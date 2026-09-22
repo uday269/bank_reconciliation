@@ -1,19 +1,5 @@
 # Project Proposal — AI-Assisted Bank Reconciliation
 
-| Field | Value |
-|---|---|
-| Document ID | DOC-01 |
-| Version | 0.1 (Draft for sponsor review) |
-| Date | 2026-09-21 |
-| Owner | Uday Gunturu, Lead Analyst and Developer |
-| Approver | Project Sponsor |
-| Status | Draft |
-| Related documents | DOC-02 Requirements Specification (planned), DOC-05 System Design (planned) |
-
-> **Project principle:** AI recommends. Humans authorize. The system documents both.
-
----
-
 ## 1. Purpose
 
 This document defines the business problem, stakeholders, scope, assumptions, risks and success criteria for an AI-assisted bank reconciliation system. Once approved, it is the baseline against which all later requirements, design and evaluation work is traced.
@@ -21,7 +7,7 @@ This document defines the business problem, stakeholders, scope, assumptions, ri
 ## 2. Business Context
 
 | Attribute | Value |
-|---|---|
+|-----------------|----------------------------------------------------------------|
 | Organization | Bonneville Provisions Co. (fictional) |
 | Business | Wholesale distributor of specialty foods to restaurants and grocers in Utah and Idaho |
 | Headquarters | Salt Lake City, Utah |
@@ -37,7 +23,7 @@ This document defines the business problem, stakeholders, scope, assumptions, ri
 The monthly reconciliation of the operating account is performed in a spreadsheet. The process works, but it has four structural weaknesses:
 
 | ID | Problem | Consequence |
-|---|---|---|
+|---------|----------------------------|------------------------------------------------|
 | PRB-01 | Matching is done by amount lookups and manual tick-marks | Repeated amounts produce false matches; timing differences and abbreviated bank descriptions are resolved by memory |
 | PRB-02 | There is no record of who matched what, when, or why | Matches cannot be traced or re-performed during review or audit |
 | PRB-03 | Spreadsheet cells are overwritten | Corrections destroy the original value; history cannot be reconstructed |
@@ -58,7 +44,7 @@ The answer is produced in DOC-07 Evaluation Report by comparing the hybrid syste
 Control criteria are absolute and must be met. Evaluation criteria require an evidenced answer, not a predetermined result.
 
 | ID | Type | Criterion |
-|---|---|---|
+|--------|------------------|--------------------------------------------------------------|
 | SC-01 | Control | 100% of reconciliation items carry a recorded human approval before being reported as reconciled |
 | SC-02 | Control | No item is reported as reconciled unless all six completion conditions are satisfied; this is enforced in code and verified by tests |
 | SC-03 | Control | 100% of audit events contain every required minimum field (audit completeness) |
@@ -75,7 +61,7 @@ Control criteria are absolute and must be met. Evaluation criteria require an ev
 ### 6.1 Business stakeholders (fictional organization)
 
 | Role | Name | Interest | Involvement |
-|---|---|---|---|
+|-------------|-----------------|-----------------------|--------------------------------------|
 | Staff Accountant | Maya Castillo | Faster matching; clear evidence for each item | Primary reviewer; approves matches and exceptions; prepares adjustments |
 | Staff Accountant | Ethan Brooks | Same as above | Primary reviewer; provides second-person coverage for separation of duties |
 | Senior Accountant | Priya Raman | Visibility of high-risk items; defensible decisions | Approves escalated and high-risk items; approves adjustments |
@@ -86,7 +72,7 @@ Control criteria are absolute and must be met. Evaluation criteria require an ev
 ### 6.2 Delivery stakeholders
 
 | Role | Name | Responsibility |
-|---|---|---|
+|---------------|----------|-------------------------------------------------------|
 | Project Sponsor | — | Approves scope and design decisions; weekly progress review; final authority on scope |
 | Lead Analyst and Developer | Uday Gunturu | Analysis, design, build, testing, documentation, release |
 
@@ -95,7 +81,7 @@ Control criteria are absolute and must be met. Evaluation criteria require an ev
 ### 7.1 In scope
 
 | Area | Included |
-|---|---|
+|------------------|-------------------------------------------------------------------|
 | Data intake | CSV import of the bank statement and GL cash detail; structure, field, record-count, control-total and duplicate validation |
 | Normalization | Dates, amounts, descriptions, payee names and references, with original values retained |
 | Matching | Deterministic exact rules; AI-assisted candidate generation, scoring and ranking for one-to-one, one-to-many and many-to-one matches |
@@ -111,7 +97,7 @@ Control criteria are absolute and must be met. Evaluation criteria require an ev
 ### 7.2 Out of scope — deliberate no-ops
 
 | Item | Reason |
-|---|---|
+|----------------------------|----------------------------------------------------|
 | Posting journal entries to any accounting system | The system proposes and records adjustments; posting remains a human action outside the system |
 | Bank file formats MT940, BAI2, OFX | Format parsing adds no control or matching value; CSV is sufficient (DD-08) |
 | Real authentication and single sign-on | A user selector demonstrates role and separation-of-duties enforcement without credential handling (DD-05) |
@@ -126,7 +112,7 @@ Control criteria are absolute and must be met. Evaluation criteria require an ev
 ## 8. Solution Overview
 
 | Layer | Responsibility | Nature |
-|---|---|---|
+|----------------|------------------------------------------|-------------------------|
 | Intake and validation | Import, validate, record control totals and file hashes | Deterministic |
 | Normalization | Standardize fields and keep originals | Deterministic |
 | Rules | Exact matches and known bank-originated items | Deterministic |
@@ -141,10 +127,10 @@ Planned technology: Python, FastAPI, Jinja2, SQLAlchemy and SQLite, running loca
 
 ## 9. Current-State Process
 
-![Current-state reconciliation process](../diagrams/current_state_process.png)
+![Current-state reconciliation process](../diagrams/current_state_process.png){height=6.2in}
 
 | Step | Activity | Performed by | Pain point |
-|---|---|---|---|
+|--------|-----------------------------|-------------|-------------------------------------|
 | CS-01 | Download the bank statement from online banking | Staff Accountant | No record of file version or control totals |
 | CS-02 | Export GL cash detail for account 1010 | Staff Accountant | Export date and filters are not recorded |
 | CS-03 | Paste both into the reconciliation spreadsheet | Staff Accountant | Original values are overwritten during clean-up |
@@ -158,7 +144,7 @@ Planned technology: Python, FastAPI, Jinja2, SQLAlchemy and SQLite, running loca
 ## 10. Assumptions
 
 | ID | Assumption |
-|---|---|
+|---------|-------------------------------------------------------------------------|
 | ASM-01 | One USD operating account and one GL cash account (1010) are reconciled per run |
 | ASM-02 | The period is one calendar month; business days follow the US federal holiday calendar |
 | ASM-03 | All data is synthetic, generated from a fixed seed; no real banking or customer data is used |
@@ -173,7 +159,7 @@ Planned technology: Python, FastAPI, Jinja2, SQLAlchemy and SQLite, running loca
 ## 11. Constraints
 
 | ID | Constraint |
-|---|---|
+|---------|-------------------------------------------------------------------------|
 | CON-01 | Only free, easily installed tools; no paid services are required |
 | CON-02 | Runs on macOS with Python; no container or cloud dependency is required |
 | CON-03 | The external GenAI provider is optional, off by default, and may receive synthetic data only |
@@ -185,7 +171,7 @@ Planned technology: Python, FastAPI, Jinja2, SQLAlchemy and SQLite, running loca
 Scale for likelihood (L) and impact (I): H = high, M = medium, L = low.
 
 | ID | Risk | L | I | Mitigation |
-|---|---|---|---|---|
+|---------|------------------------------|----|----|------------------------------------------|
 | RSK-01 | Reviewers over-trust AI recommendations and approve incorrect matches | M | H | Conflicting evidence is always shown; ranked alternatives are visible; confidence bands are labeled; no decision is preselected outside exact batches; approval rates are monitored by band |
 | RSK-02 | Batch approval becomes rubber-stamping | M | H | Batches hold only exact, unflagged items; items can be pulled out of a batch; an approval record is written per item (DD-02, pending) |
 | RSK-03 | Confidence calibration overfits and overstates accuracy | M | H | Separate seeded calibration and evaluation datasets; ground truth is read only by the evaluator (DD-11) |
@@ -203,7 +189,7 @@ Scale for likelihood (L) and impact (I): H = high, M = medium, L = low.
 The full rationale is recorded in the design decisions log in DOC-05.
 
 | ID | Decision | Status |
-|---|---|---|
+|--------|-------------------------------------------------------------------|----------|
 | DD-01 | False automatic match rate is reported as a hypothetical against a fixed policy defined before evaluation | Pending sponsor |
 | DD-02 | Batch approval: one action writes a separate approval record per item; batches hold exact, unflagged items only | Pending sponsor |
 | DD-03 | Review rate is 100% by design, with a hypothetical figure alongside | Adopted |
@@ -220,7 +206,7 @@ The full rationale is recorded in the design decisions log in DOC-05.
 ## 14. Deliverables
 
 | ID | Deliverable | Location |
-|---|---|---|
+|-------------|------------------------------------------------------|------------------|
 | DOC-01 | Project Proposal | `docs/` |
 | DOC-02 | Requirements Specification, with traceability matrix | `docs/` |
 | DOC-03 | Systems Analysis | `docs/` |
@@ -238,7 +224,7 @@ Every document is delivered in Markdown (`markdown/`) and Word (`word-files/`).
 ## 15. Milestones
 
 | Week | Milestone | Decision gate |
-|---|---|---|
+|---------|---------------------------------------------------|--------------------|
 | 1 | Discovery and requirements approved | — |
 | 2 | Systems analysis and labeled dataset complete | — |
 | 3 | System design approved | DD-02 confirmed |
@@ -251,17 +237,10 @@ Every document is delivered in Markdown (`markdown/`) and Word (`word-files/`).
 ## 16. Items Requiring Sponsor Decision
 
 | ID | Item | Working default |
-|---|---|---|
+|---------|------------------------------|--------------------------------------------|
 | OPN-01 | Approve DD-01 and DD-02 as defined | As stated in Section 13 |
 | OPN-02 | Format and length of written deliverables | Markdown and Word; consolidated documents |
 | OPN-03 | Demonstration length | 15 minutes (10 minutes live, 5 minutes results and questions) |
 | OPN-04 | Report output format | HTML and CSV; PDF through browser print |
 | OPN-05 | Repository visibility and license at release | Private during build; public under MIT at v1.0.0 if approved |
 | OPN-06 | Fixed completion date | 8-week plan |
-
-## 17. Approval
-
-| Role | Name | Decision | Date |
-|---|---|---|---|
-| Project Sponsor | | | |
-| Lead Analyst and Developer | Uday Gunturu | Submitted | 2026-09-21 |

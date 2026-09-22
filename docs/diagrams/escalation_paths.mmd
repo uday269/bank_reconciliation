@@ -1,0 +1,43 @@
+%% DOC-02 Section 9 — Approval roles and escalation paths
+%% Path IDs ESC-01..05, categories CAT-01..05 and control rules CR-xx match the Requirements Specification.
+flowchart TB
+    route{{"System routing<br/>BR-13"}}
+
+    fl["<b>First-level review</b><br/>Staff Accountant ROL-01 or Senior Accountant ROL-02<br/><br/>CAT-01 Exact: batch approve / reject (CR-11, pending DD-02)<br/>CAT-02 High confidence: approve / reject / modify<br/>CAT-03 Ambiguous: select candidate / unresolved<br/>CAT-04 Exception: approve disposition"]
+
+    sr["<b>Senior queue</b><br/>ROL-02 or ROL-03<br/><br/>CAT-05 High risk and escalated items<br/>Senior decision required (CR-02)<br/><b>SoD CR-03:</b> not the reviewer who escalated"]
+
+    adj["<b>Adjustment approval</b><br/>ROL-02 or ROL-03<br/><br/><b>SoD CR-04:</b> not the preparer"]
+
+    decided(["Item decided → report verified → reconciled<br/>CR-07"])
+
+    close["<b>Sign-off and lock</b><br/>Controller ROL-03<br/>Close conditions CR-10<br/><b>SoD CR-05:</b> not the sole first-level reviewer"]
+
+    locked(["Period closed and locked"])
+
+    req["<b>Reopen request</b> with reason<br/>ROL-01 or ROL-02"]
+
+    reopen["<b>Approve reopening</b><br/>Controller ROL-03<br/><b>SoD CR-06:</b> not the requester"]
+
+    route -- "Normal risk" --> fl
+    route -- "ESC-01 Risk High (BR-15)" --> sr
+    fl -- "ESC-02 Reviewer escalates" --> sr
+    fl -- "ESC-03 Adjustment proposed" --> adj
+    fl --> decided
+    sr --> decided
+    adj --> decided
+    decided -- "ESC-04 All queues empty" --> close --> locked
+    locked -- "ESC-05 Change needed" --> req --> reopen
+    reopen -. "Reopened: items return to routing" .-> route
+
+    classDef sys fill:#EEF3FB,stroke:#3B5B92,color:#1B2A44
+    classDef first fill:#E7F4EA,stroke:#2E7D32,color:#1B3D1F,text-align:left
+    classDef senior fill:#FFF6DD,stroke:#B38600,color:#3D2E00
+    classDef ctl fill:#FDECEC,stroke:#B3261E,color:#5C1111
+    classDef term fill:#F2F2F2,stroke:#555,color:#222
+
+    class route sys
+    class fl,req first
+    class sr,adj senior
+    class close,reopen ctl
+    class decided,locked term
