@@ -1,0 +1,28 @@
+stateDiagram-v2
+%% DOC-03 — State diagram: reconciliation item lifecycle (bank transaction, ledger entry or carry-in item)
+%% State names are the item status values stored in the database. Labels are short; DOC-03 lists every
+%% transition with its guard and rule. Every transition writes an audit event (CR-08).
+    direction TB
+    [*] --> imported: import
+    imported --> excluded: invalid row
+    imported --> validated: valid, normalized
+    validated --> proposed: disposition proposed
+    proposed --> approved: approve / modify
+    proposed --> escalated: escalate / risk High
+    proposed --> proposed: reject
+    proposed --> unresolved: mark unresolved
+    escalated --> approved: senior approves
+    escalated --> proposed: senior rejects
+    escalated --> unresolved: senior keeps unresolved
+    approved --> report_verified: report check
+    report_verified --> reconciled: CR-07 met
+    reconciled --> proposed: reopened, reversed
+    unresolved --> proposed: new evidence / reopened
+    excluded --> [*]
+    reconciled --> [*]
+    unresolved --> [*]
+
+    note right of reconciled
+        The only status counted
+        as reconciled in any report
+    end note

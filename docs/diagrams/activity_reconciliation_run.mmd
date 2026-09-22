@@ -1,0 +1,66 @@
+flowchart TB
+%% DOC-03 — Activity diagram: one complete reconciliation run
+%% Colour = performing role (see legend). Circles marked A are connectors: flow continues at the matching A.
+%% Every action writes an audit event (CR-08); not drawn.
+    start([Start: period ended])
+    a1["Import bank, GL and carry-in files<br/><i>Staff · UC-01</i>"]
+    a3["Validate files<br/><i>System · P2</i>"]
+    d1{"File-level<br/>checks pass?"}
+    a2["Correct and re-export source file<br/><i>Staff</i>"]
+    a4["Normalize, keep originals<br/><i>System · P2</i>"]
+    a5["Apply deterministic rules<br/><i>System · P3</i>"]
+    a6["Score, rank and explain candidates<br/><i>System · P4</i>"]
+    a7["Assess risk, classify, route<br/><i>System · P5</i>"]
+    d2{"Risk<br/>High?"}
+    a9["Review queues CAT-01..04<br/><i>Staff · UC-04, UC-05</i>"]
+    d3{"Escalate?"}
+    a8["Decide escalated and High-risk items<br/><i>Senior / Controller · UC-07</i>"]
+    d4{"Adjustment<br/>needed?"}
+    a10["Propose adjustment<br/><i>Staff · UC-08</i>"]
+    a11["Approve or reject adjustment<br/><i>Senior / Controller · UC-09</i>"]
+    d6{"All items<br/>decided?"}
+    a12["Generate package, verify reports<br/>and audit chain<br/><i>System · P8, UC-10, UC-14</i>"]
+    d7{"Close conditions<br/>met? CR-10"}
+    a13["Sign off and lock period<br/><i>Controller · UC-11</i>"]
+    stop([End: period closed])
+
+    start --> a1 --> a3 --> d1
+    d1 -- No --> a2 --> a1
+    d1 -- Yes --> a4 --> a5 --> a6 --> a7 --> d2
+    d2 -- Yes --> a8
+    d2 -- No --> a9 --> d3
+    d3 -- Yes --> a8
+    d3 -- No --> d4
+    a8 --> d4
+    d4 -- Yes --> a10 --> a11 --> d6
+    d4 -- No --> d6
+    d6 -- "No: next item" --> cA1(("A"))
+    d6 -- Yes --> a12 --> d7
+    d7 -- "No: resolve gaps" --> cA2(("A"))
+    cA3(("A")) -- "return to review" --> a9
+    d7 -- Yes --> a13 --> stop
+
+    subgraph LEG["Legend: performing role"]
+        direction LR
+        k1["Staff Accountant ROL-01"]
+        k2["System ROL-04"]
+        k3["Senior Accountant ROL-02 / Controller ROL-03"]
+        k4["Controller ROL-03"]
+    end
+    stop ~~~ LEG
+
+    classDef staff fill:#E7F4EA,stroke:#2E7D32,color:#1B3D1F
+    classDef sys fill:#EEF3FB,stroke:#3B5B92,color:#1B2A44
+    classDef senior fill:#FFF6DD,stroke:#B38600,color:#3D2E00
+    classDef ctl fill:#FDECEC,stroke:#B3261E,color:#5C1111
+    classDef dec fill:#FFFFFF,stroke:#555,color:#222
+    classDef conn fill:#FFFFFF,stroke:#B3261E,color:#B3261E,font-weight:bold
+    classDef term fill:#F2F2F2,stroke:#555,color:#222
+    class a1,a2,a9,a10,k1 staff
+    class a3,a4,a5,a6,a7,a12,k2 sys
+    class a8,a11,k3 senior
+    class a13,k4 ctl
+    class d1,d2,d3,d4,d6,d7 dec
+    class start,stop term
+    class cA1,cA2,cA3 conn
+    style LEG fill:#FFFFFF,stroke:#999,stroke-dasharray:4 3

@@ -1,0 +1,36 @@
+%% DOC-03 — Context diagram (DFD level 0)
+%% External entities and data flows. Flow labels are summarized; DOC-03 §3 lists every flow in full.
+flowchart LR
+    bank["Lone Peak Commercial Bank"]
+    gl["General ledger system<br/>account 1010"]
+    prior["Prior-period<br/>reconciliation"]
+
+    sys(("<b>0</b><br/><b>AI-Assisted Bank<br/>Reconciliation<br/>System</b>"))
+
+    staff["Staff Accountant<br/>ROL-01"]
+    senior["Senior Accountant<br/>ROL-02"]
+    ctrl["Controller<br/>ROL-03"]
+    auditor["External auditor"]
+    genai["GenAI provider<br/>optional, off by default"]
+    evalr["Evaluation analyst"]
+
+    bank -- "F1 Statement CSV" --> sys
+    gl -- "F2 GL CSV + balances" --> sys
+    prior -- "F3 Carry-in CSV" --> sys
+
+    staff <-- "F4 / F5" --> sys
+    senior <-- "F6 / F7" --> sys
+    ctrl <-- "F8 / F9" --> sys
+    sys -- "F10 Package + audit log" --> auditor
+    sys <-. "F11 / F12" .-> genai
+    evalr <-. "F13 / F14" .-> sys
+
+    classDef ext fill:#EEF3FB,stroke:#3B5B92,color:#1B2A44
+    classDef user fill:#E7F4EA,stroke:#2E7D32,color:#1B3D1F
+    classDef opt fill:#F2F2F2,stroke:#777,color:#333,stroke-dasharray:4 3
+    classDef core fill:#FFF6DD,stroke:#B38600,color:#3D2E00
+
+    class bank,gl,prior,auditor ext
+    class staff,senior,ctrl user
+    class genai,evalr opt
+    class sys core

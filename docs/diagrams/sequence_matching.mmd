@@ -1,0 +1,46 @@
+sequenceDiagram
+%% DOC-03 — Sequence: import, validate, match and recommend (UC-01..03, P1..P5)
+%% Every system step writes its audit event in the same transaction (CR-08).
+    autonumber
+    actor S as Staff Accountant
+    participant UI as Web UI
+    participant RUN as Run service
+    participant VAL as Validation and normalization
+    participant RUL as Rules engine
+    participant SCO as Scoring engine
+    participant RSK as Risk and routing
+    participant DB as Database D1–D7
+    participant AUD as Audit log D9
+
+    S->>UI: Upload bank, GL and carry-in CSV (UC-01)
+    UI->>RUN: Start run (account 7310, Aug 2026)
+    RUN->>DB: Store files, hash, control totals (D1)
+    RUN->>AUD: IMPORT events
+    RUN->>VAL: Validate files
+    VAL->>DB: Record tests and results (D3)
+    VAL->>AUD: VALIDATION events
+    alt File-level check fails (CR-17)
+        VAL-->>UI: Run blocked, failures listed
+        UI-->>S: Data Quality Report (RPT-02)
+    else All file-level checks pass
+        VAL->>DB: Save normalized values beside originals (D2)
+        VAL->>AUD: NORMALIZATION events
+        RUN->>RUL: Apply exact, bank-originated and carry-in rules
+        RUL->>DB: Exact matches, fee and interest items (D4)
+        RUL->>AUD: RULE events (rule name, version)
+        loop Each unmatched item
+            RUN->>SCO: Generate candidates (PRM-02, PRM-04, PRM-05)
+            SCO->>SCO: Score features, rank, calibrate confidence
+            SCO->>SCO: Build explanation (supporting and conflicting)
+            opt GenAI enabled (off by default)
+                SCO->>SCO: Add labelled prose via adapter (never scores)
+            end
+            SCO->>DB: All candidates, scores, confidence (D4)
+            SCO->>AUD: AI_RECOMMENDATION event (model version)
+        end
+        RUN->>RSK: Assess risk (BR-15), classify (EXC), route (BR-13)
+        RSK->>DB: Risk, category, queue (D4)
+        RSK->>AUD: ROUTING events
+        RUN-->>UI: Run ready for review
+        UI-->>S: Review queues CAT-01..05
+    end

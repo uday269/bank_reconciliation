@@ -1,0 +1,39 @@
+sequenceDiagram
+%% DOC-03 — Sequence: review decision with atomic audit write (UC-05..07; CR-03, CR-08, CR-16)
+    autonumber
+    actor R as Reviewer
+    participant UI as Web UI
+    participant REV as Review service
+    participant CTL as Control checks
+    participant DB as Database D4, D6
+    participant AUD as Audit log D9
+
+    R->>UI: Select identity, open item
+    UI->>REV: Get item detail
+    REV->>DB: Load evidence, all ranked candidates, risk
+    REV-->>UI: Detail view (no preselected decision)
+    UI->>REV: Record detail-opened time (FR-REV-11)
+    R->>UI: Choose decision and enter comment
+    UI->>REV: Submit decision
+    REV->>CTL: Check role, category, SoD (CR-02, CR-03), comment rule (CR-16), period not locked (CR-18)
+    alt Check fails
+        CTL-->>REV: Blocked, with reason
+        REV->>AUD: BLOCKED_ATTEMPT event (who, what, rule)
+        REV-->>UI: Decision refused, reason shown
+    else Check passes
+        REV->>DB: BEGIN transaction
+        REV->>DB: Insert decision record (D6)
+        REV->>AUD: Append event with previous hash, same transaction (FR-AUD-04)
+        alt Audit write fails
+            REV->>DB: ROLLBACK (CR-08)
+            REV-->>UI: Error, decision not saved
+        else Audit write succeeds
+            REV->>DB: COMMIT
+            alt Decision = escalate
+                REV-->>UI: Item moved to senior queue (ESC-02)
+            else Decision = approve / reject / modify / unresolved
+                REV-->>UI: Item status updated, next item
+            end
+        end
+    end
+    Note over REV,AUD: Correcting a decision later inserts a new decision and a new event,<br/>earlier records are never updated (CR-09)
