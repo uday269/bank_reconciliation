@@ -1,0 +1,61 @@
+%% DOC-01 Section 9 — Current-state bank reconciliation process (manual, spreadsheet-based)
+%% Step IDs CS-01..CS-09 and problem IDs PRB-01..PRB-04 match the Project Proposal.
+%% Steps marked with a problem ID are the sources of that problem.
+flowchart TB
+    start([Month end: August 2026 closed in GL])
+
+    subgraph SA["Staff Accountant"]
+        direction TB
+        cs01["CS-01 Download bank statement<br/>from online banking"]
+        cs02["CS-02 Export GL cash detail<br/>for account 1010"]
+        cs03["CS-03 Paste both into spreadsheet<br/><b>⚠ PRB-03</b>"]
+        cs04["CS-04 Match by amount lookup<br/>and manual tick-marks<br/><b>⚠ PRB-01</b>"]
+        unm{"Unmatched<br/>items?"}
+        cs05["CS-05 Investigate by email<br/>and bank images<br/><b>⚠ PRB-02</b>"]
+        fee{"Bank fee or<br/>interest?"}
+        cs06["CS-06 Prepare adjusting entries<br/><b>⚠ PRB-04</b>"]
+        cs07["CS-07 Complete bank-to-book<br/>reconciliation template"]
+    end
+
+    subgraph REV["Senior Accountant / Controller"]
+        direction TB
+        cs08["CS-08 Review totals and sign off<br/><b>⚠ PRB-04</b>"]
+        ok{"Totals<br/>agree?"}
+    end
+
+    cs09["CS-09 Staff Accountant files<br/>spreadsheet on shared drive<br/><b>⚠ PRB-03</b>"]
+    done([Reconciliation filed])
+
+    start --> cs01 --> cs02 --> cs03 --> cs04 --> unm
+    unm -- Yes --> cs05 --> fee
+    fee -- Yes --> cs06 --> cs07
+    fee -- No --> cs07
+    unm -- No --> cs07
+    cs07 --> cs08 --> ok
+    ok -- "No: rework" --> cs04
+    ok -- Yes --> cs09 --> done
+
+    subgraph LEG["Problems (see Proposal Section 3)"]
+        direction LR
+        p1["<b>PRB-01</b> False matches on repeated amounts; timing and name variations resolved from memory"]
+        p2["<b>PRB-02</b> No record of who matched what or why; findings stay in email"]
+        p3["<b>PRB-03</b> Cells overwritten; original values and history lost"]
+        p4["<b>PRB-04</b> Review of totals, not items; preparer may also approve adjustments"]
+        p1 ~~~ p2 ~~~ p3 ~~~ p4
+    end
+
+    done ~~~ LEG
+
+    classDef step fill:#EEF3FB,stroke:#3B5B92,color:#1B2A44
+    classDef decision fill:#FFF6DD,stroke:#B38600,color:#3D2E00
+    classDef pain fill:#FDECEC,stroke:#B3261E,color:#5C1111,text-align:left
+    classDef terminal fill:#E7F4EA,stroke:#2E7D32,color:#1B3D1F
+
+    class cs01,cs02,cs03,cs04,cs05,cs06,cs07,cs08,cs09 step
+    class unm,fee,ok decision
+    class p1,p2,p3,p4 pain
+    class start,done terminal
+
+    style SA fill:#F7F9FC,stroke:#3B5B92
+    style REV fill:#F7F9FC,stroke:#3B5B92
+    style LEG fill:#FFFFFF,stroke:#B3261E,stroke-dasharray:4 3
