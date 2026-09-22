@@ -1,0 +1,69 @@
+---
+config:
+  layout: elk
+---
+flowchart TB
+%% DOC-03 — Data flow diagram, level 1
+%% Processes P1..P8, data stores D1..D9. Every process also writes to D9 Audit log (CR-08).
+    src["Bank · GL system ·<br/>Prior-period reconciliation"]
+    users["Reviewers<br/>ROL-01 / 02 / 03"]
+    auditor["External auditor"]
+
+    p1("P1<br/>Import files")
+    p2("P2<br/>Validate and<br/>normalize")
+    p3("P3<br/>Apply deterministic<br/>rules")
+    p4("P4<br/>Score and explain<br/>candidates")
+    p5("P5<br/>Assess risk,<br/>classify, route")
+    p6("P6<br/>Review, approve,<br/>adjust")
+    p7("P7<br/>Close and reopen<br/>period")
+    p8("P8<br/>Generate<br/>reports")
+
+    d1[("D1 Source files")]
+    d2[("D2 Transactions<br/>original + normalized")]
+    d3[("D3 Validation results")]
+    d4[("D4 Recommendations")]
+    d5[("D5 Model and parameters")]
+    d6[("D6 Decisions and adjustments")]
+    d7[("D7 Run and period")]
+    d8[("D8 Report package")]
+    d9[("D9 Audit log")]
+
+    src -- "CSV files" --> p1
+    p1 -- "hash, totals" --> d1
+    p1 -- "raw rows" --> d2
+    p2 -- "tests, exclusions" --> d3
+    d2 <-- "raw / normalized" --> p2
+    d2 -- "normalized rows" --> p3
+    p3 -- "exact matches, fees, interest" --> d4
+    p3 -- "unmatched items" --> p4
+    d5 -- "model, PRM" --> p4
+    p4 -- "candidates, confidence,<br/>explanations" --> d4
+    d4 -- "recommendations" --> p5
+    p5 -- "risk, category" --> d4
+    d4 -- "queued items" --> p6
+    users <-- "evidence / decisions" --> p6
+    p6 -- "decisions, adjustments" --> d6
+    d6 -- "decided items" --> p7
+    users <-- "readiness / sign-off, reopen" --> p7
+    p7 -- "status, lock" --> d7
+    d3 & d4 & d6 & d7 -- "run data" --> p8
+    p8 -- "reports" --> d8
+    p8 -- "report check FR-RPT-05" --> d6
+    d8 -- "package" --> auditor
+    d8 -- "package" --> users
+
+    note["Every process P1–P8 writes its<br/>events to D9 in the same<br/>transaction as the action (CR-08)"]
+    note -.- d9
+
+    classDef ext fill:#EEF3FB,stroke:#3B5B92,color:#1B2A44
+    classDef proc fill:#FFF6DD,stroke:#B38600,color:#3D2E00
+    classDef store fill:#F7F9FC,stroke:#555,color:#222
+    classDef nt fill:#FFFFFF,stroke:#B3261E,color:#5C1111,stroke-dasharray:4 3
+    classDef audit fill:#FDECEC,stroke:#B3261E,color:#5C1111
+
+    class src,users,auditor ext
+    class p1,p2,p3,p4,p5,p6,p7,p8 proc
+    class d1,d2,d3,d4,d5,d6,d7,d8 store
+    class d9 audit
+    class note nt
+

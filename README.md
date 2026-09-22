@@ -6,7 +6,7 @@ A human-supervised bank reconciliation system that recommends bank-to-ledger mat
 
 ## Status
 
-**In development: Stage 2, Business Analysis.** The application, setup instructions and usage guide will be added as the build progresses. The full README ships with release v1.0.0.
+**In development: Stage 3, Systems Analysis.** The application, setup instructions and usage guide will be added as the build progresses. The full README ships with release v1.0.0.
 
 ## Documents
 
@@ -14,6 +14,7 @@ A human-supervised bank reconciliation system that recommends bank-to-ledger mat
 |---|---|---|---|
 | DOC-01 | Project Proposal | [01_project_proposal.md](docs/markdown/01_project_proposal.md) | [01_project_proposal.docx](docs/word-files/01_project_proposal.docx) |
 | DOC-02 | Requirements Specification | [02_requirements_specification.md](docs/markdown/02_requirements_specification.md) | [02_requirements_specification.docx](docs/word-files/02_requirements_specification.docx) |
+| DOC-03 | Systems Analysis | [03_systems_analysis.md](docs/markdown/03_systems_analysis.md) | [03_systems_analysis.docx](docs/word-files/03_systems_analysis.docx) |
 
 ## Repository Structure
 

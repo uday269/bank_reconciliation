@@ -1,0 +1,190 @@
+---
+config:
+  layout: elk
+---
+erDiagram
+%% DOC-03 — Logical ERD. Key attributes only; Stage 4 (DOC-04) defines every column, type and constraint.
+%% Singular lower_snake_case names. Money in integer cents. audit_event is append-only and hash-chained.
+    app_user {
+        int user_id PK
+        string full_name
+        string role "ROL-01..03"
+    }
+    bank_account {
+        int bank_account_id PK
+        string bank_name
+        string account_mask "ending 7310"
+        string gl_account "1010"
+    }
+    reconciliation_run {
+        int run_id PK
+        int bank_account_id FK
+        date period_start
+        date period_end
+        string status "created..closed"
+        json parameter_snapshot "PRM-01..10"
+        int model_version_id FK
+    }
+    source_file {
+        int source_file_id PK
+        int run_id FK
+        string file_type "bank, gl, carry_in"
+        string sha256
+        int row_count
+        int control_total_cents
+    }
+    bank_transaction {
+        int bank_transaction_id PK
+        int source_file_id FK
+        date transaction_date
+        int amount_cents
+        string description_original
+        string description_normalized
+        string status "imported..reconciled"
+    }
+    ledger_entry {
+        int ledger_entry_id PK
+        int source_file_id FK
+        date posting_date
+        int amount_cents
+        string description_original
+        string description_normalized
+        string status
+    }
+    carry_in_item {
+        int carry_in_item_id PK
+        int source_file_id FK
+        date original_date
+        int amount_cents
+        string item_type "check, deposit"
+        string status
+    }
+    validation_result {
+        int validation_result_id PK
+        int source_file_id FK
+        string test_name
+        string outcome
+    }
+    normalization_change {
+        int normalization_change_id PK
+        string item_ref
+        string field_name
+        string original_value
+        string revised_value
+        string rule_name
+    }
+    model_version {
+        int model_version_id PK
+        string version_label
+        string calibration_dataset
+    }
+    recommendation {
+        int recommendation_id PK
+        int run_id FK
+        string source "rule or ai"
+        string relationship "1:1, 1:n, n:1"
+        string category "CAT-01..05"
+        string exception_category "EXC-01..08"
+        string risk_level
+        float confidence
+        string explanation
+    }
+    candidate {
+        int candidate_id PK
+        int recommendation_id FK
+        int rank
+        float score
+        json feature_values
+    }
+    candidate_member {
+        int candidate_member_id PK
+        int candidate_id FK
+        string item_type "bank, ledger, carry_in"
+        int item_id
+    }
+    review_batch {
+        int review_batch_id PK
+        int run_id FK
+        int created_by FK
+    }
+    review_decision {
+        int review_decision_id PK
+        int recommendation_id FK
+        int chosen_candidate_id FK
+        int review_batch_id FK "nullable"
+        int decided_by FK
+        string decision "approve..unresolved"
+        string comment
+        datetime opened_at
+        datetime decided_at
+    }
+    adjustment {
+        int adjustment_id PK
+        int recommendation_id FK
+        int amount_cents
+        string debit_account
+        string credit_account
+        int prepared_by FK
+    }
+    adjustment_decision {
+        int adjustment_decision_id PK
+        int adjustment_id FK
+        int decided_by FK
+        string decision
+    }
+    period_signoff {
+        int period_signoff_id PK
+        int run_id FK
+        int signed_by FK
+        int unresolved_difference_cents
+        string chain_head_hash
+    }
+    reopen_request {
+        int reopen_request_id PK
+        int run_id FK
+        int requested_by FK
+        int decided_by FK
+        string reason
+        string decision
+    }
+    report {
+        int report_id PK
+        int run_id FK
+        string report_code "RPT-01..13"
+        string content_sha256
+    }
+    audit_event {
+        int audit_event_id PK
+        int run_id FK
+        int sequence_no
+        string event_type
+        int actor_user_id FK "null = System"
+        json original_values
+        json revised_values
+        string previous_hash
+        string event_hash
+    }
+
+    bank_account ||--o{ reconciliation_run : "reconciled in"
+    model_version ||--o{ reconciliation_run : "used by"
+    reconciliation_run ||--|{ source_file : "imports"
+    source_file ||--o{ bank_transaction : "contains"
+    source_file ||--o{ ledger_entry : "contains"
+    source_file ||--o{ carry_in_item : "contains"
+    source_file ||--o{ validation_result : "tested by"
+    reconciliation_run ||--o{ normalization_change : "records"
+    reconciliation_run ||--o{ recommendation : "produces"
+    recommendation ||--|{ candidate : "ranks"
+    candidate ||--|{ candidate_member : "groups"
+    recommendation ||--o{ review_decision : "decided by"
+    candidate |o--o{ review_decision : "chosen in"
+    review_batch |o--o{ review_decision : "groups"
+    reconciliation_run ||--o{ review_batch : "has"
+    recommendation ||--o{ adjustment : "proposes"
+    adjustment ||--o{ adjustment_decision : "decided by"
+    reconciliation_run ||--o{ period_signoff : "signed off"
+    reconciliation_run ||--o{ reopen_request : "reopened by"
+    reconciliation_run ||--o{ report : "generates"
+    reconciliation_run ||--|{ audit_event : "logs"
+    app_user ||--o{ review_decision : "makes"
+    app_user ||--o{ audit_event : "acts in"

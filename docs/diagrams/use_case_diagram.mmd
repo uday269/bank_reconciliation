@@ -1,0 +1,65 @@
+---
+config:
+  layout: elk
+---
+flowchart LR
+%% DOC-03 — Use case diagram
+%% Actors (boxes), use cases UC-01..15 (ovals) inside the system boundary.
+%% Thick arrows "is a": actor generalization (the specialized actor inherits all use cases of the general one).
+%% Solid lines: actor participates. Dashed arrows: «include» / «extend».
+    user["«abstract actor»<br/>Any user"]
+    staff["«actor»<br/>Staff Accountant<br/>ROL-01"]
+    senior["«actor»<br/>Senior Accountant<br/>ROL-02"]
+    approver["«abstract actor»<br/>Approver"]
+    ctrl["«actor»<br/>Controller<br/>ROL-03"]
+
+    staff == "is a" ==> user
+    senior == "is a" ==> staff
+    senior == "is a" ==> approver
+    ctrl == "is a" ==> approver
+    ctrl == "is a" ==> user
+
+    subgraph SYS["AI-Assisted Bank Reconciliation System"]
+        direction TB
+        uc01(["UC-01 Import source files"])
+        uc02(["UC-02 Validate and normalize data"])
+        uc03(["UC-03 Generate matches and recommendations"])
+        uc04(["UC-04 Review exact-match batch"])
+        uc05(["UC-05 Review recommendation or exception"])
+        uc06(["UC-06 Escalate item"])
+        uc08(["UC-08 Propose adjustment"])
+        uc12(["UC-12 Request reopening"])
+        uc07(["UC-07 Decide escalated item"])
+        uc09(["UC-09 Approve adjustment"])
+        uc11(["UC-11 Sign off and close period"])
+        uc13(["UC-13 Approve reopening"])
+        uc10(["UC-10 Generate and view reports"])
+        uc14(["UC-14 Verify audit chain"])
+        uc15(["UC-15 Evaluate performance"])
+    end
+
+    system["«actor»<br/>System<br/>ROL-04"]
+    evalr["«actor»<br/>Evaluation analyst"]
+
+    staff --- uc01 & uc04 & uc05 & uc06 & uc08 & uc12
+    approver --- uc07 & uc09
+    ctrl --- uc11 & uc13
+    user --- uc10 & uc14
+    uc02 & uc03 & uc10 --- system
+    uc15 --- evalr
+
+    uc01 -. "«include»" .-> uc02
+    uc06 -. "«extend»" .-> uc05
+    uc08 -. "«extend»" .-> uc05
+    uc11 -. "«include»" .-> uc10
+    uc11 -. "«include»" .-> uc14
+
+    classDef actor fill:#E7F4EA,stroke:#2E7D32,color:#1B3D1F
+    classDef abstract fill:#FFFFFF,stroke:#2E7D32,color:#1B3D1F,stroke-dasharray:4 3
+    classDef sysactor fill:#EEF3FB,stroke:#3B5B92,color:#1B2A44
+    classDef uc fill:#FFF6DD,stroke:#B38600,color:#3D2E00
+    class staff,senior,ctrl actor
+    class user,approver abstract
+    class system,evalr sysactor
+    class uc01,uc02,uc03,uc04,uc05,uc06,uc07,uc08,uc09,uc10,uc11,uc12,uc13,uc14,uc15 uc
+    style SYS fill:#FBFBFB,stroke:#555

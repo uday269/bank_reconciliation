@@ -1,0 +1,28 @@
+stateDiagram-v2
+%% DOC-03 — State diagram: reconciliation run and period lifecycle (one account, one month)
+%% State names are the run status values used in the database. Every transition writes an audit event (CR-08).
+    direction TB
+    [*] --> created: run started (UC-01)
+    created --> validating: files imported
+    validating --> validation_failed: file-level check fails (CR-17)
+    validation_failed --> validating: corrected file re-imported
+    validating --> processing: all file-level checks pass
+    processing --> in_review: matching, scoring and routing complete
+    in_review --> ready_to_close: all decided, package generated, chain verified
+    ready_to_close --> in_review: decision changed or gap found
+    ready_to_close --> closed: Controller signs off, CR-05, CR-10, lock event
+    closed --> reopen_requested: ROL-01 or ROL-02 requests, reason required
+    reopen_requested --> closed: request rejected
+    reopen_requested --> in_review: Controller approves, CR-06
+    closed --> [*]
+
+    note right of closed
+        Locked: no imports, decisions
+        or adjustments (FR-PER-03).
+        Chain-head hash printed on
+        the signed summary (FR-AUD-07)
+    end note
+    note left of in_review
+        After reopening, a new sign-off
+        is required to close again (FR-PER-05)
+    end note
