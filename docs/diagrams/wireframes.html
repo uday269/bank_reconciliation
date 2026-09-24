@@ -1,0 +1,323 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Reviewer interface wireframes — AI-Assisted Bank Reconciliation</title>
+<style>
+  :root { --line:#9aa3ad; --ink:#1f2933; --muted:#6b7480; --fill:#f4f6f8; --accent:#3b5b92; }
+  * { box-sizing:border-box; }
+  body { font-family:-apple-system,"Segoe UI",Helvetica,Arial,sans-serif; color:var(--ink); background:#fff; margin:0; padding:24px; }
+  .screen { width:1120px; border:1px solid var(--line); margin:0 0 40px; background:#fff; }
+  .screen-title { background:var(--ink); color:#fff; font-size:13px; padding:6px 12px; letter-spacing:.04em; }
+  .topbar { display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--line); padding:10px 12px; font-size:13px; background:var(--fill); }
+  .brand { font-weight:600; }
+  .pill { border:1px solid var(--line); border-radius:12px; padding:2px 10px; font-size:12px; background:#fff; }
+  .body { padding:12px; }
+  .row { display:flex; gap:12px; }
+  .col { flex:1; }
+  .panel { border:1px solid var(--line); margin-bottom:12px; }
+  .panel h3 { margin:0; font-size:12px; text-transform:uppercase; letter-spacing:.05em; color:var(--muted);
+              padding:6px 10px; border-bottom:1px solid var(--line); background:var(--fill); font-weight:600; }
+  .panel .content { padding:10px; font-size:13px; }
+  table { width:100%; border-collapse:collapse; font-size:12.5px; }
+  th,td { border:1px solid var(--line); padding:5px 7px; text-align:left; vertical-align:top; }
+  th { background:var(--fill); font-weight:600; }
+  .btn { display:inline-block; border:1px solid var(--ink); padding:5px 12px; font-size:12.5px; margin-right:6px; background:#fff; }
+  .btn.primary { border-width:2px; font-weight:600; }
+  .btn.ghost { border-style:dashed; color:var(--muted); }
+  .note { font-size:11.5px; color:var(--muted); font-style:italic; margin-top:6px; }
+  .tag { border:1px solid var(--line); padding:1px 6px; font-size:11.5px; background:var(--fill); }
+  .bar { height:10px; border:1px solid var(--line); background:repeating-linear-gradient(90deg,#dfe4ea 0 6px,#fff 6px 12px); }
+  .field { border:1px solid var(--line); padding:6px 8px; font-size:12.5px; color:var(--muted); background:#fff; }
+  .grid4 { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
+  .stat { border:1px solid var(--line); padding:8px 10px; }
+  .stat .n { font-size:20px; font-weight:600; }
+  .stat .l { font-size:11.5px; color:var(--muted); text-transform:uppercase; letter-spacing:.04em; }
+  ul { margin:4px 0 0 16px; padding:0; font-size:12.5px; }
+  .conflict { border-left:3px solid var(--ink); padding-left:8px; }
+  .callout { border:1px dashed var(--line); padding:6px 8px; font-size:11.5px; color:var(--muted); }
+</style>
+</head>
+<body>
+
+<!-- W1 -->
+<section class="screen" id="w1">
+  <div class="screen-title">W1 · Run dashboard — queues and close readiness</div>
+  <div class="topbar">
+    <span class="brand">Bank Reconciliation · Lone Peak Operating ••7310 · August 2026</span>
+    <span>Acting as: <span class="pill">Maya Castillo — Staff Accountant (ROL-01) ▾</span> <span class="pill">Run status: in_review</span></span>
+  </div>
+  <div class="body">
+    <div class="grid4" style="margin-bottom:12px">
+      <div class="stat"><div class="n">612</div><div class="l">Bank items</div></div>
+      <div class="stat"><div class="n">628</div><div class="l">Ledger items</div></div>
+      <div class="stat"><div class="n">431</div><div class="l">Decided</div></div>
+      <div class="stat"><div class="n">197</div><div class="l">Awaiting decision</div></div>
+    </div>
+    <div class="panel">
+      <h3>Review queues — ordered by risk, then lowest confidence</h3>
+      <div class="content">
+        <table>
+          <tr><th>Queue</th><th>Description</th><th>Items</th><th>Value</th><th>Risk high</th><th></th></tr>
+          <tr><td>CAT-01</td><td>Exact matches</td><td>312</td><td>$1,884,210.55</td><td>0</td><td><span class="btn">Open batch</span></td></tr>
+          <tr><td>CAT-02</td><td>High confidence</td><td>84</td><td>$402,118.90</td><td>0</td><td><span class="btn">Review</span></td></tr>
+          <tr><td>CAT-03</td><td>Ambiguous</td><td>61</td><td>$188,904.12</td><td>0</td><td><span class="btn">Review</span></td></tr>
+          <tr><td>CAT-04</td><td>Exceptions</td><td>39</td><td>$27,455.08</td><td>0</td><td><span class="btn">Review</span></td></tr>
+          <tr><td>CAT-05</td><td>High risk / escalated</td><td>13</td><td>$214,860.00</td><td>13</td><td><span class="btn">Senior review</span></td></tr>
+        </table>
+        <p class="note">Low-confidence items are never hidden or filtered out by default (CR-15).</p>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col panel">
+        <h3>Close readiness (CR-10)</h3>
+        <div class="content">
+          <table>
+            <tr><td>Items awaiting decision</td><td>197</td><td>Not met</td></tr>
+            <tr><td>Escalations decided</td><td>4 of 13</td><td>Not met</td></tr>
+            <tr><td>Adjustments decided</td><td>6 of 9</td><td>Not met</td></tr>
+            <tr><td>Report package generated</td><td>—</td><td>Not met</td></tr>
+            <tr><td>Audit chain verified</td><td>1,884 events</td><td>Met</td></tr>
+          </table>
+          <p class="note">Sign-off is available to the Controller only when every condition is met.</p>
+        </div>
+      </div>
+      <div class="col panel">
+        <h3>Run actions</h3>
+        <div class="content">
+          <span class="btn">Import files</span><span class="btn">Generate reports</span><span class="btn">Verify audit chain</span><br><br>
+          <span class="btn ghost">Sign off and close (Controller only)</span>
+          <p class="note">Actions not permitted for the selected identity are shown disabled, with the rule that blocks them.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- W2 -->
+<section class="screen" id="w2">
+  <div class="screen-title">W2 · Import and validation results</div>
+  <div class="topbar"><span class="brand">Import — August 2026</span><span class="pill">Maya Castillo (ROL-01) ▾</span></div>
+  <div class="body">
+    <div class="panel"><h3>Source files</h3><div class="content">
+      <table>
+        <tr><th>File</th><th>Type</th><th>Rows</th><th>Debits</th><th>Credits</th><th>Opening</th><th>Closing</th><th>SHA-256</th></tr>
+        <tr><td>lpcb_7310_2026-08.csv</td><td>bank</td><td>612</td><td>$2,118,440.10</td><td>$2,006,918.44</td><td>$486,201.77</td><td>$374,680.11</td><td>3f9a…c21b</td></tr>
+        <tr><td>gl_1010_2026-08.csv</td><td>gl</td><td>628</td><td>$2,014,702.09</td><td>$2,101,330.55</td><td>$492,118.02</td><td>$405,489.56</td><td>9c04…7ae2</td></tr>
+        <tr><td>carry_in_2026-07.csv</td><td>carry_in</td><td>18</td><td>$41,208.31</td><td>$6,145.00</td><td>—</td><td>—</td><td>b710…44df</td></tr>
+      </table>
+      <span class="btn">Choose files</span><span class="btn primary">Start run</span>
+    </div></div>
+    <div class="panel"><h3>Validation results (FR-VAL-01..07)</h3><div class="content">
+      <table>
+        <tr><th>Test</th><th>Scope</th><th>Outcome</th><th>Detail</th></tr>
+        <tr><td>VAL-01 Required columns</td><td>file</td><td>Pass</td><td>All three files</td></tr>
+        <tr><td>VAL-03 Control totals</td><td>file</td><td>Pass</td><td>Opening + credits − debits = closing</td></tr>
+        <tr><td>VAL-04 Duplicate IDs</td><td>row</td><td>Pass</td><td>None</td></tr>
+        <tr><td>VAL-04 Possible duplicates</td><td>row</td><td>Warning</td><td>4 flagged for investigation, not excluded</td></tr>
+        <tr><td>VAL-05 Outside period</td><td>row</td><td>Warning</td><td>2 rows dated 2026-07-31</td></tr>
+        <tr><td>VAL-02 Field types</td><td>row</td><td>Fail</td><td>1 row excluded: amount not numeric</td></tr>
+      </table>
+      <p class="note">File-level failures block matching (CR-17). Row-level failures exclude the row and are listed in RPT-02.</p>
+    </div></div>
+  </div>
+</section>
+
+<!-- W3 -->
+<section class="screen" id="w3">
+  <div class="screen-title">W3 · Item detail — recommendation review (CAT-02 / CAT-03)</div>
+  <div class="topbar"><span class="brand">Item 84 of 145 · CAT-03 Ambiguous</span><span>Acting as: <span class="pill">Maya Castillo (ROL-01) ▾</span></span></div>
+  <div class="body">
+    <div class="row">
+      <div class="col" style="flex:1.1">
+        <div class="panel"><h3>Bank transaction and source evidence</h3><div class="content">
+          <table>
+            <tr><th>Date</th><td>2026-08-14</td><th>Amount</th><td>$4,820.00 credit</td></tr>
+            <tr><th>Description</th><td colspan="3">ACH DEP CANYON RIDGE GRCRY 8842 <span class="tag">original</span></td></tr>
+            <tr><th>Normalized</th><td colspan="3">ACH DEPOSIT CANYON RIDGE GROCERY · payee: CANYON RIDGE GROCERY · ref 8842</td></tr>
+            <tr><th>Bank ID</th><td>BT-000412</td><th>Type code</th><td>ACH-CR</td></tr>
+          </table>
+        </div></div>
+        <div class="panel"><h3>Ranked candidates — every candidate is shown (FR-REV-09)</h3><div class="content">
+          <table>
+            <tr><th></th><th>Rank</th><th>Ledger entry</th><th>Date</th><th>Amount</th><th>Score</th><th>Confidence</th></tr>
+            <tr><td>○</td><td>1</td><td>GL-000871 Canyon Ridge Grocery — invoice 8842</td><td>2026-08-12</td><td>$4,820.00</td><td>0.86</td><td>0.74 <span class="tag">Medium</span></td></tr>
+            <tr><td>○</td><td>2</td><td>GL-000903 Canyon Ridge Grocery — invoice 8846</td><td>2026-08-15</td><td>$4,820.00</td><td>0.81</td><td>0.69 <span class="tag">Low</span></td></tr>
+            <tr><td>○</td><td>3</td><td>GL-000844 + GL-000845 (group of 2)</td><td>2026-08-11</td><td>$4,820.00</td><td>0.58</td><td>0.41 <span class="tag">Low</span></td></tr>
+          </table>
+          <p class="note">No option is preselected (FR-REV-10). Margin between rank 1 and rank 2 is 0.05, below PRM-08, so this item is Ambiguous rather than High confidence.</p>
+        </div></div>
+      </div>
+      <div class="col">
+        <div class="panel"><h3>Confidence and risk</h3><div class="content">
+          Confidence 0.74 <span class="tag">Medium band</span><div class="bar" style="margin:6px 0"></div>
+          Risk <span class="tag">Low</span>
+          <p class="note">Triggered risk rules: none. Amount below PRM-01 ($10,000); counterparty seen 6 times this period.</p>
+        </div></div>
+        <div class="panel"><h3>Why this is recommended</h3><div class="content">
+          <ul><li>Amount matches exactly ($4,820.00)</li><li>Payee text similarity 0.94</li><li>Reference 8842 appears in both records</li><li>2 business days apart, within PRM-02</li></ul>
+          <div class="conflict" style="margin-top:8px"><strong>Conflicting evidence</strong>
+            <ul><li>A second ledger entry has the same amount and payee (rank 2)</li><li>Invoice 8846 is also unpaid, so the reference may be coincidental</li></ul></div>
+          <p class="note">Conflicting evidence is always displayed (CR-15, NFR-06).</p>
+        </div></div>
+        <div class="panel"><h3>Decision</h3><div class="content">
+          <div class="field">Comment (required to reject, modify, escalate or leave unresolved — CR-16)</div><br>
+          <span class="btn primary">Approve selected</span><span class="btn">Reject</span><span class="btn">Escalate</span><span class="btn">Leave unresolved</span>
+          <p class="note">Recorded as Maya Castillo (ROL-01) at decision time, with the time this view was opened.</p>
+        </div></div>
+        <div class="panel"><h3>Item history</h3><div class="content">
+          <table><tr><td>08-31 09:14</td><td>System</td><td>Candidates scored, model v1.2.0</td></tr>
+          <tr><td>08-31 09:14</td><td>System</td><td>Routed to CAT-03 (BR-13)</td></tr></table>
+        </div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- W4 -->
+<section class="screen" id="w4">
+  <div class="screen-title">W4 · Exact-match batch review (CAT-01) — behaviour depends on DD-02</div>
+  <div class="topbar"><span class="brand">CAT-01 Exact matches · 312 items · $1,884,210.55</span><span class="pill">Ethan Brooks (ROL-01) ▾</span></div>
+  <div class="body">
+    <div class="panel"><h3>Batch contents — exact matches with Low risk only (CR-11)</h3><div class="content">
+      <table>
+        <tr><th></th><th>Bank item</th><th>Ledger entry</th><th>Date</th><th>Amount</th><th>Rule</th><th>Risk</th><th></th></tr>
+        <tr><td>☑</td><td>BT-000101</td><td>GL-000455</td><td>2026-08-03</td><td>$12,410.00</td><td>BR-01</td><td>Low</td><td><span class="btn ghost">Remove</span></td></tr>
+        <tr><td>☑</td><td>BT-000102</td><td>GL-000456</td><td>2026-08-03</td><td>$1,988.40</td><td>BR-01</td><td>Low</td><td><span class="btn ghost">Remove</span></td></tr>
+        <tr><td>☑</td><td>BT-000103</td><td>GL-000460</td><td>2026-08-04</td><td>$640.00</td><td>BR-01</td><td>Low</td><td><span class="btn ghost">Remove</span></td></tr>
+        <tr><td colspan="8" style="text-align:center;color:#6b7480">… 309 more rows, sortable by amount, date and payee …</td></tr>
+      </table>
+      <span class="btn primary">Approve batch (312 items)</span><span class="btn">Reject batch</span>
+      <div class="callout" style="margin-top:8px"><strong>DD-02 pending.</strong> As designed, one click writes one decision record and one audit event per item; removed items return to CAT-02 or CAT-03. If the sponsor decides otherwise, only this screen changes — the data model already stores decisions per item.</div>
+    </div></div>
+  </div>
+</section>
+
+<!-- W5 -->
+<section class="screen" id="w5">
+  <div class="screen-title">W5 · Exception detail and proposed adjustment (CAT-04)</div>
+  <div class="topbar"><span class="brand">Exception EXC-03 Bank fee · BT-000588</span><span class="pill">Maya Castillo (ROL-01) ▾</span></div>
+  <div class="body">
+    <div class="row">
+      <div class="col">
+        <div class="panel"><h3>Unmatched bank item</h3><div class="content">
+          <table>
+            <tr><th>Date</th><td>2026-08-31</td><th>Amount</th><td>$78.50 debit</td></tr>
+            <tr><th>Description</th><td colspan="3">MONTHLY ANALYSIS FEE</td></tr>
+            <tr><th>Type code</th><td>FEE</td><th>Ledger match</th><td>None found</td></tr>
+          </table>
+        </div></div>
+        <div class="panel"><h3>Classification and next action</h3><div class="content">
+          Suggested category <span class="tag">EXC-03 Bank fee</span> · rule BR-06<br>
+          Suggested action: propose an adjustment (debit expense, credit cash)
+          <p class="note">The reviewer can change the category; the original suggestion is kept in the audit event.</p>
+        </div></div>
+      </div>
+      <div class="col">
+        <div class="panel"><h3>Proposed adjustment (never posted — CR-12)</h3><div class="content">
+          <table>
+            <tr><th>Amount</th><td>$78.50</td></tr>
+            <tr><th>Debit</th><td>6810 Bank Service Charges</td></tr>
+            <tr><th>Credit</th><td>1010 Cash — Operating</td></tr>
+            <tr><th>Rationale</th><td class="field">Monthly account analysis fee charged by the bank, not yet recorded</td></tr>
+            <tr><th>Evidence</th><td>Statement line BT-000588</td></tr>
+          </table>
+          <span class="btn primary">Submit for approval</span><span class="btn">Cancel</span>
+          <p class="note">Approval is by ROL-02 or ROL-03 and cannot be the preparer (CR-04). The system records the proposal only; nothing is posted to any ledger.</p>
+        </div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- W6 -->
+<section class="screen" id="w6">
+  <div class="screen-title">W6 · Senior queue — escalated and high-risk items (CAT-05)</div>
+  <div class="topbar"><span class="brand">Senior review · 13 items</span><span class="pill">Priya Raman — Senior Accountant (ROL-02) ▾</span></div>
+  <div class="body">
+    <div class="panel"><h3>Queue</h3><div class="content">
+      <table>
+        <tr><th>Item</th><th>Amount</th><th>Risk rules</th><th>Escalated by</th><th>Reason</th><th></th></tr>
+        <tr><td>BT-000233</td><td>$48,200.00</td><td>Amount ≥ PRM-01</td><td>System (ESC-01)</td><td>Routed on risk</td><td><span class="btn">Open</span></td></tr>
+        <tr><td>BT-000415</td><td>$3,150.00</td><td>Suspected duplicate BR-07</td><td>Maya Castillo</td><td>Same amount twice in 2 days</td><td><span class="btn">Open</span></td></tr>
+        <tr><td>BT-000502</td><td>$9,980.00</td><td>Unexplained EXC-07</td><td>Priya Raman</td><td>No credible candidate</td><td><span class="btn ghost">Blocked</span></td></tr>
+      </table>
+      <div class="callout" style="margin-top:8px"><strong>Separation of duties (CR-03).</strong> BT-000502 was escalated by the selected identity, so this user cannot decide it. It is shown, not hidden, with the blocking rule named. A refused attempt is recorded as a BLOCKED_ATTEMPT audit event.</div>
+    </div></div>
+  </div>
+</section>
+
+<!-- W7 -->
+<section class="screen" id="w7">
+  <div class="screen-title">W7 · Close period — bank-to-book statement and sign-off</div>
+  <div class="topbar"><span class="brand">Close August 2026</span><span class="pill">Daniel Okafor — Controller (ROL-03) ▾</span></div>
+  <div class="body">
+    <div class="row">
+      <div class="col">
+        <div class="panel"><h3>Reconciliation statement (BR-17)</h3><div class="content">
+          <table>
+            <tr><th colspan="2">Bank side</th></tr>
+            <tr><td>Bank ending balance</td><td>$374,680.11</td></tr>
+            <tr><td>Add deposits in transit (6)</td><td>$42,118.00</td></tr>
+            <tr><td>Less outstanding checks (14)</td><td>($11,308.55)</td></tr>
+            <tr><th>Adjusted bank balance</th><th>$405,489.56</th></tr>
+            <tr><th colspan="2">Book side</th></tr>
+            <tr><td>Book ending balance</td><td>$405,489.56</td></tr>
+            <tr><td>Add interest not recorded</td><td>$212.44</td></tr>
+            <tr><td>Less fees not recorded</td><td>($290.94)</td></tr>
+            <tr><th>Adjusted book balance</th><th>$405,411.06</th></tr>
+            <tr><th>Unresolved difference</th><th>$78.50</th></tr>
+          </table>
+        </div></div>
+      </div>
+      <div class="col">
+        <div class="panel"><h3>Close conditions (CR-10)</h3><div class="content">
+          <table>
+            <tr><td>All items decided</td><td>628 of 628</td><td>Met</td></tr>
+            <tr><td>Escalations decided</td><td>13 of 13</td><td>Met</td></tr>
+            <tr><td>Adjustments decided</td><td>9 of 9</td><td>Met</td></tr>
+            <tr><td>Report package generated</td><td>RPT-01..13</td><td>Met</td></tr>
+            <tr><td>Audit chain verified</td><td>2,140 events</td><td>Met</td></tr>
+            <tr><td>Separation of duties</td><td>CR-05</td><td>Met</td></tr>
+          </table>
+        </div></div>
+        <div class="panel"><h3>Unresolved items carried forward (3)</h3><div class="content">
+          <table><tr><td>BT-000502</td><td>$9,980.00</td><td>EXC-07 unexplained</td></tr>
+          <tr><td>BT-000588</td><td>$78.50</td><td>Adjustment rejected, under query</td></tr>
+          <tr><td>GL-000912</td><td>$1,240.00</td><td>EXC-07 unexplained</td></tr></table>
+        </div></div>
+        <div class="panel"><h3>Sign-off</h3><div class="content">
+          <div class="field">Comment — required because the unresolved difference is not zero (CR-10)</div><br>
+          <span class="btn primary">Sign off and lock period</span>
+          <p class="note">Signing writes the sign-off record with the chain-head hash and locks the period (FR-AUD-07, FR-PER-03).</p>
+        </div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- W8 -->
+<section class="screen" id="w8">
+  <div class="screen-title">W8 · Audit log and chain verification</div>
+  <div class="topbar"><span class="brand">Audit log · run 1 · 2,140 events</span><span class="pill">Any role ▾</span></div>
+  <div class="body">
+    <div class="panel"><h3>Chain verification (FR-AUD-05)</h3><div class="content">
+      Result: <strong>Chain intact</strong> · events checked 2,140 · chain head 8ad2…41f7 · verified 2026-09-01T14:02:11Z
+      <span class="btn" style="margin-left:10px">Re-verify</span>
+      <p class="note">If a break is found, the first affected event is named and close is blocked (CR-10).</p>
+    </div></div>
+    <div class="panel"><h3>Events — filter by process, actor, item or event type</h3><div class="content">
+      <table>
+        <tr><th>Seq</th><th>Time (UTC)</th><th>Process</th><th>Actor</th><th>Event</th><th>Item</th><th>Before → after</th><th>Hash</th></tr>
+        <tr><td>1</td><td>08-31T09:02:41Z</td><td>P1</td><td>System</td><td>IMPORT</td><td>lpcb_7310_2026-08.csv</td><td>— → imported</td><td>3f9a…c21b</td></tr>
+        <tr><td>884</td><td>08-31T09:14:07Z</td><td>P4</td><td>System</td><td>AI_RECOMMENDATION</td><td>BT-000412</td><td>validated → proposed</td><td>77c1…9d02</td></tr>
+        <tr><td>1,502</td><td>08-31T15:41:55Z</td><td>P6</td><td>Maya Castillo</td><td>DECISION approve</td><td>BT-000412</td><td>proposed → approved</td><td>b0e4…3312</td></tr>
+        <tr><td>1,503</td><td>08-31T15:44:02Z</td><td>P6</td><td>Priya Raman</td><td>BLOCKED_ATTEMPT</td><td>BT-000502</td><td>escalated → escalated</td><td>c9a7…8810</td></tr>
+      </table>
+      <p class="note">Corrections appear as new events; nothing in this table is ever edited (CR-09).</p>
+    </div></div>
+  </div>
+</section>
+
+</body>
+</html>

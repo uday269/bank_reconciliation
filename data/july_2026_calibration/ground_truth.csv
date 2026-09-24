@@ -1,0 +1,1003 @@
+item_type,item_id,true_match_group,scenario_code,exception_code,expected_risk,expected_disposition,note
+bank,BT-000001,SCN-01-G0001,SCN-01,,low,match,Prior-period check clearing this period
+carry_in,CI-0008,SCN-01-G0001,SCN-01,,low,match,Prior-period check clearing this period
+bank,BT-000002,SCN-01-G0002,SCN-01,,low,match,Prior-period check clearing this period
+carry_in,CI-0003,SCN-01-G0002,SCN-01,,low,match,Prior-period check clearing this period
+bank,BT-000003,SCN-01-G0003,SCN-01,,high,match,Prior-period deposit clearing this period
+carry_in,CI-0013,SCN-01-G0003,SCN-01,,high,match,Prior-period deposit clearing this period
+bank,BT-000004,SCN-01-G0004,SCN-01,,low,match,Prior-period check clearing this period
+carry_in,CI-0001,SCN-01-G0004,SCN-01,,low,match,Prior-period check clearing this period
+bank,BT-000005,SCN-01-G0005,SCN-01,,low,match,Prior-period check clearing this period
+carry_in,CI-0005,SCN-01-G0005,SCN-01,,low,match,Prior-period check clearing this period
+bank,BT-000006,SCN-01-G0006,SCN-01,,low,match,Prior-period check clearing this period
+carry_in,CI-0011,SCN-01-G0006,SCN-01,,low,match,Prior-period check clearing this period
+bank,BT-000007,SCN-01-G0007,SCN-01,,low,match,Prior-period check clearing this period
+carry_in,CI-0007,SCN-01-G0007,SCN-01,,low,match,Prior-period check clearing this period
+bank,BT-000008,SCN-01-G0008,SCN-01,,low,match,Prior-period check clearing this period
+carry_in,CI-0004,SCN-01-G0008,SCN-01,,low,match,Prior-period check clearing this period
+bank,BT-000009,SCN-01-G0009,SCN-01,,low,match,Prior-period check clearing this period
+carry_in,CI-0010,SCN-01-G0009,SCN-01,,low,match,Prior-period check clearing this period
+carry_in,CI-0014,,SCN-02,EXC-02,low,carry_forward,Prior-period item still outstanding
+carry_in,CI-0012,,SCN-02,EXC-02,low,carry_forward,Prior-period item still outstanding
+carry_in,CI-0002,,SCN-02,EXC-01,medium,carry_forward,Stale prior-period item
+carry_in,CI-0006,,SCN-02,EXC-01,medium,carry_forward,Stale prior-period item
+carry_in,CI-0009,,SCN-02,EXC-01,low,carry_forward,Prior-period item still outstanding
+bank,BT-000010,SCN-01-G0010,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000001,SCN-01-G0010,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000011,SCN-01-G0011,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000002,SCN-01-G0011,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000012,SCN-01-G0012,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000003,SCN-01-G0012,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000013,SCN-01-G0013,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000004,SCN-01-G0013,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000014,SCN-01-G0014,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000005,SCN-01-G0014,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000015,SCN-01-G0015,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000006,SCN-01-G0015,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000016,SCN-01-G0016,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000007,SCN-01-G0016,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000017,SCN-01-G0017,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000008,SCN-01-G0017,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000018,SCN-01-G0018,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000009,SCN-01-G0018,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000019,SCN-01-G0019,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000010,SCN-01-G0019,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000020,SCN-01-G0020,SCN-01,,high,match,"Amount, reference and date agree"
+ledger,GL-000011,SCN-01-G0020,SCN-01,,high,match,"Amount, reference and date agree"
+bank,BT-000021,SCN-01-G0021,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000012,SCN-01-G0021,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000022,SCN-01-G0022,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000013,SCN-01-G0022,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000023,SCN-01-G0023,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000014,SCN-01-G0023,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000024,SCN-01-G0024,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000015,SCN-01-G0024,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000025,SCN-01-G0025,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000016,SCN-01-G0025,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000026,SCN-01-G0026,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000017,SCN-01-G0026,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000027,SCN-01-G0027,SCN-01,,high,match,"Amount, reference and date agree"
+ledger,GL-000018,SCN-01-G0027,SCN-01,,high,match,"Amount, reference and date agree"
+bank,BT-000028,SCN-01-G0028,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000019,SCN-01-G0028,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000029,SCN-01-G0029,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000020,SCN-01-G0029,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000030,SCN-01-G0030,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000021,SCN-01-G0030,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000031,SCN-01-G0031,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000022,SCN-01-G0031,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000032,SCN-01-G0032,SCN-01,,high,match,"Amount, reference and date agree"
+ledger,GL-000023,SCN-01-G0032,SCN-01,,high,match,"Amount, reference and date agree"
+bank,BT-000033,SCN-01-G0033,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000024,SCN-01-G0033,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000034,SCN-01-G0034,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000025,SCN-01-G0034,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000035,SCN-01-G0035,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000026,SCN-01-G0035,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000036,SCN-01-G0036,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000027,SCN-01-G0036,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000037,SCN-01-G0037,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000028,SCN-01-G0037,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000038,SCN-01-G0038,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000029,SCN-01-G0038,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000039,SCN-01-G0039,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000030,SCN-01-G0039,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000040,SCN-01-G0040,SCN-01,,high,match,"Amount, reference and date agree"
+ledger,GL-000031,SCN-01-G0040,SCN-01,,high,match,"Amount, reference and date agree"
+bank,BT-000041,SCN-01-G0041,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000032,SCN-01-G0041,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000042,SCN-01-G0042,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000033,SCN-01-G0042,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000043,SCN-01-G0043,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000034,SCN-01-G0043,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000044,SCN-01-G0044,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000035,SCN-01-G0044,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000045,SCN-01-G0045,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000036,SCN-01-G0045,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000046,SCN-01-G0046,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000037,SCN-01-G0046,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000047,SCN-01-G0047,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000038,SCN-01-G0047,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000048,SCN-01-G0048,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000039,SCN-01-G0048,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000049,SCN-01-G0049,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000040,SCN-01-G0049,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000050,SCN-01-G0050,SCN-01,,low,match,Same amount and date as another pair; only the reference separates them
+ledger,GL-000041,SCN-01-G0050,SCN-01,,low,match,Same amount and date as another pair; only the reference separates them
+bank,BT-000051,SCN-01-G0051,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000042,SCN-01-G0051,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000052,SCN-01-G0052,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000043,SCN-01-G0052,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000053,SCN-01-G0053,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000044,SCN-01-G0053,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000054,SCN-01-G0054,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000045,SCN-01-G0054,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000055,SCN-01-G0055,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000046,SCN-01-G0055,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000056,SCN-01-G0056,SCN-01,,high,match,"Amount, reference and date agree"
+ledger,GL-000047,SCN-01-G0056,SCN-01,,high,match,"Amount, reference and date agree"
+bank,BT-000057,SCN-01-G0057,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000048,SCN-01-G0057,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000058,SCN-01-G0058,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000049,SCN-01-G0058,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000059,SCN-01-G0059,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000050,SCN-01-G0059,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000060,SCN-01-G0060,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000051,SCN-01-G0060,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000061,SCN-01-G0061,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000052,SCN-01-G0061,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000062,SCN-01-G0062,SCN-01,,low,match,Same amount and date as another pair; only the reference separates them
+ledger,GL-000053,SCN-01-G0062,SCN-01,,low,match,Same amount and date as another pair; only the reference separates them
+bank,BT-000063,SCN-01-G0063,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000054,SCN-01-G0063,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000064,SCN-01-G0064,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000055,SCN-01-G0064,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000065,SCN-01-G0065,SCN-01,,low,match,Amount within $1.00 of another pair on the same day
+ledger,GL-000056,SCN-01-G0065,SCN-01,,low,match,Amount within $1.00 of another pair on the same day
+bank,BT-000066,SCN-01-G0066,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000057,SCN-01-G0066,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000067,SCN-01-G0067,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000058,SCN-01-G0067,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000068,SCN-01-G0068,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000059,SCN-01-G0068,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000069,SCN-01-G0069,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000060,SCN-01-G0069,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000070,SCN-01-G0070,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000061,SCN-01-G0070,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000071,SCN-01-G0071,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000062,SCN-01-G0071,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000072,SCN-01-G0072,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000063,SCN-01-G0072,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000073,SCN-01-G0073,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000064,SCN-01-G0073,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000074,SCN-01-G0074,SCN-01,,low,match,Same amount and date as another pair; only the reference separates them
+ledger,GL-000065,SCN-01-G0074,SCN-01,,low,match,Same amount and date as another pair; only the reference separates them
+bank,BT-000075,SCN-01-G0075,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000066,SCN-01-G0075,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000076,SCN-01-G0076,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000067,SCN-01-G0076,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000077,SCN-01-G0077,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000068,SCN-01-G0077,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000078,SCN-01-G0078,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000069,SCN-01-G0078,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000079,SCN-01-G0079,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000070,SCN-01-G0079,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000080,SCN-01-G0080,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000071,SCN-01-G0080,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000081,SCN-01-G0081,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000072,SCN-01-G0081,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000082,SCN-01-G0082,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000073,SCN-01-G0082,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000083,SCN-01-G0083,SCN-01,,low,match,Amount within $1.00 of another pair on the same day
+ledger,GL-000074,SCN-01-G0083,SCN-01,,low,match,Amount within $1.00 of another pair on the same day
+bank,BT-000084,SCN-01-G0084,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000075,SCN-01-G0084,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000085,SCN-01-G0085,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000076,SCN-01-G0085,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000086,SCN-01-G0086,SCN-01,,low,match,Same amount and date as another pair; only the reference separates them
+ledger,GL-000077,SCN-01-G0086,SCN-01,,low,match,Same amount and date as another pair; only the reference separates them
+bank,BT-000087,SCN-01-G0087,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000078,SCN-01-G0087,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000088,SCN-01-G0088,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000079,SCN-01-G0088,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000089,SCN-01-G0089,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000080,SCN-01-G0089,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000090,SCN-01-G0090,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000081,SCN-01-G0090,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000091,SCN-01-G0091,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000082,SCN-01-G0091,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000092,SCN-01-G0092,SCN-01,,low,match,Amount within $1.00 of another pair on the same day
+ledger,GL-000083,SCN-01-G0092,SCN-01,,low,match,Amount within $1.00 of another pair on the same day
+bank,BT-000093,SCN-01-G0093,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000084,SCN-01-G0093,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000094,SCN-01-G0094,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000085,SCN-01-G0094,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000095,SCN-01-G0095,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000086,SCN-01-G0095,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000096,SCN-01-G0096,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000087,SCN-01-G0096,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000097,SCN-01-G0097,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000088,SCN-01-G0097,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000098,SCN-01-G0098,SCN-01,,low,match,Same amount and date as another pair; only the reference separates them
+ledger,GL-000089,SCN-01-G0098,SCN-01,,low,match,Same amount and date as another pair; only the reference separates them
+bank,BT-000099,SCN-01-G0099,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000090,SCN-01-G0099,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000100,SCN-01-G0100,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000091,SCN-01-G0100,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000101,SCN-01-G0101,SCN-01,,low,match,Amount within $1.00 of another pair on the same day
+ledger,GL-000092,SCN-01-G0101,SCN-01,,low,match,Amount within $1.00 of another pair on the same day
+bank,BT-000102,SCN-01-G0102,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000093,SCN-01-G0102,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000103,SCN-01-G0103,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000094,SCN-01-G0103,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000104,SCN-01-G0104,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000095,SCN-01-G0104,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000105,SCN-01-G0105,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000096,SCN-01-G0105,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000106,SCN-01-G0106,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000097,SCN-01-G0106,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000107,SCN-01-G0107,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000098,SCN-01-G0107,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000108,SCN-01-G0108,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000099,SCN-01-G0108,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000109,SCN-01-G0109,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000100,SCN-01-G0109,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000110,SCN-01-G0110,SCN-01,,low,match,Same amount and date as another pair; only the reference separates them
+ledger,GL-000101,SCN-01-G0110,SCN-01,,low,match,Same amount and date as another pair; only the reference separates them
+bank,BT-000111,SCN-01-G0111,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000102,SCN-01-G0111,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000112,SCN-01-G0112,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000103,SCN-01-G0112,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000113,SCN-01-G0113,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000104,SCN-01-G0113,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000114,SCN-01-G0114,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000105,SCN-01-G0114,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000115,SCN-01-G0115,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000106,SCN-01-G0115,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000116,SCN-01-G0116,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000107,SCN-01-G0116,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000117,SCN-01-G0117,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000108,SCN-01-G0117,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000118,SCN-01-G0118,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000109,SCN-01-G0118,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000119,SCN-01-G0119,SCN-01,,low,match,Amount within $1.00 of another pair on the same day
+ledger,GL-000110,SCN-01-G0119,SCN-01,,low,match,Amount within $1.00 of another pair on the same day
+bank,BT-000120,SCN-01-G0120,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000111,SCN-01-G0120,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000121,SCN-01-G0121,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000112,SCN-01-G0121,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000122,SCN-01-G0122,SCN-01,,low,match,Same amount and date as another pair; only the reference separates them
+ledger,GL-000113,SCN-01-G0122,SCN-01,,low,match,Same amount and date as another pair; only the reference separates them
+bank,BT-000123,SCN-01-G0123,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000114,SCN-01-G0123,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000124,SCN-01-G0124,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000115,SCN-01-G0124,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000125,SCN-01-G0125,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000116,SCN-01-G0125,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000126,SCN-01-G0126,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000117,SCN-01-G0126,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000127,SCN-01-G0127,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000118,SCN-01-G0127,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000128,SCN-01-G0128,SCN-01,,low,match,Amount within $1.00 of another pair on the same day
+ledger,GL-000119,SCN-01-G0128,SCN-01,,low,match,Amount within $1.00 of another pair on the same day
+bank,BT-000129,SCN-01-G0129,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000120,SCN-01-G0129,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000130,SCN-01-G0130,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000121,SCN-01-G0130,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000131,SCN-01-G0131,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000122,SCN-01-G0131,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000132,SCN-01-G0132,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000123,SCN-01-G0132,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000133,SCN-01-G0133,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000124,SCN-01-G0133,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000134,SCN-01-G0134,SCN-01,,low,match,Same amount and date as another pair; only the reference separates them
+ledger,GL-000125,SCN-01-G0134,SCN-01,,low,match,Same amount and date as another pair; only the reference separates them
+bank,BT-000135,SCN-01-G0135,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000126,SCN-01-G0135,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000136,SCN-01-G0136,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000127,SCN-01-G0136,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000137,SCN-01-G0137,SCN-01,,low,match,Amount within $1.00 of another pair on the same day
+ledger,GL-000128,SCN-01-G0137,SCN-01,,low,match,Amount within $1.00 of another pair on the same day
+bank,BT-000138,SCN-01-G0138,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000129,SCN-01-G0138,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000139,SCN-01-G0139,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000130,SCN-01-G0139,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000140,SCN-01-G0140,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000131,SCN-01-G0140,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000141,SCN-01-G0141,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000132,SCN-01-G0141,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000142,SCN-01-G0142,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000133,SCN-01-G0142,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000143,SCN-01-G0143,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000134,SCN-01-G0143,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000144,SCN-01-G0144,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000135,SCN-01-G0144,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000145,SCN-01-G0145,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000136,SCN-01-G0145,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000146,SCN-01-G0146,SCN-01,,low,match,Same amount and date as another pair; only the reference separates them
+ledger,GL-000137,SCN-01-G0146,SCN-01,,low,match,Same amount and date as another pair; only the reference separates them
+bank,BT-000147,SCN-01-G0147,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000138,SCN-01-G0147,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000148,SCN-01-G0148,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000139,SCN-01-G0148,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000149,SCN-01-G0149,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000140,SCN-01-G0149,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000150,SCN-01-G0150,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000141,SCN-01-G0150,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000151,SCN-01-G0151,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000142,SCN-01-G0151,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000152,SCN-01-G0152,SCN-01,,high,match,"Amount, reference and date agree"
+ledger,GL-000143,SCN-01-G0152,SCN-01,,high,match,"Amount, reference and date agree"
+bank,BT-000153,SCN-01-G0153,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000144,SCN-01-G0153,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000154,SCN-01-G0154,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000145,SCN-01-G0154,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000155,SCN-01-G0155,SCN-01,,low,match,Amount within $1.00 of another pair on the same day
+ledger,GL-000146,SCN-01-G0155,SCN-01,,low,match,Amount within $1.00 of another pair on the same day
+bank,BT-000156,SCN-01-G0156,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000147,SCN-01-G0156,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000157,SCN-01-G0157,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000148,SCN-01-G0157,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000158,SCN-01-G0158,SCN-01,,low,match,Same amount and date as another pair; only the reference separates them
+ledger,GL-000149,SCN-01-G0158,SCN-01,,low,match,Same amount and date as another pair; only the reference separates them
+bank,BT-000159,SCN-01-G0159,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000150,SCN-01-G0159,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000160,SCN-01-G0160,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000151,SCN-01-G0160,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000161,SCN-01-G0161,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000152,SCN-01-G0161,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000162,SCN-01-G0162,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000153,SCN-01-G0162,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000163,SCN-01-G0163,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000154,SCN-01-G0163,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000164,SCN-01-G0164,SCN-01,,low,match,Amount within $1.00 of another pair on the same day
+ledger,GL-000155,SCN-01-G0164,SCN-01,,low,match,Amount within $1.00 of another pair on the same day
+bank,BT-000165,SCN-01-G0165,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000156,SCN-01-G0165,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000166,SCN-01-G0166,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000157,SCN-01-G0166,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000167,SCN-01-G0167,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000158,SCN-01-G0167,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000168,SCN-01-G0168,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000159,SCN-01-G0168,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000169,SCN-01-G0169,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000160,SCN-01-G0169,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000170,SCN-01-G0170,SCN-01,,low,match,Same amount and date as another pair; only the reference separates them
+ledger,GL-000161,SCN-01-G0170,SCN-01,,low,match,Same amount and date as another pair; only the reference separates them
+bank,BT-000171,SCN-01-G0171,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000162,SCN-01-G0171,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000172,SCN-01-G0172,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000163,SCN-01-G0172,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000173,SCN-01-G0173,SCN-01,,low,match,Amount within $1.00 of another pair on the same day
+ledger,GL-000164,SCN-01-G0173,SCN-01,,low,match,Amount within $1.00 of another pair on the same day
+bank,BT-000174,SCN-01-G0174,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000165,SCN-01-G0174,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000175,SCN-01-G0175,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000166,SCN-01-G0175,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000176,SCN-01-G0176,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000167,SCN-01-G0176,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000177,SCN-01-G0177,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000168,SCN-01-G0177,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000178,SCN-01-G0178,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000169,SCN-01-G0178,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000179,SCN-01-G0179,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000170,SCN-01-G0179,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000180,SCN-01-G0180,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000171,SCN-01-G0180,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000181,SCN-01-G0181,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000172,SCN-01-G0181,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000182,SCN-01-G0182,SCN-01,,low,match,Amount within $1.00 of another pair on the same day
+ledger,GL-000173,SCN-01-G0182,SCN-01,,low,match,Amount within $1.00 of another pair on the same day
+bank,BT-000183,SCN-01-G0183,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000174,SCN-01-G0183,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000184,SCN-01-G0184,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000175,SCN-01-G0184,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000185,SCN-01-G0185,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000176,SCN-01-G0185,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000186,SCN-01-G0186,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000177,SCN-01-G0186,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000187,SCN-01-G0187,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000178,SCN-01-G0187,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000188,SCN-01-G0188,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000179,SCN-01-G0188,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000189,SCN-01-G0189,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000180,SCN-01-G0189,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000190,SCN-01-G0190,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000181,SCN-01-G0190,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000191,SCN-01-G0191,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000182,SCN-01-G0191,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000192,SCN-01-G0192,SCN-01,,high,match,"Amount, reference and date agree"
+ledger,GL-000183,SCN-01-G0192,SCN-01,,high,match,"Amount, reference and date agree"
+bank,BT-000193,SCN-01-G0193,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000184,SCN-01-G0193,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000194,SCN-01-G0194,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000185,SCN-01-G0194,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000195,SCN-01-G0195,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000186,SCN-01-G0195,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000196,SCN-01-G0196,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000187,SCN-01-G0196,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000197,SCN-01-G0197,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000188,SCN-01-G0197,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000198,SCN-01-G0198,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000189,SCN-01-G0198,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000199,SCN-01-G0199,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000190,SCN-01-G0199,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000200,SCN-01-G0200,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000191,SCN-01-G0200,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000201,SCN-01-G0201,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000192,SCN-01-G0201,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000202,SCN-01-G0202,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000193,SCN-01-G0202,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000203,SCN-01-G0203,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000194,SCN-01-G0203,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000204,SCN-01-G0204,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000195,SCN-01-G0204,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000205,SCN-01-G0205,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000196,SCN-01-G0205,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000206,SCN-01-G0206,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000197,SCN-01-G0206,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000207,SCN-01-G0207,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000198,SCN-01-G0207,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000208,SCN-01-G0208,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000199,SCN-01-G0208,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000209,SCN-01-G0209,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000200,SCN-01-G0209,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000210,SCN-01-G0210,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000201,SCN-01-G0210,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000211,SCN-01-G0211,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000202,SCN-01-G0211,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000212,SCN-01-G0212,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000203,SCN-01-G0212,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000213,SCN-01-G0213,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000204,SCN-01-G0213,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000214,SCN-01-G0214,SCN-01,,high,match,"Amount, reference and date agree"
+ledger,GL-000205,SCN-01-G0214,SCN-01,,high,match,"Amount, reference and date agree"
+bank,BT-000215,SCN-01-G0215,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000206,SCN-01-G0215,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000216,SCN-01-G0216,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000207,SCN-01-G0216,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000217,SCN-01-G0217,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000208,SCN-01-G0217,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000218,SCN-01-G0218,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000209,SCN-01-G0218,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000219,SCN-01-G0219,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000210,SCN-01-G0219,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000220,SCN-01-G0220,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000211,SCN-01-G0220,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000221,SCN-01-G0221,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000212,SCN-01-G0221,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000222,SCN-01-G0222,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000213,SCN-01-G0222,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000223,SCN-01-G0223,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000214,SCN-01-G0223,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000224,SCN-01-G0224,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000215,SCN-01-G0224,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000225,SCN-01-G0225,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000216,SCN-01-G0225,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000226,SCN-01-G0226,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000217,SCN-01-G0226,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000227,SCN-01-G0227,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000218,SCN-01-G0227,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000228,SCN-01-G0228,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000219,SCN-01-G0228,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000229,SCN-01-G0229,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000220,SCN-01-G0229,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000230,SCN-01-G0230,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000221,SCN-01-G0230,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000231,SCN-01-G0231,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000222,SCN-01-G0231,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000232,SCN-01-G0232,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000223,SCN-01-G0232,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000233,SCN-01-G0233,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000224,SCN-01-G0233,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000234,SCN-01-G0234,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000225,SCN-01-G0234,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000235,SCN-01-G0235,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000226,SCN-01-G0235,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000236,SCN-01-G0236,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000227,SCN-01-G0236,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000237,SCN-01-G0237,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000228,SCN-01-G0237,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000238,SCN-01-G0238,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000229,SCN-01-G0238,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000239,SCN-01-G0239,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000230,SCN-01-G0239,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000240,SCN-01-G0240,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000231,SCN-01-G0240,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000241,SCN-01-G0241,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000232,SCN-01-G0241,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000242,SCN-01-G0242,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000233,SCN-01-G0242,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000243,SCN-01-G0243,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000234,SCN-01-G0243,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000244,SCN-01-G0244,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000235,SCN-01-G0244,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000245,SCN-01-G0245,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000236,SCN-01-G0245,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000246,SCN-01-G0246,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000237,SCN-01-G0246,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000247,SCN-01-G0247,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000238,SCN-01-G0247,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000248,SCN-01-G0248,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000239,SCN-01-G0248,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000249,SCN-01-G0249,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000240,SCN-01-G0249,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000250,SCN-01-G0250,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000241,SCN-01-G0250,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000251,SCN-01-G0251,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000242,SCN-01-G0251,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000252,SCN-01-G0252,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000243,SCN-01-G0252,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000253,SCN-01-G0253,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000244,SCN-01-G0253,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000254,SCN-01-G0254,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000245,SCN-01-G0254,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000255,SCN-01-G0255,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000246,SCN-01-G0255,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000256,SCN-01-G0256,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000247,SCN-01-G0256,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000257,SCN-01-G0257,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000248,SCN-01-G0257,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000258,SCN-01-G0258,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000249,SCN-01-G0258,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000259,SCN-01-G0259,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000250,SCN-01-G0259,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000260,SCN-01-G0260,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000251,SCN-01-G0260,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000261,SCN-01-G0261,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000252,SCN-01-G0261,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000262,SCN-01-G0262,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000253,SCN-01-G0262,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000263,SCN-01-G0263,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000254,SCN-01-G0263,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000264,SCN-01-G0264,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000255,SCN-01-G0264,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000265,SCN-01-G0265,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000256,SCN-01-G0265,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000266,SCN-01-G0266,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000257,SCN-01-G0266,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000267,SCN-01-G0267,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000258,SCN-01-G0267,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000268,SCN-01-G0268,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000259,SCN-01-G0268,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000269,SCN-01-G0269,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000260,SCN-01-G0269,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000270,SCN-01-G0270,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000261,SCN-01-G0270,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000271,SCN-01-G0271,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000262,SCN-01-G0271,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000272,SCN-01-G0272,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000263,SCN-01-G0272,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000273,SCN-01-G0273,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000264,SCN-01-G0273,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000274,SCN-01-G0274,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000265,SCN-01-G0274,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000275,SCN-01-G0275,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000266,SCN-01-G0275,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000276,SCN-01-G0276,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000267,SCN-01-G0276,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000277,SCN-01-G0277,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000268,SCN-01-G0277,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000278,SCN-01-G0278,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000269,SCN-01-G0278,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000279,SCN-01-G0279,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000270,SCN-01-G0279,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000280,SCN-01-G0280,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000271,SCN-01-G0280,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000281,SCN-01-G0281,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000272,SCN-01-G0281,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000282,SCN-01-G0282,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000273,SCN-01-G0282,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000283,SCN-01-G0283,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000274,SCN-01-G0283,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000284,SCN-01-G0284,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000275,SCN-01-G0284,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000285,SCN-01-G0285,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000276,SCN-01-G0285,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000286,SCN-01-G0286,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000277,SCN-01-G0286,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000287,SCN-01-G0287,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000278,SCN-01-G0287,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000288,SCN-01-G0288,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000279,SCN-01-G0288,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000289,SCN-01-G0289,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000280,SCN-01-G0289,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000290,SCN-01-G0290,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000281,SCN-01-G0290,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000291,SCN-01-G0291,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000282,SCN-01-G0291,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000292,SCN-01-G0292,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000283,SCN-01-G0292,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000293,SCN-01-G0293,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000284,SCN-01-G0293,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000294,SCN-01-G0294,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000285,SCN-01-G0294,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000295,SCN-01-G0295,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000286,SCN-01-G0295,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000296,SCN-01-G0296,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000287,SCN-01-G0296,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000297,SCN-01-G0297,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000288,SCN-01-G0297,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000298,SCN-01-G0298,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000289,SCN-01-G0298,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000299,SCN-01-G0299,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000290,SCN-01-G0299,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000300,SCN-01-G0300,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000291,SCN-01-G0300,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000301,SCN-01-G0301,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000292,SCN-01-G0301,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000302,SCN-01-G0302,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000293,SCN-01-G0302,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000303,SCN-01-G0303,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000294,SCN-01-G0303,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000304,SCN-01-G0304,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000295,SCN-01-G0304,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000305,SCN-01-G0305,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000296,SCN-01-G0305,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000306,SCN-01-G0306,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000297,SCN-01-G0306,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000307,SCN-01-G0307,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000298,SCN-01-G0307,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000308,SCN-01-G0308,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000299,SCN-01-G0308,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000309,SCN-01-G0309,SCN-01,,low,match,"Amount, reference and date agree"
+ledger,GL-000300,SCN-01-G0309,SCN-01,,low,match,"Amount, reference and date agree"
+bank,BT-000310,SCN-02-G0310,SCN-02,,low,match,Posted 4 calendar days after the ledger entry
+ledger,GL-000301,SCN-02-G0310,SCN-02,,low,match,Posted 4 calendar days after the ledger entry
+bank,BT-000311,SCN-02-G0311,SCN-02,,low,match,Posted 5 calendar days after the ledger entry
+ledger,GL-000302,SCN-02-G0311,SCN-02,,low,match,Posted 5 calendar days after the ledger entry
+bank,BT-000312,SCN-02-G0312,SCN-02,,low,match,Posted 2 calendar days after the ledger entry
+ledger,GL-000303,SCN-02-G0312,SCN-02,,low,match,Posted 2 calendar days after the ledger entry
+bank,BT-000313,SCN-02-G0313,SCN-02,,low,match,Posted 1 calendar days after the ledger entry
+ledger,GL-000304,SCN-02-G0313,SCN-02,,low,match,Posted 1 calendar days after the ledger entry
+bank,BT-000314,SCN-02-G0314,SCN-02,,low,match,Posted 3 calendar days after the ledger entry
+ledger,GL-000305,SCN-02-G0314,SCN-02,,low,match,Posted 3 calendar days after the ledger entry
+bank,BT-000315,SCN-02-G0315,SCN-02,,low,match,Posted 2 calendar days after the ledger entry
+ledger,GL-000306,SCN-02-G0315,SCN-02,,low,match,Posted 2 calendar days after the ledger entry
+bank,BT-000316,SCN-02-G0316,SCN-02,,low,match,Posted 4 calendar days after the ledger entry
+ledger,GL-000307,SCN-02-G0316,SCN-02,,low,match,Posted 4 calendar days after the ledger entry
+bank,BT-000317,SCN-02-G0317,SCN-02,,low,match,Posted 3 calendar days after the ledger entry
+ledger,GL-000308,SCN-02-G0317,SCN-02,,low,match,Posted 3 calendar days after the ledger entry
+bank,BT-000318,SCN-02-G0318,SCN-02,,low,match,Posted 4 calendar days after the ledger entry
+ledger,GL-000309,SCN-02-G0318,SCN-02,,low,match,Posted 4 calendar days after the ledger entry
+bank,BT-000319,SCN-02-G0319,SCN-02,,low,match,Posted 2 calendar days after the ledger entry
+ledger,GL-000310,SCN-02-G0319,SCN-02,,low,match,Posted 2 calendar days after the ledger entry
+bank,BT-000320,SCN-02-G0320,SCN-02,,low,match,Posted 5 calendar days after the ledger entry
+ledger,GL-000311,SCN-02-G0320,SCN-02,,low,match,Posted 5 calendar days after the ledger entry
+bank,BT-000321,SCN-02-G0321,SCN-02,,low,match,Posted 1 calendar days after the ledger entry
+ledger,GL-000312,SCN-02-G0321,SCN-02,,low,match,Posted 1 calendar days after the ledger entry
+bank,BT-000322,SCN-02-G0322,SCN-02,,low,match,Posted 4 calendar days after the ledger entry
+ledger,GL-000313,SCN-02-G0322,SCN-02,,low,match,Posted 4 calendar days after the ledger entry
+bank,BT-000323,SCN-02-G0323,SCN-02,,low,match,Posted 1 calendar days after the ledger entry
+ledger,GL-000314,SCN-02-G0323,SCN-02,,low,match,Posted 1 calendar days after the ledger entry
+bank,BT-000324,SCN-02-G0324,SCN-02,,low,match,Posted 5 calendar days after the ledger entry
+ledger,GL-000315,SCN-02-G0324,SCN-02,,low,match,Posted 5 calendar days after the ledger entry
+bank,BT-000325,SCN-02-G0325,SCN-02,,low,match,Posted 1 calendar days after the ledger entry
+ledger,GL-000316,SCN-02-G0325,SCN-02,,low,match,Posted 1 calendar days after the ledger entry
+bank,BT-000326,SCN-02-G0326,SCN-02,,low,match,Posted 5 calendar days after the ledger entry
+ledger,GL-000317,SCN-02-G0326,SCN-02,,low,match,Posted 5 calendar days after the ledger entry
+bank,BT-000327,SCN-02-G0327,SCN-02,,low,match,Posted 3 calendar days after the ledger entry
+ledger,GL-000318,SCN-02-G0327,SCN-02,,low,match,Posted 3 calendar days after the ledger entry
+bank,BT-000328,SCN-02-G0328,SCN-02,,low,match,Posted 5 calendar days after the ledger entry
+ledger,GL-000319,SCN-02-G0328,SCN-02,,low,match,Posted 5 calendar days after the ledger entry
+bank,BT-000329,SCN-02-G0329,SCN-02,,low,match,Posted 2 calendar days after the ledger entry
+ledger,GL-000320,SCN-02-G0329,SCN-02,,low,match,Posted 2 calendar days after the ledger entry
+bank,BT-000330,SCN-02-G0330,SCN-02,,low,match,Posted 1 calendar days after the ledger entry
+ledger,GL-000321,SCN-02-G0330,SCN-02,,low,match,Posted 1 calendar days after the ledger entry
+bank,BT-000331,SCN-02-G0331,SCN-02,,low,match,Posted 4 calendar days after the ledger entry
+ledger,GL-000322,SCN-02-G0331,SCN-02,,low,match,Posted 4 calendar days after the ledger entry
+bank,BT-000332,SCN-02-G0332,SCN-02,,low,match,Posted 2 calendar days after the ledger entry
+ledger,GL-000323,SCN-02-G0332,SCN-02,,low,match,Posted 2 calendar days after the ledger entry
+bank,BT-000333,SCN-02-G0333,SCN-02,,low,match,Posted 1 calendar days after the ledger entry
+ledger,GL-000324,SCN-02-G0333,SCN-02,,low,match,Posted 1 calendar days after the ledger entry
+bank,BT-000334,SCN-02-G0334,SCN-02,,low,match,Posted 1 calendar days after the ledger entry
+ledger,GL-000325,SCN-02-G0334,SCN-02,,low,match,Posted 1 calendar days after the ledger entry
+bank,BT-000335,SCN-02-G0335,SCN-02,,low,match,Posted 5 calendar days after the ledger entry
+ledger,GL-000326,SCN-02-G0335,SCN-02,,low,match,Posted 5 calendar days after the ledger entry
+bank,BT-000336,SCN-02-G0336,SCN-02,,low,match,Posted 5 calendar days after the ledger entry
+ledger,GL-000327,SCN-02-G0336,SCN-02,,low,match,Posted 5 calendar days after the ledger entry
+bank,BT-000337,SCN-02-G0337,SCN-02,,low,match,Posted 5 calendar days after the ledger entry
+ledger,GL-000328,SCN-02-G0337,SCN-02,,low,match,Posted 5 calendar days after the ledger entry
+bank,BT-000338,SCN-02-G0338,SCN-02,,low,match,Posted 5 calendar days after the ledger entry
+ledger,GL-000329,SCN-02-G0338,SCN-02,,low,match,Posted 5 calendar days after the ledger entry
+bank,BT-000339,SCN-02-G0339,SCN-02,,low,match,Posted 1 calendar days after the ledger entry
+ledger,GL-000330,SCN-02-G0339,SCN-02,,low,match,Posted 1 calendar days after the ledger entry
+bank,BT-000340,SCN-02-G0340,SCN-02,,low,match,Posted 5 calendar days after the ledger entry
+ledger,GL-000331,SCN-02-G0340,SCN-02,,low,match,Posted 5 calendar days after the ledger entry
+bank,BT-000341,SCN-02-G0341,SCN-02,,low,match,Posted 2 calendar days after the ledger entry
+ledger,GL-000332,SCN-02-G0341,SCN-02,,low,match,Posted 2 calendar days after the ledger entry
+bank,BT-000342,SCN-02-G0342,SCN-02,,low,match,Posted 3 calendar days after the ledger entry
+ledger,GL-000333,SCN-02-G0342,SCN-02,,low,match,Posted 3 calendar days after the ledger entry
+bank,BT-000343,SCN-02-G0343,SCN-02,,low,match,Posted 3 calendar days after the ledger entry
+ledger,GL-000334,SCN-02-G0343,SCN-02,,low,match,Posted 3 calendar days after the ledger entry
+bank,BT-000344,SCN-02-G0344,SCN-02,,low,match,Posted 3 calendar days after the ledger entry
+ledger,GL-000335,SCN-02-G0344,SCN-02,,low,match,Posted 3 calendar days after the ledger entry
+bank,BT-000345,SCN-02-G0345,SCN-02,,low,match,Posted 5 calendar days after the ledger entry
+ledger,GL-000336,SCN-02-G0345,SCN-02,,low,match,Posted 5 calendar days after the ledger entry
+bank,BT-000346,SCN-02-G0346,SCN-02,,low,match,Posted 2 calendar days after the ledger entry
+ledger,GL-000337,SCN-02-G0346,SCN-02,,low,match,Posted 2 calendar days after the ledger entry
+bank,BT-000347,SCN-02-G0347,SCN-02,,low,match,Posted 1 calendar days after the ledger entry
+ledger,GL-000338,SCN-02-G0347,SCN-02,,low,match,Posted 1 calendar days after the ledger entry
+bank,BT-000348,SCN-02-G0348,SCN-02,,low,match,Posted 5 calendar days after the ledger entry
+ledger,GL-000339,SCN-02-G0348,SCN-02,,low,match,Posted 5 calendar days after the ledger entry
+bank,BT-000349,SCN-02-G0349,SCN-02,,low,match,Posted 1 calendar days after the ledger entry
+ledger,GL-000340,SCN-02-G0349,SCN-02,,low,match,Posted 1 calendar days after the ledger entry
+bank,BT-000350,SCN-02-G0350,SCN-02,,low,match,Posted 5 calendar days after the ledger entry
+ledger,GL-000341,SCN-02-G0350,SCN-02,,low,match,Posted 5 calendar days after the ledger entry
+bank,BT-000351,SCN-02-G0351,SCN-02,,low,match,Posted 1 calendar days after the ledger entry
+ledger,GL-000342,SCN-02-G0351,SCN-02,,low,match,Posted 1 calendar days after the ledger entry
+bank,BT-000352,SCN-02-G0352,SCN-02,,low,match,Posted 3 calendar days after the ledger entry
+ledger,GL-000343,SCN-02-G0352,SCN-02,,low,match,Posted 3 calendar days after the ledger entry
+bank,BT-000353,SCN-02-G0353,SCN-02,,low,match,Posted 5 calendar days after the ledger entry
+ledger,GL-000344,SCN-02-G0353,SCN-02,,low,match,Posted 5 calendar days after the ledger entry
+bank,BT-000354,SCN-02-G0354,SCN-02,,low,match,Posted 3 calendar days after the ledger entry
+ledger,GL-000345,SCN-02-G0354,SCN-02,,low,match,Posted 3 calendar days after the ledger entry
+bank,BT-000355,SCN-02-G0355,SCN-02,,low,match,Posted 3 calendar days after the ledger entry
+ledger,GL-000346,SCN-02-G0355,SCN-02,,low,match,Posted 3 calendar days after the ledger entry
+bank,BT-000356,SCN-02-G0356,SCN-02,,low,match,Posted 1 calendar days after the ledger entry
+ledger,GL-000347,SCN-02-G0356,SCN-02,,low,match,Posted 1 calendar days after the ledger entry
+bank,BT-000357,SCN-02-G0357,SCN-02,,low,match,Posted 1 calendar days after the ledger entry
+ledger,GL-000348,SCN-02-G0357,SCN-02,,low,match,Posted 1 calendar days after the ledger entry
+bank,BT-000358,SCN-02-G0358,SCN-02,,low,match,Posted 2 calendar days after the ledger entry
+ledger,GL-000349,SCN-02-G0358,SCN-02,,low,match,Posted 2 calendar days after the ledger entry
+bank,BT-000359,SCN-02-G0359,SCN-02,,low,match,Posted 2 calendar days after the ledger entry
+ledger,GL-000350,SCN-02-G0359,SCN-02,,low,match,Posted 2 calendar days after the ledger entry
+bank,BT-000360,SCN-02-G0360,SCN-02,,low,match,Posted 3 calendar days after the ledger entry
+ledger,GL-000351,SCN-02-G0360,SCN-02,,low,match,Posted 3 calendar days after the ledger entry
+bank,BT-000361,SCN-02-G0361,SCN-02,,low,match,Posted 2 calendar days after the ledger entry
+ledger,GL-000352,SCN-02-G0361,SCN-02,,low,match,Posted 2 calendar days after the ledger entry
+bank,BT-000362,SCN-02-G0362,SCN-02,,low,match,Posted 2 calendar days after the ledger entry
+ledger,GL-000353,SCN-02-G0362,SCN-02,,low,match,Posted 2 calendar days after the ledger entry
+bank,BT-000363,SCN-02-G0363,SCN-02,,low,match,Posted 1 calendar days after the ledger entry
+ledger,GL-000354,SCN-02-G0363,SCN-02,,low,match,Posted 1 calendar days after the ledger entry
+bank,BT-000364,SCN-02-G0364,SCN-02,,low,match,Posted 3 calendar days after the ledger entry
+ledger,GL-000355,SCN-02-G0364,SCN-02,,low,match,Posted 3 calendar days after the ledger entry
+bank,BT-000365,SCN-02-G0365,SCN-02,,low,match,Posted 1 calendar days after the ledger entry
+ledger,GL-000356,SCN-02-G0365,SCN-02,,low,match,Posted 1 calendar days after the ledger entry
+bank,BT-000366,SCN-02-G0366,SCN-02,,low,match,Posted 4 calendar days after the ledger entry
+ledger,GL-000357,SCN-02-G0366,SCN-02,,low,match,Posted 4 calendar days after the ledger entry
+bank,BT-000367,SCN-02-G0367,SCN-02,,low,match,Posted 5 calendar days after the ledger entry
+ledger,GL-000358,SCN-02-G0367,SCN-02,,low,match,Posted 5 calendar days after the ledger entry
+bank,BT-000368,SCN-02-G0368,SCN-02,,low,match,Posted 1 calendar days after the ledger entry
+ledger,GL-000359,SCN-02-G0368,SCN-02,,low,match,Posted 1 calendar days after the ledger entry
+bank,BT-000369,SCN-02-G0369,SCN-02,,low,match,Posted 2 calendar days after the ledger entry
+ledger,GL-000360,SCN-02-G0369,SCN-02,,low,match,Posted 2 calendar days after the ledger entry
+bank,BT-000370,SCN-02-G0370,SCN-02,,low,match,Posted 3 calendar days after the ledger entry
+ledger,GL-000361,SCN-02-G0370,SCN-02,,low,match,Posted 3 calendar days after the ledger entry
+bank,BT-000371,SCN-02-G0371,SCN-02,,low,match,Posted 2 calendar days after the ledger entry
+ledger,GL-000362,SCN-02-G0371,SCN-02,,low,match,Posted 2 calendar days after the ledger entry
+bank,BT-000372,SCN-02-G0372,SCN-02,,low,match,Posted 2 calendar days after the ledger entry
+ledger,GL-000363,SCN-02-G0372,SCN-02,,low,match,Posted 2 calendar days after the ledger entry
+bank,BT-000373,SCN-02-G0373,SCN-02,,low,match,Posted 5 calendar days after the ledger entry
+ledger,GL-000364,SCN-02-G0373,SCN-02,,low,match,Posted 5 calendar days after the ledger entry
+bank,BT-000374,SCN-02-G0374,SCN-02,,low,match,Posted 5 calendar days after the ledger entry
+ledger,GL-000365,SCN-02-G0374,SCN-02,,low,match,Posted 5 calendar days after the ledger entry
+bank,BT-000375,SCN-02-G0375,SCN-02,,low,match,Posted 3 calendar days after the ledger entry
+ledger,GL-000366,SCN-02-G0375,SCN-02,,low,match,Posted 3 calendar days after the ledger entry
+bank,BT-000376,SCN-02-G0376,SCN-02,,low,match,Posted 5 calendar days after the ledger entry
+ledger,GL-000367,SCN-02-G0376,SCN-02,,low,match,Posted 5 calendar days after the ledger entry
+bank,BT-000377,SCN-02-G0377,SCN-02,,low,match,Posted 4 calendar days after the ledger entry
+ledger,GL-000368,SCN-02-G0377,SCN-02,,low,match,Posted 4 calendar days after the ledger entry
+bank,BT-000378,SCN-02-G0378,SCN-02,,low,match,Posted 3 calendar days after the ledger entry
+ledger,GL-000369,SCN-02-G0378,SCN-02,,low,match,Posted 3 calendar days after the ledger entry
+bank,BT-000379,SCN-02-G0379,SCN-02,,low,match,Posted 4 calendar days after the ledger entry
+ledger,GL-000370,SCN-02-G0379,SCN-02,,low,match,Posted 4 calendar days after the ledger entry
+bank,BT-000380,SCN-02-G0380,SCN-02,,low,match,Posted 3 calendar days after the ledger entry
+ledger,GL-000371,SCN-02-G0380,SCN-02,,low,match,Posted 3 calendar days after the ledger entry
+bank,BT-000381,SCN-02-G0381,SCN-02,,low,match,Posted 3 calendar days after the ledger entry
+ledger,GL-000372,SCN-02-G0381,SCN-02,,low,match,Posted 3 calendar days after the ledger entry
+bank,BT-000382,SCN-02-G0382,SCN-02,,low,match,Posted 5 calendar days after the ledger entry
+ledger,GL-000373,SCN-02-G0382,SCN-02,,low,match,Posted 5 calendar days after the ledger entry
+bank,BT-000383,SCN-02-G0383,SCN-02,,low,match,Posted 2 calendar days after the ledger entry
+ledger,GL-000374,SCN-02-G0383,SCN-02,,low,match,Posted 2 calendar days after the ledger entry
+bank,BT-000384,SCN-02-G0384,SCN-02,,low,match,Posted 5 calendar days after the ledger entry
+ledger,GL-000375,SCN-02-G0384,SCN-02,,low,match,Posted 5 calendar days after the ledger entry
+bank,BT-000385,SCN-02-G0385,SCN-02,,low,match,Posted 5 calendar days after the ledger entry
+ledger,GL-000376,SCN-02-G0385,SCN-02,,low,match,Posted 5 calendar days after the ledger entry
+bank,BT-000386,SCN-02-G0386,SCN-02,,low,match,Posted 5 calendar days after the ledger entry
+ledger,GL-000377,SCN-02-G0386,SCN-02,,low,match,Posted 5 calendar days after the ledger entry
+bank,BT-000387,SCN-02-G0387,SCN-02,,low,match,Posted 1 calendar days after the ledger entry
+ledger,GL-000378,SCN-02-G0387,SCN-02,,low,match,Posted 1 calendar days after the ledger entry
+bank,BT-000388,SCN-03-G0388,SCN-03,,medium,match,"New counterparty, abbreviated bank description"
+ledger,GL-000379,SCN-03-G0388,SCN-03,,medium,match,"New counterparty, abbreviated bank description"
+bank,BT-000389,SCN-03-G0389,SCN-03,,medium,match,"New counterparty, abbreviated bank description"
+ledger,GL-000380,SCN-03-G0389,SCN-03,,medium,match,"New counterparty, abbreviated bank description"
+bank,BT-000390,SCN-03-G0390,SCN-03,,medium,match,"New counterparty, abbreviated bank description"
+ledger,GL-000381,SCN-03-G0390,SCN-03,,medium,match,"New counterparty, abbreviated bank description"
+bank,BT-000391,SCN-03-G0391,SCN-03,,medium,match,"New counterparty, abbreviated bank description"
+ledger,GL-000382,SCN-03-G0391,SCN-03,,medium,match,"New counterparty, abbreviated bank description"
+bank,BT-000392,SCN-03-G0392,SCN-03,,medium,match,"New counterparty, abbreviated bank description"
+ledger,GL-000383,SCN-03-G0392,SCN-03,,medium,match,"New counterparty, abbreviated bank description"
+bank,BT-000393,SCN-03-G0393,SCN-03,,medium,match,"New counterparty, abbreviated bank description"
+ledger,GL-000384,SCN-03-G0393,SCN-03,,medium,match,"New counterparty, abbreviated bank description"
+bank,BT-000394,SCN-03-G0394,SCN-03,,medium,match,"New counterparty, abbreviated bank description"
+ledger,GL-000385,SCN-03-G0394,SCN-03,,medium,match,"New counterparty, abbreviated bank description"
+bank,BT-000395,SCN-03-G0395,SCN-03,,medium,match,"New counterparty, abbreviated bank description"
+ledger,GL-000386,SCN-03-G0395,SCN-03,,medium,match,"New counterparty, abbreviated bank description"
+bank,BT-000396,SCN-03-G0396,SCN-03,,medium,match,"New counterparty, abbreviated bank description"
+ledger,GL-000387,SCN-03-G0396,SCN-03,,medium,match,"New counterparty, abbreviated bank description"
+bank,BT-000397,SCN-03-G0397,SCN-03,,low,match,"Abbreviated bank description, no reference"
+ledger,GL-000388,SCN-03-G0397,SCN-03,,low,match,"Abbreviated bank description, no reference"
+bank,BT-000398,SCN-03-G0398,SCN-03,,low,match,"Abbreviated bank description, no reference"
+ledger,GL-000389,SCN-03-G0398,SCN-03,,low,match,"Abbreviated bank description, no reference"
+bank,BT-000399,SCN-03-G0399,SCN-03,,low,match,"Abbreviated bank description, no reference"
+ledger,GL-000390,SCN-03-G0399,SCN-03,,low,match,"Abbreviated bank description, no reference"
+bank,BT-000400,SCN-03-G0400,SCN-03,,low,match,"Abbreviated bank description, no reference"
+ledger,GL-000391,SCN-03-G0400,SCN-03,,low,match,"Abbreviated bank description, no reference"
+bank,BT-000401,SCN-03-G0401,SCN-03,,low,match,"Abbreviated bank description, no reference"
+ledger,GL-000392,SCN-03-G0401,SCN-03,,low,match,"Abbreviated bank description, no reference"
+bank,BT-000402,SCN-03-G0402,SCN-03,,low,match,"Abbreviated bank description, no reference"
+ledger,GL-000393,SCN-03-G0402,SCN-03,,low,match,"Abbreviated bank description, no reference"
+bank,BT-000403,SCN-03-G0403,SCN-03,,low,match,"Abbreviated bank description, no reference"
+ledger,GL-000394,SCN-03-G0403,SCN-03,,low,match,"Abbreviated bank description, no reference"
+bank,BT-000404,SCN-03-G0404,SCN-03,,low,match,"Abbreviated bank description, no reference"
+ledger,GL-000395,SCN-03-G0404,SCN-03,,low,match,"Abbreviated bank description, no reference"
+bank,BT-000405,SCN-03-G0405,SCN-03,,low,match,"Abbreviated bank description, no reference"
+ledger,GL-000396,SCN-03-G0405,SCN-03,,low,match,"Abbreviated bank description, no reference"
+bank,BT-000406,SCN-03-G0406,SCN-03,,low,match,"Abbreviated bank description, no reference"
+ledger,GL-000397,SCN-03-G0406,SCN-03,,low,match,"Abbreviated bank description, no reference"
+bank,BT-000407,SCN-03-G0407,SCN-03,,low,match,"Abbreviated bank description, no reference"
+ledger,GL-000398,SCN-03-G0407,SCN-03,,low,match,"Abbreviated bank description, no reference"
+bank,BT-000408,SCN-03-G0408,SCN-03,,low,match,"Abbreviated bank description, no reference"
+ledger,GL-000399,SCN-03-G0408,SCN-03,,low,match,"Abbreviated bank description, no reference"
+bank,BT-000409,SCN-03-G0409,SCN-03,,low,match,"Abbreviated bank description, no reference"
+ledger,GL-000400,SCN-03-G0409,SCN-03,,low,match,"Abbreviated bank description, no reference"
+bank,BT-000410,SCN-03-G0410,SCN-03,,low,match,"Abbreviated bank description, no reference"
+ledger,GL-000401,SCN-03-G0410,SCN-03,,low,match,"Abbreviated bank description, no reference"
+bank,BT-000411,SCN-03-G0411,SCN-03,,low,match,"Abbreviated bank description, no reference"
+ledger,GL-000402,SCN-03-G0411,SCN-03,,low,match,"Abbreviated bank description, no reference"
+bank,BT-000412,SCN-03-G0412,SCN-03,,low,match,"Abbreviated bank description, no reference"
+ledger,GL-000403,SCN-03-G0412,SCN-03,,low,match,"Abbreviated bank description, no reference"
+bank,BT-000413,SCN-03-G0413,SCN-03,,low,match,"Abbreviated bank description, no reference"
+ledger,GL-000404,SCN-03-G0413,SCN-03,,low,match,"Abbreviated bank description, no reference"
+bank,BT-000414,SCN-03-G0414,SCN-03,,low,match,"Abbreviated bank description, no reference"
+ledger,GL-000405,SCN-03-G0414,SCN-03,,low,match,"Abbreviated bank description, no reference"
+bank,BT-000415,SCN-03-G0415,SCN-03,,low,match,"Abbreviated bank description, no reference"
+ledger,GL-000406,SCN-03-G0415,SCN-03,,low,match,"Abbreviated bank description, no reference"
+bank,BT-000416,SCN-03-G0416,SCN-03,,low,match,"Abbreviated bank description, no reference"
+ledger,GL-000407,SCN-03-G0416,SCN-03,,low,match,"Abbreviated bank description, no reference"
+bank,BT-000417,SCN-03-G0417,SCN-03,,low,match,"Abbreviated bank description, no reference"
+ledger,GL-000408,SCN-03-G0417,SCN-03,,low,match,"Abbreviated bank description, no reference"
+bank,BT-000418,SCN-03-G0418,SCN-03,,low,match,"Abbreviated bank description, no reference"
+ledger,GL-000409,SCN-03-G0418,SCN-03,,low,match,"Abbreviated bank description, no reference"
+bank,BT-000419,SCN-03-G0419,SCN-03,,low,match,"Abbreviated bank description, no reference"
+ledger,GL-000410,SCN-03-G0419,SCN-03,,low,match,"Abbreviated bank description, no reference"
+bank,BT-000420,SCN-03-G0420,SCN-03,,low,match,"Abbreviated bank description, no reference"
+ledger,GL-000411,SCN-03-G0420,SCN-03,,low,match,"Abbreviated bank description, no reference"
+bank,BT-000421,SCN-03-G0421,SCN-03,,low,match,"Abbreviated bank description, no reference"
+ledger,GL-000412,SCN-03-G0421,SCN-03,,low,match,"Abbreviated bank description, no reference"
+bank,BT-000422,SCN-03-G0422,SCN-03,,low,match,"Abbreviated bank description, no reference"
+ledger,GL-000413,SCN-03-G0422,SCN-03,,low,match,"Abbreviated bank description, no reference"
+bank,BT-000423,SCN-03-G0423,SCN-03,,low,match,"Abbreviated bank description, no reference"
+ledger,GL-000414,SCN-03-G0423,SCN-03,,low,match,"Abbreviated bank description, no reference"
+bank,BT-000424,SCN-03-G0424,SCN-03,,low,match,"Abbreviated bank description, no reference"
+ledger,GL-000415,SCN-03-G0424,SCN-03,,low,match,"Abbreviated bank description, no reference"
+bank,BT-000425,SCN-03-G0425,SCN-03,,low,match,"Abbreviated bank description, no reference"
+ledger,GL-000416,SCN-03-G0425,SCN-03,,low,match,"Abbreviated bank description, no reference"
+bank,BT-000426,SCN-03-G0426,SCN-03,,low,match,"Abbreviated bank description, no reference"
+ledger,GL-000417,SCN-03-G0426,SCN-03,,low,match,"Abbreviated bank description, no reference"
+bank,BT-000427,SCN-03-G0427,SCN-03,,low,match,"Abbreviated bank description, no reference"
+ledger,GL-000418,SCN-03-G0427,SCN-03,,low,match,"Abbreviated bank description, no reference"
+bank,BT-000428,SCN-03-G0428,SCN-03,,low,match,"Abbreviated bank description, no reference"
+ledger,GL-000419,SCN-03-G0428,SCN-03,,low,match,"Abbreviated bank description, no reference"
+bank,BT-000429,SCN-03-G0429,SCN-03,,low,match,"Abbreviated bank description, no reference"
+ledger,GL-000420,SCN-03-G0429,SCN-03,,low,match,"Abbreviated bank description, no reference"
+bank,BT-000430,SCN-03-G0430,SCN-03,,low,match,"Abbreviated bank description, no reference"
+ledger,GL-000421,SCN-03-G0430,SCN-03,,low,match,"Abbreviated bank description, no reference"
+bank,BT-000431,SCN-03-G0431,SCN-03,,low,match,"Abbreviated bank description, no reference"
+ledger,GL-000422,SCN-03-G0431,SCN-03,,low,match,"Abbreviated bank description, no reference"
+bank,BT-000432,SCN-04-G0432,SCN-04,,low,match,Single deposit equal to 4 ledger receipts
+ledger,GL-000423,SCN-04-G0432,SCN-04,,low,match,Member of a grouped deposit
+ledger,GL-000424,SCN-04-G0432,SCN-04,,low,match,Member of a grouped deposit
+ledger,GL-000425,SCN-04-G0432,SCN-04,,low,match,Member of a grouped deposit
+ledger,GL-000426,SCN-04-G0432,SCN-04,,low,match,Member of a grouped deposit
+bank,BT-000433,SCN-04-G0433,SCN-04,,low,match,Single deposit equal to 3 ledger receipts
+ledger,GL-000427,SCN-04-G0433,SCN-04,,low,match,Member of a grouped deposit
+ledger,GL-000428,SCN-04-G0433,SCN-04,,low,match,Member of a grouped deposit
+ledger,GL-000429,SCN-04-G0433,SCN-04,,low,match,Member of a grouped deposit
+bank,BT-000434,SCN-04-G0434,SCN-04,,low,match,Single deposit equal to 4 ledger receipts
+ledger,GL-000430,SCN-04-G0434,SCN-04,,low,match,Member of a grouped deposit
+ledger,GL-000431,SCN-04-G0434,SCN-04,,low,match,Member of a grouped deposit
+ledger,GL-000432,SCN-04-G0434,SCN-04,,low,match,Member of a grouped deposit
+ledger,GL-000433,SCN-04-G0434,SCN-04,,low,match,Member of a grouped deposit
+bank,BT-000435,SCN-04-G0435,SCN-04,,low,match,Single deposit equal to 3 ledger receipts
+ledger,GL-000434,SCN-04-G0435,SCN-04,,low,match,Member of a grouped deposit
+ledger,GL-000435,SCN-04-G0435,SCN-04,,low,match,Member of a grouped deposit
+ledger,GL-000436,SCN-04-G0435,SCN-04,,low,match,Member of a grouped deposit
+bank,BT-000436,SCN-04-G0436,SCN-04,,low,match,Single deposit equal to 4 ledger receipts
+ledger,GL-000437,SCN-04-G0436,SCN-04,,low,match,Member of a grouped deposit
+ledger,GL-000438,SCN-04-G0436,SCN-04,,low,match,Member of a grouped deposit
+ledger,GL-000439,SCN-04-G0436,SCN-04,,low,match,Member of a grouped deposit
+ledger,GL-000440,SCN-04-G0436,SCN-04,,low,match,Member of a grouped deposit
+bank,BT-000437,SCN-04-G0437,SCN-04,,low,match,Single deposit equal to 3 ledger receipts
+ledger,GL-000441,SCN-04-G0437,SCN-04,,low,match,Member of a grouped deposit
+ledger,GL-000442,SCN-04-G0437,SCN-04,,low,match,Member of a grouped deposit
+ledger,GL-000443,SCN-04-G0437,SCN-04,,low,match,Member of a grouped deposit
+bank,BT-000438,SCN-04-G0438,SCN-04,,low,match,Single deposit equal to 4 ledger receipts
+ledger,GL-000444,SCN-04-G0438,SCN-04,,low,match,Member of a grouped deposit
+ledger,GL-000445,SCN-04-G0438,SCN-04,,low,match,Member of a grouped deposit
+ledger,GL-000446,SCN-04-G0438,SCN-04,,low,match,Member of a grouped deposit
+ledger,GL-000447,SCN-04-G0438,SCN-04,,low,match,Member of a grouped deposit
+bank,BT-000439,SCN-04-G0439,SCN-04,,low,match,Single deposit equal to 3 ledger receipts
+ledger,GL-000448,SCN-04-G0439,SCN-04,,low,match,Member of a grouped deposit
+ledger,GL-000449,SCN-04-G0439,SCN-04,,low,match,Member of a grouped deposit
+ledger,GL-000450,SCN-04-G0439,SCN-04,,low,match,Member of a grouped deposit
+bank,BT-000440,SCN-04-G0440,SCN-04,,low,match,Single deposit equal to 4 ledger receipts
+ledger,GL-000451,SCN-04-G0440,SCN-04,,low,match,Member of a grouped deposit
+ledger,GL-000452,SCN-04-G0440,SCN-04,,low,match,Member of a grouped deposit
+ledger,GL-000453,SCN-04-G0440,SCN-04,,low,match,Member of a grouped deposit
+ledger,GL-000454,SCN-04-G0440,SCN-04,,low,match,Member of a grouped deposit
+bank,BT-000441,SCN-04-G0441,SCN-04,,low,match,Single deposit equal to 3 ledger receipts
+ledger,GL-000455,SCN-04-G0441,SCN-04,,low,match,Member of a grouped deposit
+ledger,GL-000456,SCN-04-G0441,SCN-04,,low,match,Member of a grouped deposit
+ledger,GL-000457,SCN-04-G0441,SCN-04,,low,match,Member of a grouped deposit
+ledger,GL-000458,SCN-05-G0442,SCN-05,,low,match,Single ledger entry equal to 3 bank items
+bank,BT-000442,SCN-05-G0442,SCN-05,,low,match,Member of a split payment
+bank,BT-000443,SCN-05-G0442,SCN-05,,low,match,Member of a split payment
+bank,BT-000444,SCN-05-G0442,SCN-05,,low,match,Member of a split payment
+ledger,GL-000459,SCN-05-G0443,SCN-05,,low,match,Single ledger entry equal to 3 bank items
+bank,BT-000445,SCN-05-G0443,SCN-05,,low,match,Member of a split payment
+bank,BT-000446,SCN-05-G0443,SCN-05,,low,match,Member of a split payment
+bank,BT-000447,SCN-05-G0443,SCN-05,,low,match,Member of a split payment
+ledger,GL-000460,SCN-05-G0444,SCN-05,,low,match,Single ledger entry equal to 3 bank items
+bank,BT-000448,SCN-05-G0444,SCN-05,,low,match,Member of a split payment
+bank,BT-000449,SCN-05-G0444,SCN-05,,low,match,Member of a split payment
+bank,BT-000450,SCN-05-G0444,SCN-05,,low,match,Member of a split payment
+ledger,GL-000461,SCN-05-G0445,SCN-05,,low,match,Single ledger entry equal to 3 bank items
+bank,BT-000451,SCN-05-G0445,SCN-05,,low,match,Member of a split payment
+bank,BT-000452,SCN-05-G0445,SCN-05,,low,match,Member of a split payment
+bank,BT-000453,SCN-05-G0445,SCN-05,,low,match,Member of a split payment
+ledger,GL-000462,SCN-05-G0446,SCN-05,,low,match,Single ledger entry equal to 3 bank items
+bank,BT-000454,SCN-05-G0446,SCN-05,,low,match,Member of a split payment
+bank,BT-000455,SCN-05-G0446,SCN-05,,low,match,Member of a split payment
+bank,BT-000456,SCN-05-G0446,SCN-05,,low,match,Member of a split payment
+ledger,GL-000463,SCN-05-G0447,SCN-05,,low,match,Single ledger entry equal to 3 bank items
+bank,BT-000457,SCN-05-G0447,SCN-05,,low,match,Member of a split payment
+bank,BT-000458,SCN-05-G0447,SCN-05,,low,match,Member of a split payment
+bank,BT-000459,SCN-05-G0447,SCN-05,,low,match,Member of a split payment
+ledger,GL-000464,SCN-05-G0448,SCN-05,,low,match,Single ledger entry equal to 3 bank items
+bank,BT-000460,SCN-05-G0448,SCN-05,,low,match,Member of a split payment
+bank,BT-000461,SCN-05-G0448,SCN-05,,low,match,Member of a split payment
+bank,BT-000462,SCN-05-G0448,SCN-05,,low,match,Member of a split payment
+ledger,GL-000465,SCN-05-G0449,SCN-05,,low,match,Single ledger entry equal to 3 bank items
+bank,BT-000463,SCN-05-G0449,SCN-05,,low,match,Member of a split payment
+bank,BT-000464,SCN-05-G0449,SCN-05,,low,match,Member of a split payment
+bank,BT-000465,SCN-05-G0449,SCN-05,,low,match,Member of a split payment
+bank,BT-000466,,SCN-06,EXC-03,low,adjust,Bank fee with no ledger entry
+bank,BT-000467,,SCN-06,EXC-03,low,adjust,Bank fee with no ledger entry
+bank,BT-000468,,SCN-06,EXC-03,low,adjust,Bank fee with no ledger entry
+bank,BT-000469,,SCN-06,EXC-03,low,adjust,Bank fee with no ledger entry
+bank,BT-000470,,SCN-06,EXC-03,low,adjust,Bank fee with no ledger entry
+bank,BT-000471,,SCN-06,EXC-03,low,adjust,Bank fee with no ledger entry
+bank,BT-000472,,SCN-06,EXC-03,low,adjust,Bank fee with no ledger entry
+bank,BT-000473,,SCN-06,EXC-03,low,adjust,Bank fee with no ledger entry
+bank,BT-000474,,SCN-06,EXC-04,low,adjust,Interest credited by the bank
+bank,BT-000475,,SCN-06,EXC-04,low,adjust,Interest credited by the bank
+bank,BT-000476,,SCN-06,EXC-06,medium,adjust,"Returned deposit, ledger entry missing"
+bank,BT-000477,,SCN-06,EXC-06,medium,adjust,"Returned deposit, ledger entry missing"
+ledger,GL-000466,SCN-07-G0450,SCN-07,EXC-05,high,investigate,Ledger entry paid twice by the bank
+bank,BT-000478,SCN-07-G0450,SCN-07,EXC-05,high,investigate,"Same amount, payee and near date as another bank item"
+bank,BT-000479,SCN-07-G0450,SCN-07,EXC-05,high,investigate,"Same amount, payee and near date as another bank item"
+ledger,GL-000467,SCN-07-G0451,SCN-07,EXC-05,high,investigate,Ledger entry paid twice by the bank
+bank,BT-000480,SCN-07-G0451,SCN-07,EXC-05,high,investigate,"Same amount, payee and near date as another bank item"
+bank,BT-000481,SCN-07-G0451,SCN-07,EXC-05,high,investigate,"Same amount, payee and near date as another bank item"
+bank,BT-000482,SCN-07-G0452,SCN-07,EXC-05,high,investigate,Single receipt recorded twice in the ledger
+ledger,GL-000468,SCN-07-G0452,SCN-07,EXC-05,high,investigate,"Same amount, counterparty and near date as another ledger entry"
+ledger,GL-000469,SCN-07-G0452,SCN-07,EXC-05,high,investigate,"Same amount, counterparty and near date as another ledger entry"
+bank,BT-000483,SCN-07-G0453,SCN-07,EXC-05,high,investigate,Single receipt recorded twice in the ledger
+ledger,GL-000470,SCN-07-G0453,SCN-07,EXC-05,high,investigate,"Same amount, counterparty and near date as another ledger entry"
+ledger,GL-000471,SCN-07-G0453,SCN-07,EXC-05,high,investigate,"Same amount, counterparty and near date as another ledger entry"
+bank,BT-000484,SCN-07-G0454,SCN-07,EXC-05,high,investigate,Single receipt recorded twice in the ledger
+ledger,GL-000472,SCN-07-G0454,SCN-07,EXC-05,high,investigate,"Same amount, counterparty and near date as another ledger entry"
+ledger,GL-000473,SCN-07-G0454,SCN-07,EXC-05,high,investigate,"Same amount, counterparty and near date as another ledger entry"
+bank,BT-000485,,SCN-08,EXC-07,high,unresolved,No credible ledger candidate
+bank,BT-000486,,SCN-08,EXC-07,high,unresolved,No credible ledger candidate
+ledger,GL-000474,,SCN-08,EXC-07,high,unresolved,No credible bank candidate
+ledger,GL-000475,,SCN-08,EXC-07,high,unresolved,No credible bank candidate
+ledger,GL-000476,,SCN-08,EXC-07,high,unresolved,No credible bank candidate
+ledger,GL-000477,,SCN-08,EXC-07,high,unresolved,No credible bank candidate
+ledger,GL-000478,,SCN-02,EXC-01,low,carry_forward,Check issued but not yet cleared at period end
+ledger,GL-000479,,SCN-02,EXC-01,low,carry_forward,Check issued but not yet cleared at period end
+ledger,GL-000480,,SCN-02,EXC-01,low,carry_forward,Check issued but not yet cleared at period end
+ledger,GL-000481,,SCN-02,EXC-01,low,carry_forward,Check issued but not yet cleared at period end
+ledger,GL-000482,,SCN-02,EXC-01,low,carry_forward,Check issued but not yet cleared at period end
+ledger,GL-000483,,SCN-02,EXC-01,low,carry_forward,Check issued but not yet cleared at period end
+ledger,GL-000484,,SCN-02,EXC-01,low,carry_forward,Check issued but not yet cleared at period end
+ledger,GL-000485,,SCN-02,EXC-01,low,carry_forward,Check issued but not yet cleared at period end
+ledger,GL-000486,,SCN-02,EXC-01,low,carry_forward,Check issued but not yet cleared at period end
+ledger,GL-000487,,SCN-02,EXC-01,low,carry_forward,Check issued but not yet cleared at period end
+ledger,GL-000488,,SCN-02,EXC-01,low,carry_forward,Check issued but not yet cleared at period end
+ledger,GL-000489,,SCN-02,EXC-01,low,carry_forward,Check issued but not yet cleared at period end
+ledger,GL-000490,,SCN-02,EXC-01,low,carry_forward,Check issued but not yet cleared at period end
+ledger,GL-000491,,SCN-02,EXC-01,low,carry_forward,Check issued but not yet cleared at period end
+ledger,GL-000492,,SCN-02,EXC-01,low,carry_forward,Check issued but not yet cleared at period end
+ledger,GL-000493,,SCN-02,EXC-01,low,carry_forward,Check issued but not yet cleared at period end
+ledger,GL-000494,,SCN-02,EXC-01,low,carry_forward,Check issued but not yet cleared at period end
+ledger,GL-000495,,SCN-02,EXC-01,low,carry_forward,Check issued but not yet cleared at period end
+ledger,GL-000496,,SCN-02,EXC-02,low,carry_forward,Deposit recorded but not yet on the statement at period end
+ledger,GL-000497,,SCN-02,EXC-02,low,carry_forward,Deposit recorded but not yet on the statement at period end
+ledger,GL-000498,,SCN-02,EXC-02,low,carry_forward,Deposit recorded but not yet on the statement at period end
+ledger,GL-000499,,SCN-02,EXC-02,low,carry_forward,Deposit recorded but not yet on the statement at period end
+ledger,GL-000500,,SCN-02,EXC-02,low,carry_forward,Deposit recorded but not yet on the statement at period end
+ledger,GL-000501,,SCN-02,EXC-02,low,carry_forward,Deposit recorded but not yet on the statement at period end
+ledger,GL-000502,,SCN-02,EXC-02,low,carry_forward,Deposit recorded but not yet on the statement at period end

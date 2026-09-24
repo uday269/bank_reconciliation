@@ -1,0 +1,15 @@
+item_id,item_type,original_date,amount,direction,description,reference
+CI-0001,outstanding_check,2026-04-22,291.35,credit,Check 4101 — Northgate Paper Supply,4101
+CI-0002,outstanding_check,2026-05-08,1156.60,credit,Check 4102 — Cache Valley Creamery,4102
+CI-0003,outstanding_check,2026-05-10,5445.70,credit,Check 4103 — Dominguez Olive Oils,4103
+CI-0004,outstanding_check,2026-04-24,3309.65,credit,Check 4104 — Northgate Paper Supply,4104
+CI-0005,outstanding_check,2026-06-24,6700.80,credit,Check 4105 — Rocky Mountain Power,4105
+CI-0006,outstanding_check,2026-06-10,5674.95,credit,Check 4106 — Zion Cold Storage,4106
+CI-0007,outstanding_check,2026-06-21,6339.50,credit,Check 4107 — Trailhead Print Works,4107
+CI-0008,outstanding_check,2026-06-12,6268.90,credit,Check 4108 — Rocky Mountain Power,4108
+CI-0009,outstanding_check,2026-06-26,5507.20,credit,Check 4109 — Northgate Paper Supply,4109
+CI-0010,outstanding_check,2026-06-08,772.90,credit,Check 4110 — Trailhead Print Works,4110
+CI-0011,outstanding_check,2026-06-26,4020.20,credit,Check 4111 — Rocky Mountain Power,4111
+CI-0012,deposit_in_transit,2026-06-29,7393.25,debit,Deposit DEP96704 — Wasatch Deli Group,DEP96704
+CI-0013,deposit_in_transit,2026-06-29,17875.30,debit,Deposit DEP95237 — Wasatch Deli Group,DEP95237
+CI-0014,deposit_in_transit,2026-06-29,1241.50,debit,Deposit DEP85916 — Canyon Ridge Grocery,DEP85916
