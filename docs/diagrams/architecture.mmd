@@ -1,0 +1,99 @@
+---
+config:
+  layout: elk
+---
+flowchart TB
+%% DOC-05 — Layered architecture. Dependencies point downwards only: no layer calls a layer above it.
+    subgraph EXT["External"]
+        direction LR
+        files["CSV files<br/>bank · ledger · carry-in"]
+        browser["Browser<br/>reviewer, senior, controller"]
+        genai["GenAI provider<br/>optional, off by default"]
+    end
+
+    subgraph PRES["Presentation — app/web"]
+        direction LR
+        routes["Routers<br/>run · review · adjustment<br/>period · report · audit"]
+        templates["Jinja2 templates<br/>server-rendered HTML"]
+        identity["Identity selector<br/>session cookie (DD-05)"]
+    end
+
+    subgraph APP["Application services — app/services"]
+        direction LR
+        s_import["import_service"]
+        s_valid["validation_service"]
+        s_match["matching_service"]
+        s_review["review_service"]
+        s_adjust["adjustment_service"]
+        s_period["period_service"]
+        s_report["report_service"]
+        s_eval["evaluation_service"]
+    end
+
+    subgraph CTL["Control layer — app/control"]
+        direction LR
+        perms["permission checks<br/>CR-01, CR-02"]
+        sod["separation of duties<br/>CR-03..CR-06"]
+        lock["period lock<br/>CR-17, CR-18"]
+        complete["completion rule<br/>CR-07"]
+    end
+
+    subgraph DOM["Domain — app/domain"]
+        direction LR
+        rules["deterministic rules<br/>BR-01..BR-12"]
+        candidates["candidate generation<br/>caps PRM-04, PRM-05"]
+        scoring["feature scoring and ranking"]
+        calib["confidence calibration<br/>model artefact"]
+        risk["risk rules<br/>BR-15"]
+        explain["explanation builder<br/>supporting and conflicting"]
+    end
+
+    subgraph INF["Infrastructure — app/infra"]
+        direction LR
+        repo["repositories<br/>SQLAlchemy Core"]
+        audit["audit writer<br/>hash chain"]
+        render["report renderer<br/>HTML and CSV"]
+        adapter["GenAI adapter<br/>stub by default"]
+    end
+
+    db[("SQLite<br/>db/schema.sql")]
+
+    files --> s_import
+    browser --> routes
+    routes --> templates
+    routes --> identity
+    routes --> APP
+    APP --> CTL
+    APP --> DOM
+    CTL --> INF
+    APP --> INF
+    DOM --> INF
+    INF --> db
+    adapter -. "synthetic evidence text only" .-> genai
+
+    note["Every service writes its audit event through the audit writer,<br/>in the same transaction as the change it records (CR-08)"]
+    note -.- audit
+
+    classDef ext fill:#EEF3FB,stroke:#3B5B92,color:#1B2A44
+    classDef pres fill:#E7F4EA,stroke:#2E7D32,color:#1B3D1F
+    classDef app fill:#FFF6DD,stroke:#B38600,color:#3D2E00
+    classDef ctl fill:#FDECEC,stroke:#B3261E,color:#5C1111
+    classDef dom fill:#F3EEFB,stroke:#5B3B92,color:#2A1B44
+    classDef inf fill:#F2F2F2,stroke:#555,color:#222
+    classDef nt fill:#FFFFFF,stroke:#B3261E,color:#5C1111,stroke-dasharray:4 3
+
+    class files,browser,genai ext
+    class routes,templates,identity pres
+    class s_import,s_valid,s_match,s_review,s_adjust,s_period,s_report,s_eval app
+    class perms,sod,lock,complete ctl
+    class rules,candidates,scoring,calib,risk,explain dom
+    class repo,audit,render,adapter inf
+    class db inf
+    class note nt
+
+    style EXT fill:#F7F9FC,stroke:#3B5B92
+    style PRES fill:#F7FBF8,stroke:#2E7D32
+    style APP fill:#FFFCF2,stroke:#B38600
+    style CTL fill:#FFF7F7,stroke:#B3261E
+    style DOM fill:#FAF8FD,stroke:#5B3B92
+    style INF fill:#FAFAFA,stroke:#555

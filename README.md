@@ -6,7 +6,7 @@ A human-supervised bank reconciliation system that recommends bank-to-ledger mat
 
 ## Status
 
-**In development: Stage 4, Data.** The application, setup instructions and usage guide will be added as the build progresses. The full README ships with release v1.0.0.
+**In development: Stage 5, System Design.** The application, setup instructions and usage guide will be added as the build progresses. The full README ships with release v1.0.0.
 
 ## Documents
 
@@ -16,6 +16,7 @@ A human-supervised bank reconciliation system that recommends bank-to-ledger mat
 | DOC-02 | Requirements Specification | [02_requirements_specification.md](docs/markdown/02_requirements_specification.md) | [02_requirements_specification.docx](docs/word-files/02_requirements_specification.docx) |
 | DOC-03 | Systems Analysis | [03_systems_analysis.md](docs/markdown/03_systems_analysis.md) | [03_systems_analysis.docx](docs/word-files/03_systems_analysis.docx) |
 | DOC-04 | Data Specification | [04_data_specification.md](docs/markdown/04_data_specification.md) | [04_data_specification.docx](docs/word-files/04_data_specification.docx) |
+| DOC-05 | System Design | [05_system_design.md](docs/markdown/05_system_design.md) | [05_system_design.docx](docs/word-files/05_system_design.docx) |
 | — | Reviewer Interface Wireframes | [reviewer_interface_wireframes.md](docs/markdown/reviewer_interface_wireframes.md) | [reviewer_interface_wireframes.docx](docs/word-files/reviewer_interface_wireframes.docx) |
 
 ## Data
@@ -44,10 +45,15 @@ sqlite3 reconciliation.db < db/schema.sql
 
 `db/schema.sql` is the source of truth for the schema: 23 tables, append-only triggers on evidence tables, and a hash-chained audit log.
 
+## Architecture
+
+Six layers with dependencies pointing one way: presentation, application services, control, domain, infrastructure, storage. Control rules (permissions, separation of duties, period lock, the completion rule) live in their own layer and are enforced again by database constraints and triggers. See [DOC-05](docs/markdown/05_system_design.md).
+
 ## Repository Structure
 
 ```
 bank_reconciliation/
+├── app/               Application (from Stage 6)
 ├── data/              Generated datasets (CSV, seeded and deterministic)
 ├── db/
 │   └── schema.sql     Physical schema, constraints, triggers, indexes
