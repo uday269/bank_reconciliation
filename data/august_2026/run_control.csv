@@ -1,0 +1,4 @@
+file_type,row_count,total_debits,total_credits,opening_balance,closing_balance
+bank,612,1227189.35,1250511.65,486201.77,509524.07
+gl,628,1289457.75,1244864.60,463539.42,508132.57
+carry_in,18,29523.65,52186.00,,

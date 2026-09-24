@@ -1,0 +1,19 @@
+item_id,item_type,original_date,amount,direction,description,reference
+CI-0001,outstanding_check,2026-06-03,7283.00,credit,Check 4101 — Deseret Payroll Services,4101
+CI-0002,outstanding_check,2026-06-08,3126.75,credit,Check 4102 — Cache Valley Creamery,4102
+CI-0003,outstanding_check,2026-06-05,5012.80,credit,Check 4103 — Northgate Paper Supply,4103
+CI-0004,outstanding_check,2026-05-24,1073.70,credit,Check 4104 — Wasatch Produce Partners,4104
+CI-0005,outstanding_check,2026-07-12,5961.85,credit,Check 4105 — Rocky Mountain Power,4105
+CI-0006,outstanding_check,2026-07-10,7260.50,credit,Check 4106 — Rocky Mountain Power,4106
+CI-0007,outstanding_check,2026-07-12,4774.20,credit,Check 4107 — Alpine Equipment Repair,4107
+CI-0008,outstanding_check,2026-07-22,1961.50,credit,Check 4108 — Dominguez Olive Oils,4108
+CI-0009,outstanding_check,2026-07-19,3087.55,credit,Check 4109 — Sundance Freight Lines,4109
+CI-0010,outstanding_check,2026-07-22,621.55,credit,Check 4110 — Deseret Payroll Services,4110
+CI-0011,outstanding_check,2026-07-08,5405.30,credit,Check 4111 — Union Pacific Logistics,4111
+CI-0012,outstanding_check,2026-07-24,1113.85,credit,Check 4112 — High Desert Dairy,4112
+CI-0013,outstanding_check,2026-07-21,368.10,credit,Check 4113 — Sego Lily Cleaning,4113
+CI-0014,outstanding_check,2026-07-14,5135.35,credit,Check 4114 — Weber Fleet Services,4114
+CI-0015,deposit_in_transit,2026-07-29,3416.80,debit,Deposit DEP59519 — Granite Peak Foods,DEP59519
+CI-0016,deposit_in_transit,2026-07-28,2055.95,debit,Deposit DEP31051 — Provo Provisions,DEP31051
+CI-0017,deposit_in_transit,2026-07-28,6927.90,debit,Deposit DEP82066 — Timpanogos Coffee,DEP82066
+CI-0018,deposit_in_transit,2026-07-31,17123.00,debit,Deposit DEP14315 — Saltair Supper Club,DEP14315
