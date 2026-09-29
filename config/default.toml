@@ -1,0 +1,66 @@
+# AI-Assisted Bank Reconciliation — default configuration
+#
+# Values here are copied into reconciliation_run.parameter_snapshot when a run is
+# created. Reports and the evaluation read the snapshot, never this file, so editing
+# it cannot change what a closed period reported (ADR-10).
+#
+# Local overrides go in config/local.toml, which Git ignores.
+
+[organization]
+name = "Bonneville Provisions Co."
+bank_name = "Lone Peak Commercial Bank"
+account_label = "Operating Checking"
+account_mask = "7310"
+gl_account_code = "1010"
+currency = "USD"
+
+# Thresholds referenced by the business and control rules (DOC-02 section 3.4).
+[parameters]
+senior_approval_amount_cents = 1_000_000      # PRM-01  $10,000.00
+timing_window_business_days = 3               # PRM-02  ±3 business days
+outstanding_check_stale_days = 45             # PRM-03  calendar days
+group_candidate_cap = 15                      # PRM-04  candidates considered per group search
+group_member_cap = 4                          # PRM-05  members per group
+confidence_high_band = 0.90                   # PRM-06  high confidence band, lower bound
+confidence_low_band = 0.70                    # PRM-07  low confidence band, upper bound
+ambiguity_margin = 0.15                       # PRM-08  minimum gap between first and second candidate
+auto_accept_threshold = 0.95                  # PRM-09  hypothetical only, never executed (DD-01)
+deposit_in_transit_stale_days = 5             # PRM-10  business days
+
+# Matching tolerances used by the deterministic rules.
+[matching]
+exact_amount_tolerance_cents = 0              # exact means exact
+near_miss_tolerance_cents = 100               # candidate generation only, never an exact match
+duplicate_window_business_days = 1            # BR-07
+group_sum_tolerance_cents = 0                 # BR-04
+
+# Feature weights for the scoring layer (Stage 7). Tuned on the calibration
+# dataset only; the evaluation dataset never informs these values (DD-11).
+[scoring]
+weight_date_distance = 0.20
+weight_amount_similarity = 0.30
+weight_text_similarity = 0.25
+weight_reference_similarity = 0.20
+weight_relationship_type = 0.05
+relationship_score_one_to_one = 1.00
+relationship_score_group = 0.80
+
+[model]
+version_label = "baseline-rules-only"
+calibration_dataset = "data/july_2026_calibration"
+calibration_seed = 20260701
+
+[paths]
+database = "reconciliation.db"
+schema = "db/schema.sql"
+evaluation_dataset = "data/august_2026"
+report_output = "reports"
+
+# Optional generative AI adapter. Off by default; prose only, never a score,
+# confidence, risk or decision (DD-10, CR-13).
+[genai]
+enabled = false
+provider = "stub"                             # stub | gemini
+model = ""
+data_classification = "synthetic"             # the adapter refuses to send unless this is "synthetic"
+max_prose_words = 80
