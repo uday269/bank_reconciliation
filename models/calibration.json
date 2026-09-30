@@ -1,0 +1,26 @@
+{
+  "artefact_version": 1,
+  "dataset": "data/july_2026_calibration",
+  "fitted_at": "2026-09-29T03:32:50Z",
+  "method": "isotonic",
+  "notes": "Isotonic regression, monotonic by construction. Probabilities are clamped to [0.02, 0.98]: a finite sample cannot establish certainty.",
+  "positive_rate": 0.1665,
+  "probabilities": [
+    0.02,
+    0.02,
+    0.852941,
+    0.852941,
+    0.98,
+    0.98
+  ],
+  "sample_size": 793,
+  "thresholds": [
+    0.1236,
+    0.6192,
+    0.6236,
+    0.742,
+    0.7433,
+    1.0
+  ],
+  "version_label": "calibration-july_2026_calibration"
+}

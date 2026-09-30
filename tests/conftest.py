@@ -12,6 +12,7 @@ from pathlib import Path
 import pytest
 
 from app.config import load_config
+from app.domain.calibration import Calibrator
 from app.infra.audit import AuditLog, utc_now
 from app.infra.db import open_database
 from app.infra.repositories import Repositories
@@ -41,7 +42,11 @@ class Harness:
         self.audit = AuditLog(self.database)
         self.imports = ImportService(self.database, self.repositories, self.audit, self.config)
         self.validation = ValidationService(self.database, self.repositories, self.audit, self.config)
-        self.matching = MatchingService(self.database, self.repositories, self.audit, self.config)
+        calibration_path = REPOSITORY_ROOT / "models" / "calibration.json"
+        calibrator = (Calibrator.load(calibration_path) if calibration_path.exists()
+                      else Calibrator.identity())
+        self.matching = MatchingService(self.database, self.repositories, self.audit,
+                                        self.config, calibrator)
         self.users: dict[str, int] = {}
         self.account_id = 0
         self._seed()
@@ -65,10 +70,15 @@ class Harness:
         self.imports.import_directory(run_id, directory or DATASET, self.users["Maya Castillo"])
         return run_id
 
-    def matched_run(self) -> int:
+    def matched_run(self, use_scoring: bool = True) -> int:
+        """Run the full pipeline.
+
+        `use_scoring=False` reproduces the Stage 6 baseline exactly, which is what the
+        baseline tests assert against.
+        """
         run_id = self.imported_run()
         self.validation.validate_and_normalize(run_id, self.users["Maya Castillo"])
-        self.matching.run_rules(run_id, self.users["Maya Castillo"])
+        self.matching.run_rules(run_id, self.users["Maya Castillo"], use_scoring=use_scoring)
         return run_id
 
 
