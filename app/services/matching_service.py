@@ -33,7 +33,7 @@ from app.domain.rules import (
 )
 from app.domain.scoring import Ranking, Weights, rank_all
 from app.infra.audit import AuditEvent, AuditLog, RunContext, utc_now
-from app.infra.db import Database
+from app.infra.db import Database, insert
 from app.infra.repositories import CandidateInput, Repositories
 
 
@@ -376,13 +376,23 @@ class MatchingService:
         summary.by_confidence_band[band] = summary.by_confidence_band.get(band, 0) + 1
 
     def _model_version_id(self, connection) -> int:
-        """Record which calibration artefact produced these confidences (FR-AI-07)."""
+        """Record which calibration artefact produced these confidences (FR-AI-07).
+
+        The lookup runs on the connection the caller is writing through, not on the
+        database object. The first scored match of a run inserts the row and the rest
+        find it, which only works if the read happens inside the same transaction: a read
+        on any other connection would not see an uncommitted insert, would insert a second
+        row, and would fail the unique constraint on version_label, rolling back the run.
+
+        Today `Database` holds a single connection, so reading either way behaves the same.
+        Writing it this way removes the dependency on that remaining true.
+        """
         label = self.calibrator.version_label
-        row = self.database.query_one(
-            "SELECT model_version_id FROM model_version WHERE version_label = ?", (label,))
+        row = connection.execute(
+            "SELECT model_version_id FROM model_version WHERE version_label = ?",
+            (label,)).fetchone()
         if row:
             return row["model_version_id"]
-        from app.infra.db import insert
         return insert(connection, "model_version", {
             "version_label": label, "algorithm": self.calibrator.method,
             "calibration_dataset": self.calibrator.dataset or "none",
