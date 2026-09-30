@@ -18,6 +18,7 @@ import time
 from pathlib import Path
 
 from app.config import Config, ConfigError, load_config
+from app.domain.calibration import Calibrator
 from app.infra.audit import AuditLog, utc_now
 from app.infra.db import Database, open_database
 from app.infra.repositories import Repositories
@@ -51,6 +52,21 @@ def money(cents: int | None) -> str:
 def build(config: Config) -> tuple[Database, Repositories, AuditLog]:
     database = open_database(config.paths.database, config.paths.schema)
     return database, Repositories.for_database(database), AuditLog(database)
+
+
+def load_calibrator(path: Path) -> Calibrator:
+    """Load the fitted artefact, or fall back to reporting raw scores.
+
+    A missing artefact is not an error: the run proceeds and labels itself uncalibrated,
+    so nothing downstream can present an unfitted number as a calibrated one.
+    """
+    if path.exists():
+        try:
+            return Calibrator.load(path)
+        except (ValueError, KeyError) as error:
+            print(f"Calibration artefact could not be read ({error}); "
+                  f"raw scores will be reported.", file=sys.stderr)
+    return Calibrator.identity()
 
 
 # ---------------------------------------------------------------------------
@@ -130,12 +146,19 @@ def command_run(config: Config, args) -> int:
         print("\nMatching blocked: file-level validation failed (CR-17).", file=sys.stderr)
         return 1
 
-    matching = MatchingService(database, repositories, audit, config)
-    matched = matching.run_rules(run_id, performed_by)
-    print("\nDeterministic matching")
+    calibrator = load_calibrator(Path(args.calibration))
+    matching = MatchingService(database, repositories, audit, config, calibrator)
+    matched = matching.run_rules(run_id, performed_by, use_scoring=not args.rules_only)
+    print("\nMatching" + (" (rules only)" if args.rules_only else ""))
     print(f"  {matched.summary()}")
     print("  by rule:      " + ", ".join(f"{rule} {count}" for rule, count in sorted(matched.by_rule.items())))
     print("  by exception: " + ", ".join(f"{code} {count}" for code, count in sorted(matched.by_exception.items())))
+    if not args.rules_only:
+        print(f"  calibration:  {matched.calibration_version} "
+              f"({matched.candidates_generated} candidates, {matched.capped_searches} capped)")
+        if matched.by_confidence_band:
+            print("  confidence:   " + ", ".join(
+                f"{band} {count}" for band, count in sorted(matched.by_confidence_band.items())))
 
     print("\nReview queues")
     for code in ("CAT-01", "CAT-02", "CAT-03", "CAT-04", "CAT-05"):
@@ -237,6 +260,10 @@ def main(argv: list[str] | None = None) -> int:
     run_parser.add_argument("--period-end", default="2026-08-31")
     run_parser.add_argument("--seed", type=int, default=20260801)
     run_parser.add_argument("--user", type=int, help="identity performing the run")
+    run_parser.add_argument("--calibration", default="models/calibration.json",
+                            help="calibration artefact to load")
+    run_parser.add_argument("--rules-only", action="store_true",
+                            help="skip scoring, reproducing the Stage 6 baseline")
 
     status_parser = subparsers.add_parser("status", help="run status and queue counts")
     status_parser.add_argument("--run", type=int)

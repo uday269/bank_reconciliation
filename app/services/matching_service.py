@@ -1,12 +1,17 @@
-"""Deterministic matching pass (UC-03, P3 and P5).
+"""Matching pass: deterministic rules, then scored candidates (UC-03, P3, P4 and P5).
 
-Runs the rules in app/domain/rules.py over a validated run, assesses risk, routes each
-result to a review queue and stores one recommendation per item. This is the rules-only
-baseline: no scoring, no confidence, no model. Stage 7 adds candidate generation and
-scoring for whatever the rules leave unmatched.
+Order is fixed and matters. Rules run first and settle everything they can prove, so
+scoring never reopens a question a rule already answered (ADR-05). Only the leftovers
+reach the scoring layer, which generates candidates, scores them on five features, ranks
+them, converts the leading score to a calibrated confidence and writes an explanation
+that always includes conflicting evidence.
 
-Every recommendation records the rule that produced it and an explanation a reviewer
-can read, and the whole pass writes its audit events in the same transaction (CR-08).
+Nothing here decides anything. Every recommendation, scored or not, goes to a review
+queue and waits for a person (CR-01). Confidence orders the work; it never replaces
+approval.
+
+Running with `use_scoring=False` reproduces the Stage 6 baseline exactly, which is what
+makes the rules-only and hybrid comparison in DOC-07 a like-for-like measurement.
 """
 
 from __future__ import annotations
@@ -18,11 +23,15 @@ from typing import Any
 
 from app.config import Config
 from app.domain import exceptions as exception_catalog
+from app.domain.calibration import Calibrator
+from app.domain.candidates import generate_all
+from app.domain.explanation import explain_match
 from app.domain.risk import assess_risk, assign_category
 from app.domain.rules import (
     Item, RuleException, RuleMatch, apply_rules, classify_unmatched_bank_item,
     classify_unmatched_ledger_item, classify_period_end_item,
 )
+from app.domain.scoring import Ranking, Weights, rank_all
 from app.infra.audit import AuditEvent, AuditLog, RunContext, utc_now
 from app.infra.db import Database
 from app.infra.repositories import CandidateInput, Repositories
@@ -32,30 +41,39 @@ from app.infra.repositories import CandidateInput, Repositories
 class MatchingSummary:
     run_id: int
     rule_matches: int = 0
+    scored_matches: int = 0
     exceptions: int = 0
     unmatched_for_scoring: int = 0
     recommendations: int = 0
+    candidates_generated: int = 0
+    capped_searches: int = 0
+    calibration_version: str = "uncalibrated"
     by_category: dict[str, int] = field(default_factory=dict)
     by_exception: dict[str, int] = field(default_factory=dict)
     by_risk: dict[str, int] = field(default_factory=dict)
     by_rule: dict[str, int] = field(default_factory=dict)
+    by_confidence_band: dict[str, int] = field(default_factory=dict)
 
     def summary(self) -> str:
         return (f"Run {self.run_id}: {self.rule_matches} rule matches, "
-                f"{self.exceptions} exceptions, {self.unmatched_for_scoring} items left for "
-                f"scoring, {self.recommendations} recommendations")
+                f"{self.scored_matches} scored matches, {self.exceptions} exceptions, "
+                f"{self.recommendations} recommendations")
 
 
 class MatchingService:
     def __init__(self, database: Database, repositories: Repositories,
-                 audit: AuditLog, config: Config):
+                 audit: AuditLog, config: Config, calibrator: Calibrator | None = None):
         self.database = database
         self.repositories = repositories
         self.audit = audit
         self.config = config
+        # No artefact means the raw score is reported and the run is labelled
+        # "uncalibrated", so no report can claim a calibrated figure that was never fitted.
+        self.calibrator = calibrator or Calibrator.identity()
 
     # -- entry point --------------------------------------------------------
-    def run_rules(self, run_id: int, performed_by: int | None = None) -> MatchingSummary:
+    def run_rules(self, run_id: int, performed_by: int | None = None,
+                  use_scoring: bool = True) -> MatchingSummary:
         run = self.repositories.runs.get(run_id)
         if run["status"] != "processing":
             raise ValueError(
@@ -73,9 +91,16 @@ class MatchingService:
             stale_check_days=parameters.outstanding_check_stale_days,
             stale_deposit_days=parameters.deposit_in_transit_stale_days)
 
-        summary = MatchingSummary(run_id=run_id)
+        summary = MatchingSummary(run_id=run_id,
+                                  calibration_version=self.calibrator.version_label)
         context = RunContext.load(self.database, run_id)
         now = utc_now()
+
+        # Candidates are generated before the transaction opens: scoring is pure
+        # computation and holding a write lock through it would serialize nothing useful.
+        rankings: dict[tuple[str, int], Ranking] = {}
+        if use_scoring:
+            rankings = self._score_unmatched(outcome, summary)
 
         with self.database.transaction() as connection:
             # 1. Matches the rules are certain about.
@@ -89,20 +114,40 @@ class MatchingService:
                                       summary, now)
                 classified.add((exception.subject.item_type, exception.subject.item_id))
 
-            # 3. Whatever is left. In the baseline there is no scoring layer, so every
-            #    remaining item is classified as an exception and sent to a reviewer.
-            #    Stage 7 inserts candidate generation here and only the genuinely
-            #    unmatchable items continue to this step.
-            for item in outcome.unmatched_bank:
-                if (item.item_type, item.item_id) in classified:
+            # 3. Scored matches, where the leading candidate is worth proposing.
+            consumed_by_scoring: set[tuple[str, int]] = set()
+            for key, ranking in rankings.items():
+                if key in classified or ranking.best is None:
                     continue
-                exception = classify_unmatched_bank_item(item, known_counterparties)
+                members = [(member.item_type, member.item_id) for member in ranking.best.members]
+                if any(member in consumed_by_scoring for member in members):
+                    continue                     # an earlier item already claimed this record
+                self._store_scored_match(connection, run_id, ranking, known_counterparties,
+                                         summary, now)
+                consumed_by_scoring.add(key)
+                consumed_by_scoring.update(members)
+
+            # 4. Whatever is still unmatched becomes an exception for a reviewer. A capped
+            #    search is reported as EXC-08 rather than as "nothing found" (DD-07).
+            for item in outcome.unmatched_bank:
+                key = (item.item_type, item.item_id)
+                if key in classified or key in consumed_by_scoring:
+                    continue
+                ranking = rankings.get(key)
+                if ranking is not None and ranking.search_capped:
+                    exception = RuleException(
+                        rule_name="BR-05", subject=item, exception_code="EXC-08",
+                        explanation=f"The candidate search was limited: {ranking.cap_reason}.",
+                        suggested_action="Investigate manually; the automated search was capped")
+                else:
+                    exception = classify_unmatched_bank_item(item, known_counterparties)
                 self._store_exception(connection, run_id, exception, known_counterparties,
                                       summary, now)
                 summary.unmatched_for_scoring += 1
 
             for item in outcome.unmatched_ledger:
-                if (item.item_type, item.item_id) in classified:
+                key = (item.item_type, item.item_id)
+                if key in classified or key in consumed_by_scoring:
                     continue
                 period_exception = classify_period_end_item(
                     item, period_end, parameters.outstanding_check_stale_days,
@@ -119,10 +164,16 @@ class MatchingService:
                 rule_name="BR-13",
                 revised_values={
                     "rule_matches": summary.rule_matches,
+                    "scored_matches": summary.scored_matches,
                     "exceptions": summary.exceptions,
                     "recommendations": summary.recommendations,
+                    "candidates_generated": summary.candidates_generated,
+                    "capped_searches": summary.capped_searches,
+                    "calibration_version": summary.calibration_version,
+                    "scoring_enabled": use_scoring,
                     "by_category": summary.by_category,
                     "by_risk": summary.by_risk,
+                    "by_confidence_band": summary.by_confidence_band,
                 }))
 
             self.repositories.runs.set_status(connection, run_id, "in_review")
@@ -218,6 +269,126 @@ class MatchingService:
             summary.by_exception.get(exception.exception_code, 0) + 1
         summary.by_risk[risk.level] = summary.by_risk.get(risk.level, 0) + 1
         summary.by_rule[exception.rule_name] = summary.by_rule.get(exception.rule_name, 0) + 1
+
+    # -- scoring ------------------------------------------------------------
+    def _score_unmatched(self, outcome, summary: MatchingSummary) -> dict[tuple[str, int], Ranking]:
+        """Generate and rank candidates for every item the rules could not settle.
+
+        Bank items are the subjects: each is offered the unmatched ledger entries, which
+        covers one-to-one, one-to-many and, through the group search, many-to-one.
+        """
+        parameters = self.config.parameters
+        weights = Weights.from_config(self.config.scoring)
+
+        candidate_sets = generate_all(
+            outcome.unmatched_bank, outcome.unmatched_ledger,
+            window_business_days=parameters.timing_window_business_days,
+            near_miss_tolerance_cents=self.config.matching.near_miss_tolerance_cents,
+            candidate_cap=parameters.group_candidate_cap,
+            member_cap=parameters.group_member_cap)
+
+        rankings = rank_all(
+            candidate_sets, weights,
+            window_business_days=parameters.timing_window_business_days,
+            one_to_one_score=self.config.scoring.relationship_score_one_to_one,
+            group_score=self.config.scoring.relationship_score_group)
+
+        summary.candidates_generated = sum(len(ranking.scored) for ranking in rankings)
+        summary.capped_searches = sum(1 for ranking in rankings if ranking.search_capped)
+
+        # Strongest first, so when two items compete for the same ledger entry the better
+        # supported pairing takes it. Deterministic: ties fall back to the subject id.
+        ordered = sorted(rankings,
+                         key=lambda ranking: (-(ranking.best.score if ranking.best else 0.0),
+                                              ranking.subject.item_id))
+        return {(ranking.subject.item_type, ranking.subject.item_id): ranking
+                for ranking in ordered}
+
+    def _store_scored_match(self, connection, run_id: int, ranking: Ranking,
+                            known_counterparties: set[str], summary: MatchingSummary,
+                            now: str) -> None:
+        """Store a scored recommendation with every candidate it considered."""
+        subject = ranking.subject
+        best = ranking.best
+        parameters = self.config.parameters
+
+        confidence = self.calibrator.confidence(best.score)
+        runner_up_confidence = (self.calibrator.confidence(ranking.runner_up.score)
+                                if ranking.runner_up else None)
+
+        risk = assess_risk(
+            amount_cents=subject.amount_cents,
+            senior_approval_amount_cents=parameters.senior_approval_amount_cents,
+            is_possible_duplicate=subject.is_possible_duplicate
+            or any(member.is_possible_duplicate for member in best.members),
+            is_group=best.is_group,
+            counterparty=subject.payee, known_counterparties=known_counterparties)
+
+        category, reason = assign_category(
+            risk_level=risk.level, kind="match", source="ai",
+            confidence=confidence, runner_up_confidence=runner_up_confidence,
+            high_confidence_band=parameters.confidence_high_band,
+            ambiguity_margin=parameters.ambiguity_margin)
+
+        explanation = explain_match(ranking,
+                                    window_business_days=parameters.timing_window_business_days,
+                                    ambiguity_margin=parameters.ambiguity_margin)
+        band = self.calibrator.band(confidence, parameters.confidence_high_band,
+                                    parameters.confidence_low_band)
+        text = (f"{explanation.as_text()} Confidence {confidence:.2f} ({band} band), "
+                f"routed to {category}: {reason}.")
+        if risk.triggered != ["RR-07"]:
+            text += " Risk rules triggered: " + ", ".join(risk.reasons()) + "."
+
+        model_version_id = self._model_version_id(connection)
+
+        recommendation_id = self.repositories.recommendations.create(
+            connection, run_id=run_id, subject_item_type=subject.item_type,
+            subject_item_id=subject.item_id, kind="match", source="ai",
+            category_code=category, risk_level=risk.level, explanation=text, created_at=now,
+            relationship=best.relationship, model_version_id=model_version_id,
+            risk_rules=risk.as_json(), confidence=confidence,
+            candidates=[CandidateInput(
+                rank_order=scored.rank, score=scored.score,
+                confidence=self.calibrator.confidence(scored.score),
+                feature_values=scored.features.as_json(),
+                members=[(subject.item_type, subject.item_id)]
+                + [(member.item_type, member.item_id) for member in scored.members])
+                for scored in ranking.scored])
+
+        for item in (subject, *best.members):
+            self.repositories.items.set_status(connection, item.item_type, item.item_id,
+                                               "proposed")
+
+        self.audit.write(connection, RunContext.load(self.database, run_id), AuditEvent(
+            event_type="AI_RECOMMENDATION", process_code="P4", entity_type="recommendation",
+            entity_id=recommendation_id, model_version_id=model_version_id,
+            item_refs=[subject.external_id] + [member.external_id for member in best.members],
+            candidate_scores=ranking.as_candidate_scores(), confidence=confidence,
+            risk_level=risk.level, explanation=explanation.as_text(),
+            previous_status="validated", new_status="proposed"))
+
+        summary.scored_matches += 1
+        summary.recommendations += 1
+        summary.by_category[category] = summary.by_category.get(category, 0) + 1
+        summary.by_risk[risk.level] = summary.by_risk.get(risk.level, 0) + 1
+        summary.by_rule["scored"] = summary.by_rule.get("scored", 0) + 1
+        summary.by_confidence_band[band] = summary.by_confidence_band.get(band, 0) + 1
+
+    def _model_version_id(self, connection) -> int:
+        """Record which calibration artefact produced these confidences (FR-AI-07)."""
+        label = self.calibrator.version_label
+        row = self.database.query_one(
+            "SELECT model_version_id FROM model_version WHERE version_label = ?", (label,))
+        if row:
+            return row["model_version_id"]
+        from app.infra.db import insert
+        return insert(connection, "model_version", {
+            "version_label": label, "algorithm": self.calibrator.method,
+            "calibration_dataset": self.calibrator.dataset or "none",
+            "calibration_seed": self.config.model.calibration_seed,
+            "trained_at": self.calibrator.fitted_at or utc_now(),
+            "notes": self.calibrator.notes})
 
     # -- loading ------------------------------------------------------------
     def _load_items(self, run_id: int) -> dict[str, list[Item]]:

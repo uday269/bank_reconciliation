@@ -76,20 +76,20 @@ Every dependency is free, installs with pip, and earns its place.
 | FastAPI | HTTP routing | Typed request handling and automatic input validation; Flask would need the same checks written by hand |
 | Uvicorn | Server | Single-process local server, no configuration |
 | Jinja2 | HTML rendering | Server-rendered pages keep the whole request path inspectable; a front-end framework would add build tooling without changing what reviewers see |
-| SQLAlchemy Core | Database access | Parameterized statements and table reflection from `schema.sql`. The ORM is not used: it would restate table definitions already held in the schema, and the schema is the source of truth |
+| Standard library `sqlite3` | Database access | The schema is the source of truth and repositories write explicit SQL, so an abstraction layer would wrap `sqlite3` without replacing anything. Parameterized statements, transactions and row factories are all native (revised in Stage 6; see ADR-01) |
 | SQLite | Storage | Single file, zero setup, supports triggers and CHECK constraints, which is where the controls live |
-| RapidFuzz | Text similarity | Fast, dependency-free token-set ratio. Python's `difflib` is slower and handles reordered words poorly, which matters for abbreviated payee names |
+| `app/domain/text.py` | Text similarity | One token-set function written on `difflib`, about forty lines. A dependency for a single function is hard to justify, and bank abbreviations that drop vowels (SLVR for SILVER) need a subsequence test that off-the-shelf ratios handle poorly (revised in Stage 6) |
 | scikit-learn | Confidence calibration | Isotonic regression is exactly the calibration tool needed. Used for nothing else, and never for matching decisions (DD-11) |
 | pytest, httpx | Tests | Standard test runner plus an HTTP client for route tests |
 
-Deliberately not used: an ORM, a task queue, Docker, a front-end framework, a cloud service, or any paid API.
+Deliberately not used: an ORM, a migrations framework, a task queue, Docker, a front-end framework, a cloud service, or any paid API. Stages 6 and 7 run on the standard library plus scikit-learn; the first third-party import happens in the web layer.
 
 ## 4. Data Access
 
 | Point | Design |
 |---------------|---------------------------------------------------------------------|
-| Source of truth | `db/schema.sql`. On startup the engine executes it if the database is empty, then reflects the tables |
-| Statements | SQLAlchemy Core with bound parameters only; no string-built SQL anywhere |
+| Source of truth | `db/schema.sql`. On startup the connection executes it if the database is empty |
+| Statements | Bound parameters only; table and column names come from repository code, never from input; no string-built SQL anywhere |
 | Repositories | One module per aggregate (run, transactions, recommendations, decisions, adjustments, period, audit, reports). Services never write SQL |
 | Transactions | The service owns the boundary. Each request opens one transaction; the change and its audit event commit together, or neither does (CR-08) |
 | Write mode | `BEGIN IMMEDIATE` for any write, so the audit sequence number cannot be allocated twice |
@@ -336,7 +336,7 @@ Decisions DD-01..DD-12 are recorded in DOC-01 and carried unchanged. DD-01 and D
 
 | ID | Decision | Reason | Consequence |
 |---------|------------------|--------------------------------|--------------------------|
-| ADR-01 | Schema in SQL, not in ORM models | Constraints and triggers are the control layer; restating them in Python would create two sources of truth | SQLAlchemy Core with reflection; no migrations framework |
+| ADR-01 | Schema in SQL, accessed through the standard library | Constraints and triggers are the control layer; restating them in Python would create two sources of truth. With no ORM and no migrations, SQLAlchemy would wrap `sqlite3` rather than replace it (revised in Stage 6) | `sqlite3` with explicit SQL in repositories; no migrations framework |
 | ADR-02 | Separate control layer | One implementation and one test per control rule | Services must call control functions; routers never check rules themselves |
 | ADR-03 | Server-rendered HTML | Keeps the request path inspectable and matches the wireframes | No client-side state; full page loads |
 | ADR-04 | Domain layer performs no input or output | Reproducible, testable rules and scoring | Services assemble data and persist results |
@@ -351,6 +351,11 @@ Decisions DD-01..DD-12 are recorded in DOC-01 and carried unchanged. DD-01 and D
 | ADR-13 | GenAI adapter in infrastructure | Nothing in the domain layer can reach it | Prose is stored in a separate field and labelled |
 | ADR-14 | Reports hashed on content | Lets a report be shown unchanged since generation | The generation timestamp is excluded from the hash |
 | ADR-15 | Elapsed time recorded per stage | Performance is reported from measurement, not estimated | Extra timing events in the audit log |
+| ADR-16 | Text similarity written in the project, not imported | One function, and the abbreviation case needs a subsequence test; a reviewer asking why two names scored 0.94 can read the answer | Forty lines to maintain, and no library to upgrade |
+| ADR-17 | Group search by meet in the middle | Keeping only the largest candidates is the wrong slice: a deposit made of four mid-sized receipts would never be found. Indexing subset sums searches the whole window in quadratic time | Groups of five or more members remain out of reach, and that limit is reported as EXC-08 |
+| ADR-18 | Confidence clamped to [0.02, 0.98] | A finite sample cannot establish certainty, and an interface showing "100% confident" invites the over-trust the control design exists to prevent | No recommendation can ever display as certain |
+| ADR-19 | Hard negatives added when fitting calibration | Candidate generation is narrow, so its output alone is almost all correct and teaches a calibrator nothing about the middle of the range | The fitting set is not the production distribution, which is recorded in the artefact notes |
+| ADR-20 | A missing calibration artefact is not an error | A run proceeds and labels itself uncalibrated, so no report can present an unfitted score as a calibrated confidence | Two possible states to handle in reports |
 
 ## 18. Traceability
 

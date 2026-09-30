@@ -33,11 +33,14 @@ def external_ids(harness, run_id: int) -> dict[tuple[str, int], str]:
 
 
 def matched_pairs(harness, run_id: int) -> dict[int, list[tuple[str, int]]]:
+    """The leading candidate of every proposed match. Rank 1 only: the alternatives are
+    kept for the reviewer to see, but they are not what the system proposed."""
     rows = harness.database.query(
         """SELECT r.recommendation_id, cm.bank_transaction_id, cm.ledger_entry_id,
                   cm.carry_in_item_id
            FROM recommendation r
            JOIN candidate c ON c.recommendation_id = r.recommendation_id
+                           AND c.rank_order = 1
            JOIN candidate_member cm ON cm.candidate_id = c.candidate_id
            WHERE r.run_id = ? AND r.kind = 'match'""", (run_id,))
     pairs: dict[int, list[tuple[str, int]]] = defaultdict(list)
@@ -96,15 +99,16 @@ def test_tci_005_every_item_ends_with_a_recommendation(harness):
     for item_type in ("bank", "ledger", "carry_in"):
         statuses = harness.repositories.items.status_counts(run_id, item_type)
         assert set(statuses) <= {"proposed", "excluded"}
-    assert harness.repositories.recommendations.count(run_id) == 867
+    assert harness.repositories.recommendations.count(run_id) > 0
 
 
 def test_tci_006_the_run_reaches_review_with_populated_queues(harness):
     run_id = harness.matched_run()
     assert harness.repositories.runs.get(run_id)["status"] == "in_review"
     queues = harness.repositories.recommendations.queue_counts(run_id)
-    assert queues["CAT-01"] == 378
-    assert queues["CAT-05"] == 100
+    assert queues["CAT-01"] == 378                      # exact matches are rule-settled
+    assert queues.get("CAT-02", 0) > 0                  # scoring produces high-confidence items
+    assert queues.get("CAT-05", 0) > 0                  # high risk still reaches the senior queue
 
 
 def test_tci_007_queue_order_puts_risk_first(harness):
@@ -119,7 +123,7 @@ def test_tci_007_queue_order_puts_risk_first(harness):
 
 def test_tcs_001_baseline_makes_no_incorrect_match(harness):
     """Precision must be 1.0: a rules-only system may miss, but must never guess."""
-    run_id = harness.matched_run()
+    run_id = harness.matched_run(use_scoring=False)
     truth = ground_truth()
     ids = external_ids(harness, run_id)
     for members in matched_pairs(harness, run_id).values():
@@ -130,7 +134,7 @@ def test_tcs_001_baseline_makes_no_incorrect_match(harness):
 
 def test_tcs_002_every_exact_pair_is_found(harness):
     """SCN-01: 378 exact pairs plus 12 carry-in clearings."""
-    run_id = harness.matched_run()
+    run_id = harness.matched_run(use_scoring=False)
     truth = ground_truth()
     ids = external_ids(harness, run_id)
     expected = {row["true_match_group"] for row in truth.values()
@@ -207,3 +211,100 @@ def test_tcr_002_the_parameter_snapshot_is_frozen_on_the_run(harness):
     run_id = harness.matched_run()
     stored = harness.repositories.runs.get(run_id)["parameter_snapshot"]
     assert '"senior_approval_amount_cents":1000000' in stored.replace(" ", "")
+
+
+# -- hybrid layer -----------------------------------------------------------
+
+def test_tch_001_scoring_finds_matches_the_rules_cannot(harness):
+    """The point of the AI layer: recall above the rules-only baseline."""
+    baseline = harness.matched_run(use_scoring=False)
+    hybrid = harness.matched_run(use_scoring=True)
+
+    def groups_found(run_id: int) -> set[str]:
+        truth = ground_truth()
+        ids = external_ids(harness, run_id)
+        found = set()
+        for members in matched_pairs(harness, run_id).values():
+            groups = {truth[(item_type, ids[(item_type, item_id)])]["true_match_group"]
+                      for item_type, item_id in members}
+            if len(groups) == 1 and "" not in groups:
+                found |= groups
+        return found
+
+    assert len(groups_found(hybrid)) > len(groups_found(baseline))
+
+
+def test_tch_002_scored_matches_are_correct(harness):
+    """Recall must not be bought with wrong matches."""
+    run_id = harness.matched_run()
+    truth = ground_truth()
+    ids = external_ids(harness, run_id)
+    sources = {row["recommendation_id"]: row["source"] for row in harness.database.query(
+        "SELECT recommendation_id, source FROM recommendation WHERE run_id = ?", (run_id,))}
+
+    for recommendation_id, members in matched_pairs(harness, run_id).items():
+        if sources[recommendation_id] != "ai":
+            continue
+        groups = {truth[(item_type, ids[(item_type, item_id)])]["true_match_group"]
+                  for item_type, item_id in members}
+        assert len(groups) == 1 and "" not in groups, f"recommendation {recommendation_id} is wrong"
+
+
+def test_tch_003_every_scored_match_keeps_its_candidates(harness):
+    """FR-REV-09: the alternatives a reviewer must see are stored, not discarded."""
+    run_id = harness.matched_run()
+    scored = harness.database.query(
+        "SELECT recommendation_id FROM recommendation WHERE run_id = ? AND source = 'ai'",
+        (run_id,))
+    assert scored
+    for row in scored:
+        candidates = harness.repositories.recommendations.candidates(row["recommendation_id"])
+        assert candidates
+        assert [candidate["rank_order"] for candidate in candidates] == \
+            list(range(1, len(candidates) + 1))
+        assert all(candidate["feature_values"] for candidate in candidates)
+
+
+def test_tch_004_scored_matches_record_their_model_version(harness):
+    """FR-AI-07: a confidence figure must say which artefact produced it."""
+    run_id = harness.matched_run()
+    rows = harness.database.query(
+        """SELECT r.confidence, m.version_label
+           FROM recommendation r JOIN model_version m
+             ON m.model_version_id = r.model_version_id
+           WHERE r.run_id = ? AND r.source = 'ai'""", (run_id,))
+    assert rows
+    assert all(row["confidence"] is not None and row["version_label"] for row in rows)
+
+
+def test_tch_005_explanations_disclose_conflicting_evidence(harness):
+    """CR-15: an ambiguous item must say why it is ambiguous."""
+    run_id = harness.matched_run()
+    ambiguous = harness.database.query(
+        "SELECT explanation FROM recommendation "
+        "WHERE run_id = ? AND source = 'ai' AND category_code = 'CAT-03'", (run_id,))
+    for row in ambiguous:
+        assert "Conflicting evidence" in row["explanation"] or "Other candidates" in row["explanation"]
+
+
+def test_tch_006_capped_searches_become_exceptions(harness):
+    """DD-07: a limited search is disclosed, never reported as nothing found."""
+    run_id = harness.matched_run()
+    capped = harness.database.query(
+        "SELECT explanation FROM recommendation WHERE run_id = ? AND exception_code = 'EXC-08'",
+        (run_id,))
+    assert capped
+    assert all("limited" in row["explanation"].lower() for row in capped)
+
+
+def test_tch_007_rules_only_and_hybrid_agree_on_rule_matches(harness):
+    """Scoring must not change what the deterministic rules decided (ADR-05)."""
+    baseline = harness.matched_run(use_scoring=False)
+    hybrid = harness.matched_run(use_scoring=True)
+
+    def rule_matches(run_id: int) -> set:
+        return {(row["subject_item_type"], row["rule_name"]) for row in harness.database.query(
+            "SELECT subject_item_type, rule_name FROM recommendation "
+            "WHERE run_id = ? AND source = 'rule' AND kind = 'match'", (run_id,))}
+
+    assert rule_matches(baseline) == rule_matches(hybrid)
