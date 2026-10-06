@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ title }} · Bank Reconciliation</title>
+<link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+<header class="top">
+  <span class="brand">{{ organization }} · Bank Reconciliation</span>
+  <nav>
+    <a href="/{% if run %}?run={{ run.run_id }}{% endif %}">Dashboard</a>
+    <a href="/import">New run</a>
+    {% if run %}
+    <a href="/runs/{{ run.run_id }}/queues/CAT-05">Senior queue</a>
+    <a href="/runs/{{ run.run_id }}/adjustments">Adjustments</a>
+    <a href="/runs/{{ run.run_id }}/reports">Reports</a>
+    <a href="/runs/{{ run.run_id }}/close">Close</a>
+    <a href="/runs/{{ run.run_id }}/audit">Audit log</a>
+    {% endif %}
+  </nav>
+  <form method="post" action="/identity">
+    <label for="identity">Acting as</label>
+    <select id="identity" name="user_id" onchange="this.form.submit()">
+      <option value="" {% if not user %}selected{% endif %}>Select an identity…</option>
+      {% for u in users %}
+      <option value="{{ u.user_id }}" {% if user and u.user_id == user.user_id %}selected{% endif %}>{{ u.full_name }} · {{ role_names[u.role_code] }}</option>
+      {% endfor %}
+    </select>
+    {% if run %}<input type="hidden" name="run_id" value="{{ run.run_id }}">{% endif %}
+    <noscript><button type="submit">Use</button></noscript>
+  </form>
+</header>
+<main>
+  {% for message in flashes %}
+  <div class="flash {{ message.kind }}">
+    {{ message.text }}
+    {% if message.details %}<ul>{% for line in message.details %}<li>{{ line }}</li>{% endfor %}</ul>{% endif %}
+  </div>
+  {% endfor %}
+  {% block content %}{% endblock %}
+</main>
+<footer>AI recommends. Humans authorize. The system documents both. · Identity is selected, not authenticated (DD-05).</footer>
+</body>
+</html>

@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Audit log</h1>
+<div class="sub">Every system and human event in run {{ run.run_id }}, in order. Nothing here is ever edited or removed; a correction is a new event (CR-09).</div>
+<div class="panel">
+  <h2>Chain verification</h2>
+  <p class="{{ 'met' if page.verification.intact else 'unmet' }}"><b>{{ page.verification.summary() }}</b></p>
+  <p class="mono">Head {{ page.verification.head_hash }}</p>
+  <p class="muted">Each event's hash covers its content and the previous hash, so any change to a stored event breaks the chain from that point. Database triggers block changes made through the application; the hash chain makes any other change detectable (DD-06).</p>
+</div>
+<div class="panel scroll">
+  <form method="get" class="pager">
+    <label>Event type <select name="event_type" onchange="this.form.submit()">
+      <option value="">All</option>
+      {% for t in page.types %}<option value="{{ t }}" {% if t == page.event_type %}selected{% endif %}>{{ t }}</option>{% endfor %}
+    </select></label>
+    <span class="muted">{{ page.total }} event(s)</span>
+  </form>
+  <table>
+    <thead><tr><th class="num">#</th><th>Time</th><th>Event</th><th>Process</th><th>Actor</th><th>Entity</th><th>Items</th><th>Decision / rule</th><th>Status</th><th>Comment</th><th>Hash</th></tr></thead>
+    <tbody>
+    {% for e in page.rows %}
+      <tr {% if e.blocked %}class="blocked-row"{% endif %}>
+        <td class="num">{{ e.sequence }}</td><td>{{ e.created_at | timestamp }}</td><td>{{ e.event_type }}</td><td>{{ e.process }}</td>
+        <td>{{ e.actor }}</td><td>{{ e.entity }}</td><td class="mono">{{ e.items }}</td>
+        <td>{{ e.decision }}{% if e.decision and e.rule %} · {% endif %}{{ e.rule }}</td><td>{{ e.status }}</td><td>{{ e.comment }}</td>
+        <td class="mono" title="{{ e.hash }}">{{ e.hash | short_hash }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  <div class="pager">
+    {% if page.page > 1 %}<a href="?event_type={{ page.event_type }}&page={{ page.page - 1 }}">← Previous</a>{% endif %}
+    <span class="muted">Page {{ page.page }} of {{ page.pages }}</span>
+    {% if page.page < page.pages %}<a href="?event_type={{ page.event_type }}&page={{ page.page + 1 }}">Next →</a>{% endif %}
+  </div>
+</div>
+{% endblock %}

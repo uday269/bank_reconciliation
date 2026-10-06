@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>{{ page.code }} {{ page.name }}</h1>
+<div class="sub">{{ page.rows | length }} open item(s){% if page.code == "CAT-05" %}, including escalated items{% endif %}. No item is hidden for low confidence.
+{% if page.code == "CAT-01" and page.rows %} · <a href="/runs/{{ run.run_id }}/batch">Review as a batch</a>{% endif %}</div>
+<div class="panel scroll">
+{% if page.rows %}
+<table>
+  <thead><tr><th>Record</th><th>Date</th><th class="num">Amount</th><th>Description</th><th>Source</th><th>Confidence</th><th>Risk</th>{% if page.code == "CAT-05" %}<th>Escalated by</th>{% endif %}<th></th></tr></thead>
+  <tbody>
+  {% for row in page.rows %}
+    <tr {% if row.senior and row.senior.blocked %}class="blocked-row"{% endif %}>
+      <td class="mono">{{ row.record }}</td><td class="nowrap">{{ row.date }}</td>
+      <td class="num">{{ row.amount_cents | money }} <span class="muted">{{ row.direction }}</span></td>
+      <td>{{ row.description }}</td>
+      <td>{{ row.exception_code or row.source }}{% if row.escalated %} <span class="badge risk-medium">escalated</span>{% endif %}</td>
+      <td>{{ row.confidence | confidence }}</td>
+      <td><span class="badge risk-{{ row.risk }}">{{ row.risk }}</span>{% if row.risk_rules %} <span class="muted">{{ row.risk_rules | join(", ") }}</span>{% endif %}</td>
+      {% if page.code == "CAT-05" %}<td>{% if row.senior.escalated_by %}{{ row.senior.escalated_by }}<div class="muted">{{ row.senior.escalation_reason }}</div>{% else %}<span class="muted">routed by risk</span>{% endif %}
+        {% if row.senior.blocked %}<div class="unmet">You cannot decide: {{ row.senior.blocked }}</div>{% endif %}</td>{% endif %}
+      <td><a href="/items/{{ row.recommendation_id }}">Open</a></td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% else %}<p class="muted">No open items in this queue.</p>{% endif %}
+</div>
+{% endblock %}

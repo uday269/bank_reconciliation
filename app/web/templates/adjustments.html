@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Adjustments</h1>
+<div class="sub">Proposed correcting entries and their approval. Approval never posts anything (CR-12); the preparer cannot approve their own (CR-04).</div>
+<div class="panel stats">
+  <div class="stat"><b>{{ page.totals.proposed | money }}</b><span>awaiting approval</span></div>
+  <div class="stat"><b>{{ page.totals.approved | money }}</b><span>approved</span></div>
+  <div class="stat"><b>{{ page.totals.rejected | money }}</b><span>rejected</span></div>
+</div>
+<div class="panel scroll">
+  {% if page.rows %}
+  <table>
+    <thead><tr><th>#</th><th>Record</th><th>Exception</th><th class="num">Amount</th><th>Entry</th><th>Rationale</th><th>Prepared by</th><th>Status</th><th>Decision</th></tr></thead>
+    {% for row in page.rows %}
+    <tr>
+      <td>{{ row.adjustment_id }}</td><td class="mono"><a href="/items/{{ row.recommendation_id }}">{{ row.record }}</a></td><td>{{ row.exception_code }}</td>
+      <td class="num">{{ row.amount_cents | money }}</td><td>Dr {{ row.debit }} / Cr {{ row.credit }}</td><td>{{ row.rationale }}</td>
+      <td>{{ row.prepared_by }}</td><td>{{ row.status }}{% if row.decided_by %} <span class="muted">by {{ row.decided_by }}</span>{% endif %}</td>
+      <td>{% if row.status == "proposed" %}
+        <form method="post" action="/adjustments/{{ row.adjustment_id }}/decision">
+          <input type="text" name="comment" placeholder="Comment (required to reject)">
+          <button name="decision" value="approve" {% if not row.allowed %}disabled{% endif %}>Approve</button>
+          <button name="decision" value="reject" class="secondary" {% if not row.allowed %}disabled{% endif %}>Reject</button>
+          {% if not row.allowed %}<div class="disabled-reason">{{ row.reason }}</div>{% endif %}
+        </form>{% endif %}</td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% else %}<p class="muted">No adjustments have been proposed.</p>{% endif %}
+</div>
+{% endblock %}

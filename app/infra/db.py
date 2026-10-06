@@ -59,6 +59,11 @@ class Database:
             self.path,
             isolation_level=None,        # transactions are explicit, never implicit
             detect_types=0,
+            # The web server may open the connection on one thread and serve requests on
+            # another. Requests are handled one at a time (ADR-21), so the connection is
+            # never used by two threads at once; this flag only lifts sqlite3's
+            # same-thread check, it does not make concurrent use safe.
+            check_same_thread=False,
         )
         connection.row_factory = sqlite3.Row
         connection.execute("PRAGMA foreign_keys = ON")
