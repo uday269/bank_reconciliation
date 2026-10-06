@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+{% block content %}
+{% set rec = page.rec %}
+<div class="sub"><a href="/runs/{{ rec.run_id }}/queues/{{ page.queue }}">← {{ page.queue }} queue</a></div>
+<h1>{{ page.subject_ref }} · {{ page.subject.amount_cents | money }} {{ page.subject.direction }}</h1>
+<div class="sub">Recommendation {{ rec.recommendation_id }} · {{ rec.category_code }} {{ page.category_name }} ·
+  {{ "Exception " ~ rec.exception_code if rec.kind == "exception" else rec.relationship | replace("_", "-") ~ " match" }} ·
+  {{ page.level }}-level decision · status <b>{{ rec.status }}</b>{% if page.subject.status == "escalated" %} · <span class="badge risk-medium">escalated</span>{% endif %}</div>
+
+<div class="grid">
+<div>
+  <div class="panel">
+    <h2>{{ page.subject_type | replace("_", "-") | capitalize }} record</h2>
+    <table>
+      <tr><th>Record</th><td class="mono">{{ page.subject_ref }}</td></tr>
+      <tr><th>Business date</th><td>{{ page.subject_date }}</td></tr>
+      <tr><th>Amount</th><td>{{ page.subject.amount_cents | money }} {{ page.subject.direction }}</td></tr>
+      <tr><th>Item status</th><td>{{ page.subject.status }}</td></tr>
+    </table>
+    <h2 style="margin-top:14px">Original and normalized values</h2>
+    <table>
+      <thead><tr><th>Field</th><th>Original</th><th>Normalized</th></tr></thead>
+      {% for f in page.fields %}<tr><td>{{ f.label }}</td><td>{{ f.original or "—" }}</td><td>{{ f.normalized or "—" }}</td></tr>{% endfor %}
+    </table>
+  </div>
+
+  <div class="panel">
+    <h2>Candidates ({{ page.candidates | length }})</h2>
+    {% if not page.candidates %}<p class="muted">No candidate was found. See the explanation for what was considered.</p>{% endif %}
+    <p class="muted">All candidates are listed, and none is preselected. To approve a different one, select it and choose "Approve the selected candidate".</p>
+    {% for c in page.candidates %}
+    <div class="panel" style="margin-bottom:10px">
+      <label>
+        {% if rec.kind == "match" and c.rank > 1 and c.origin == "system" %}<input type="radio" name="chosen_candidate_id" value="{{ c.candidate_id }}" form="decision-form">{% endif %}
+        <b>Rank {{ c.rank }}</b>{% if c.rank == 1 and rec.kind == "match" %} · the proposal{% endif %}
+        {% if c.origin == "reviewer" %} · <span class="badge">paired by a reviewer, not scored</span>
+        {% else %} · score {{ "%.4f" | format(c.score) }} · confidence {{ c.confidence | confidence }} ({{ c.band }}){% endif %}
+      </label>
+      {% if c.features %}
+      <div class="muted mono" style="margin:6px 0">{% for k, v in c.features | dictsort %}{{ k }}={{ v }}{% if not loop.last %} · {% endif %}{% endfor %}</div>
+      {% endif %}
+      <table>
+        <thead><tr><th>Record</th><th>Date</th><th class="num">Amount</th><th>Description</th><th>Status</th></tr></thead>
+        {% for m in c.members %}<tr><td class="mono">{{ m.record }}</td><td class="nowrap">{{ m.date }}</td><td class="num">{{ m.amount_cents | money }} {{ m.direction }}</td><td>{{ m.description }}</td><td>{{ m.status }}</td></tr>{% endfor %}
+      </table>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<div>
+  <div class="panel">
+    <h2>Why the system proposes this</h2>
+    <table>
+      <tr><th>Confidence</th><td>{{ rec.confidence | confidence }}{% if rec.confidence is not none %} ({{ page.band }} band){% endif %}</td></tr>
+      <tr><th>Risk</th><td><span class="badge risk-{{ rec.risk_level }}">{{ rec.risk_level }}</span>
+        {% for r in page.risk_rules %}<div class="muted">{{ r.code }}: {{ r.name }}</div>{% endfor %}</td></tr>
+      <tr><th>Source</th><td>{{ rec.rule_name or "AI scoring" }}</td></tr>
+    </table>
+    <h2 style="margin-top:14px">Supporting evidence</h2>
+    {% if page.explanation.supporting %}<ul>{% for line in page.explanation.supporting %}<li>{{ line }}</li>{% endfor %}</ul>
+    {% else %}<p class="muted">None stated.</p>{% endif %}
+    <h2 class="unmet">Conflicting evidence</h2>
+    {% if page.explanation.conflicting %}<ul class="unmet">{% for line in page.explanation.conflicting %}<li>{{ line }}</li>{% endfor %}</ul>
+    {% else %}<p class="muted">None identified. That is not proof the proposal is right.</p>{% endif %}
+    {% if page.explanation.alternatives %}<h2>Other candidates</h2><ul>{% for line in page.explanation.alternatives %}<li>{{ line }}</li>{% endfor %}</ul>{% endif %}
+    {% if page.explanation.notes %}<p>{{ page.explanation.notes }}</p>{% endif %}
+    {% if rec.genai_prose %}<h2>Plain-language summary <span class="badge">generated text, not evidence</span></h2>
+      <p class="muted">{{ rec.genai_prose }}</p>
+      <p class="muted">A restatement of the evidence above. It sets no score, risk or decision; its source is in the audit log (CR-13).</p>{% endif %}
+    {% if page.prose_enabled %}
+      <form method="post" action="/items/{{ rec.recommendation_id }}/prose"><button class="secondary" {% if not user %}disabled{% endif %}>{{ "Regenerate" if rec.genai_prose else "Generate" }} plain-language summary</button></form>
+    {% endif %}
+  </div>
+
+  <div class="panel">
+    <h2>Decision</h2>
+    <form id="decision-form" method="post" action="/items/{{ rec.recommendation_id }}/decision">
+      <label for="comment">Comment</label>
+      <textarea id="comment" name="comment" placeholder="Required to reject, modify, escalate, leave unresolved, or approve a High-risk item (CR-16)"></textarea>
+      <div style="display:flex; flex-direction:column; gap:6px; margin-top:8px">
+      {% for a in page.actions if a.offered %}
+        <div>
+          <button name="decision" value="{{ a.decision }}" {% if not a.allowed %}disabled{% endif %} {% if a.decision in ("approve", "modify") %}{% else %}class="secondary"{% endif %}>{{ a.label }}</button>
+          {% if not a.allowed %}<span class="disabled-reason">{{ a.reason }}</span>{% elif a.comment_required %}<span class="disabled-reason">comment required</span>{% endif %}
+        </div>
+      {% endfor %}
+      </div>
+    </form>
+    <p class="muted" style="margin-top:10px">Recorded as {{ user.full_name if user else "no identity" }}, with the time this screen was opened.</p>
+  </div>
+
+  {% if page.manual %}
+  <div class="panel">
+    <h2>Pair by hand</h2>
+    <p class="muted">For records the automated search missed or could not complete. Select the records that settle this item; they must agree to the cent. Listed by nearest date, with no score.</p>
+    {% if page.manual.options %}
+    <form method="post" action="/items/{{ rec.recommendation_id }}/manual-match">
+      <div class="scroll"><table>
+        <thead><tr><th></th><th>Record</th><th>Date</th><th class="num">Amount</th><th>Description</th></tr></thead>
+        {% for m in page.manual.options %}
+        <tr><td><input type="checkbox" name="counterpart" value="{{ m.item_type }}:{{ m.item_id }}"></td><td class="mono">{{ m.record }}</td><td class="nowrap">{{ m.date }}</td><td class="num">{{ m.amount_cents | money }}</td><td>{{ m.description }}</td></tr>
+        {% endfor %}
+      </table></div>
+      <textarea name="comment" placeholder="Why these records belong together (required)"></textarea>
+      <button {% if not page.manual.allowed %}disabled{% endif %}>Pair the selected records</button>
+      {% if not page.manual.allowed %}<span class="disabled-reason">{{ page.manual.reason }}</span>{% endif %}
+    </form>
+    {% else %}<p class="muted">No free records on the other side with the same direction of cash.</p>{% endif %}
+  </div>
+  {% endif %}
+
+  {% if page.adjustment %}
+  {% set adj = page.adjustment %}
+  <div class="panel">
+    <h2>Proposed adjustment</h2>
+    <p class="muted">A proposal for the accounting team to enter. The system never posts it (CR-12), and someone other than the preparer must approve it (CR-04).</p>
+    {% for e in adj.existing %}
+      <p>Adjustment {{ e.adjustment_id }}: {{ e.amount_cents | money }} · Dr {{ e.debit }} / Cr {{ e.credit }} · <b>{{ e.status }}</b> · prepared by {{ e.prepared_by }}<br><span class="muted">{{ e.rationale }}</span></p>
+    {% endfor %}
+    {% if adj.suggestion %}
+    <form method="post" action="/items/{{ rec.recommendation_id }}/adjustment">
+      <table>
+        <tr><th>Amount</th><td><input type="text" name="amount" value="{{ '%.2f' | format(adj.suggestion.amount_cents / 100) }}"></td></tr>
+        <tr><th>Debit</th><td><select name="debit">{% for a in adj.accounts %}<option value="{{ a.gl_account_code }}" {% if a.gl_account_code == adj.suggestion.debit_account_code %}selected{% endif %}>{{ a.gl_account_code }} {{ a.account_name }}</option>{% endfor %}</select></td></tr>
+        <tr><th>Credit</th><td><select name="credit">{% for a in adj.accounts %}<option value="{{ a.gl_account_code }}" {% if a.gl_account_code == adj.suggestion.credit_account_code %}selected{% endif %}>{{ a.gl_account_code }} {{ a.account_name }}</option>{% endfor %}</select></td></tr>
+        <tr><th>Rationale</th><td><textarea name="rationale">{{ adj.suggestion.rationale }}</textarea></td></tr>
+        <tr><th>Evidence</th><td><input type="text" name="evidence" placeholder="e.g. bank notice reference"></td></tr>
+      </table>
+      <button {% if not adj.allowed %}disabled{% endif %}>Propose adjustment</button>
+      {% if not adj.allowed %}<span class="disabled-reason">{{ adj.reason }}</span>{% endif %}
+      <p class="muted">Pre-filled from the exception category; check the accounts before proposing.</p>
+    </form>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  <div class="panel">
+    <h2>Decision history</h2>
+    {% if page.history %}
+    <table>
+      <thead><tr><th>When</th><th>Who</th><th>Level</th><th>Decision</th><th>Comment</th></tr></thead>
+      {% for h in page.history %}<tr><td>{{ h.at | timestamp }}</td><td>{{ h.by }}</td><td>{{ h.level }}</td><td>{{ h.decision }}{% if h.batch %} <span class="muted">(batch {{ h.batch }})</span>{% endif %}</td><td>{{ h.comment }}</td></tr>{% endfor %}
+    </table>
+    {% else %}<p class="muted">No decision yet.</p>{% endif %}
+  </div>
+</div>
+</div>
+{% endblock %}

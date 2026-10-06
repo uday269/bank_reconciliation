@@ -1,4 +1,4 @@
-ire # --- Python ---
+# --- Python ---
 __pycache__/
 *.py[cod]
 *.egg-info/
@@ -44,3 +44,5 @@ env/
 # Local configuration and database
 config/local.toml
 reconciliation.db
+# Generated report packages (reproducible from the database; benchmarks stay tracked)
+reports/run_*/

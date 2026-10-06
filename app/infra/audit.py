@@ -40,7 +40,7 @@ EVENT_TYPES = frozenset({
     "ADJUSTMENT_DECIDED", "REPORT_GENERATED", "REPORT_EXPORTED", "REPORT_VERIFIED",
     "CHAIN_VERIFIED", "SIGNOFF", "PERIOD_LOCKED", "REOPEN_REQUESTED", "REOPEN_DECIDED",
     "GENAI_PROSE",
-    "IDENTITY_SELECTED", "STAGE_TIMING",
+    "IDENTITY_SELECTED", "STAGE_TIMING", "STATUS_CHANGED",
 })
 
 PROCESS_CODES = frozenset({"P1", "P2", "P3", "P4", "P5", "P6", "P7", "P8"})
@@ -205,8 +205,14 @@ class AuditLog:
         return GENESIS if row is None else row["event_hash"]
 
     # -- reading ------------------------------------------------------------
-    def head_hash(self, run_id: int) -> str:
-        """Chain head, printed on the signed Reconciliation Summary (FR-AUD-07)."""
+    def head_hash(self, run_id: int, connection: sqlite3.Connection | None = None) -> str:
+        """Chain head, printed on the signed Reconciliation Summary (FR-AUD-07).
+
+        Pass the transaction's connection when the head is recorded alongside a write,
+        so the recorded head is the one that write follows.
+        """
+        if connection is not None:
+            return self._head_hash(connection, run_id)
         value = self.database.scalar(
             "SELECT event_hash FROM audit_event WHERE run_id = ? "
             "ORDER BY sequence_no DESC LIMIT 1",
@@ -223,6 +229,25 @@ class AuditLog:
                + (" LIMIT ? OFFSET ?" if limit is not None else ""))
         parameters = (run_id, limit, offset) if limit is not None else (run_id,)
         return self.database.query(sql, parameters)
+
+    def latest_event(self, run_id: int, event_type: str, entity_type: str, entity_id: int,
+                     actor_user_id: int | None = None,
+                     connection: sqlite3.Connection | None = None) -> sqlite3.Row | None:
+        """The most recent event of one type for one entity, optionally by one user.
+
+        Used to recover when a reviewer opened an item's detail view (FR-REV-11), so the
+        timing comes from the evidence rather than from a value the browser sends back.
+        """
+        sql = ("SELECT * FROM audit_event WHERE run_id = ? AND event_type = ? "
+               "AND entity_type = ? AND entity_id = ?")
+        parameters: list[Any] = [run_id, event_type, entity_type, entity_id]
+        if actor_user_id is not None:
+            sql += " AND actor_user_id = ?"
+            parameters.append(actor_user_id)
+        sql += " ORDER BY sequence_no DESC LIMIT 1"
+        if connection is not None:
+            return connection.execute(sql, parameters).fetchone()
+        return self.database.query_one(sql, parameters)
 
     # -- verification -------------------------------------------------------
     def verify(self, run_id: int) -> "ChainVerification":

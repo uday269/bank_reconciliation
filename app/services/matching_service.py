@@ -17,7 +17,7 @@ makes the rules-only and hybrid comparison in DOC-07 a like-for-like measurement
 from __future__ import annotations
 
 from collections import Counter
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import date
 from typing import Any
 
@@ -225,7 +225,7 @@ class MatchingService:
 
     def _store_exception(self, connection, run_id: int, exception: RuleException,
                          known_counterparties: set[str], summary: MatchingSummary,
-                         now: str) -> None:
+                         now: str, previous_status: str = "validated") -> int:
         item = exception.subject
         category_detail = exception_catalog.get(exception.exception_code)
         is_stale = exception.rule_name == "BR-10"
@@ -260,7 +260,7 @@ class MatchingService:
             explanation=exception.explanation,
             revised_values={"exception_code": exception.exception_code,
                             "next_action": category_detail.next_action},
-            previous_status="validated", new_status="proposed"))
+            previous_status=previous_status, new_status="proposed"))
 
         summary.exceptions += 1
         summary.recommendations += 1
@@ -269,6 +269,52 @@ class MatchingService:
             summary.by_exception.get(exception.exception_code, 0) + 1
         summary.by_risk[risk.level] = summary.by_risk.get(risk.level, 0) + 1
         summary.by_rule[exception.rule_name] = summary.by_rule.get(exception.rule_name, 0) + 1
+        return recommendation_id
+
+    # -- re-proposal after a reviewer decision -------------------------------
+    def requeue_as_exceptions(self, connection, run_id: int, items: list[tuple[str, int]],
+                              reason: str, now: str) -> list[int]:
+        """Re-propose items a reviewer released, each as a new exception recommendation.
+
+        Called when a proposed match is rejected, or when a reviewer selects a different
+        candidate and the original counterparts are no longer part of it. Each item is
+        classified with the same rules matching uses (BR-08..BR-12) and routed by BR-13,
+        so a released item lands in the queue it would have reached had matching never
+        paired it. The original recommendation is kept, superseded, as evidence.
+
+        Parameters come from configuration, as they do for matching, so a re-proposal
+        and the original run classify an item the same way.
+        """
+        if not items:
+            return []
+        parameters = self.config.parameters
+        run = self.repositories.runs.get(run_id, connection)
+        period_end = date.fromisoformat(run["period_end"])
+        loaded = {item_type: [Item.from_row(item_type, row)
+                              for row in self.repositories.items.list(run_id, item_type)
+                              if row["status"] != "excluded"]
+                  for item_type in ("bank", "ledger", "carry_in")}
+        known_counterparties = self._known_counterparties(loaded)
+        by_key = {(item.item_type, item.item_id): item
+                  for group in loaded.values() for item in group}
+
+        summary = MatchingSummary(run_id=run_id)
+        created: list[int] = []
+        for key in items:
+            item = by_key[key]
+            if item.item_type == "bank":
+                exception = classify_unmatched_bank_item(item, known_counterparties)
+            else:
+                exception = (classify_period_end_item(
+                    item, period_end, parameters.outstanding_check_stale_days,
+                    parameters.deposit_in_transit_stale_days)
+                    or classify_unmatched_ledger_item(item))
+            exception = replace(exception, explanation=f"{reason} {exception.explanation}")
+            previous = self.repositories.items.get(item.item_type, item.item_id, connection)["status"]
+            created.append(self._store_exception(connection, run_id, exception,
+                                                 known_counterparties, summary, now,
+                                                 previous_status=previous))
+        return created
 
     # -- scoring ------------------------------------------------------------
     def _score_unmatched(self, outcome, summary: MatchingSummary) -> dict[tuple[str, int], Ranking]:

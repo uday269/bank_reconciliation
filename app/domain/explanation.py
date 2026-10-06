@@ -17,6 +17,7 @@ separate, labelled field (DD-10).
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 from typing import Sequence
 
@@ -244,3 +245,27 @@ def summarize_for_prose(ranking: Ranking, explanation: Explanation) -> dict:
         "supporting_evidence": list(explanation.supporting),
         "conflicting_evidence": list(explanation.conflicting),
     }
+
+
+# ---------------------------------------------------------------------------
+# Reading a stored explanation back into its parts
+# ---------------------------------------------------------------------------
+
+STORED_SECTIONS = ("Supporting evidence", "Conflicting evidence", "Other candidates")
+
+
+def split_stored(text: str | None) -> dict[str, list[str] | str]:
+    """Separate a stored explanation into supporting, conflicting, alternatives and notes.
+
+    The reviewer screen shows conflicting evidence in its own block, and the optional
+    prose adapter receives the same parts, so both read one parser.
+    """
+    sections: dict[str, list[str]] = {name: [] for name in STORED_SECTIONS}
+    remainder = text or ""
+    for name in STORED_SECTIONS:
+        match = re.search(re.escape(name) + r": (.*?)\.(?= [A-Z]|$)", remainder)
+        if match:
+            sections[name] = [part.strip() for part in match.group(1).split("; ") if part.strip()]
+            remainder = (remainder[:match.start()] + remainder[match.end():]).strip()
+    return {"supporting": sections["Supporting evidence"], "conflicting": sections["Conflicting evidence"],
+            "alternatives": sections["Other candidates"], "notes": remainder.strip()}

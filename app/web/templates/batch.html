@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Exact-match batch</h1>
+<div class="sub">{{ page.rows | length }} open exact match(es) with Low risk. Untick any row to leave it for individual review. One click writes one decision and one audit event per item (DD-02).</div>
+<form method="post" action="/runs/{{ run.run_id }}/batch">
+<div class="panel scroll">
+  {% if page.rows %}
+  <table>
+    <thead><tr><th>Include</th><th>Rule</th><th>Bank record</th><th>Date</th><th class="num">Amount</th><th>Description</th><th>Matched to</th><th></th></tr></thead>
+    {% for row in page.rows %}
+    <tr>
+      <td><input type="checkbox" name="recommendation_id" value="{{ row.recommendation_id }}" checked></td>
+      <td>{{ row.rule }}</td><td class="mono">{{ row.subject.record }}</td><td class="nowrap">{{ row.subject.date }}</td>
+      <td class="num">{{ row.subject.amount_cents | money }} {{ row.subject.direction }}</td><td>{{ row.subject.description }}</td>
+      <td class="mono">{% for c in row.counterparts %}{{ c.record }}{% if not loop.last %}, {% endif %}{% endfor %}</td>
+      <td><a href="/items/{{ row.recommendation_id }}">Open</a></td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% else %}<p class="muted">No exact matches await review.</p>{% endif %}
+</div>
+{% if page.rows %}
+<div class="panel">
+  <textarea name="comment" placeholder="Comment (required to reject)"></textarea>
+  <button name="action" value="approve" {% if not page.permission.allowed %}disabled{% endif %}>Approve selected</button>
+  <button name="action" value="reject" class="secondary" {% if not page.permission.allowed %}disabled{% endif %}>Reject selected</button>
+  {% if not page.permission.allowed %}<span class="disabled-reason">{{ page.permission.reason }}</span>{% endif %}
+</div>
+{% endif %}
+</form>
+{% endblock %}

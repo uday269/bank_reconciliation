@@ -1,16 +1,16 @@
 # AI-Assisted Bank Reconciliation — dependencies
 #
-# Stages 6 and 7 run on the standard library plus scikit-learn.
-# The web layer arrives in Stage 8.
+# Matching runs on the standard library plus scikit-learn. Jinja2 renders the reports
+# and the reviewer interface; the other web packages serve the interface.
 #
 # Install with:  pip install -r requirements.txt
 
-# --- Confidence calibration (Stage 7) -------------------------------------
+# --- Confidence calibration -------------------------------------------------
 # Isotonic regression maps a raw match score to a calibrated probability.
 # Used for calibration only, never to decide a match (DD-11).
 scikit-learn>=1.4,<2.0
 
-# --- Web layer (Stage 8) ---------------------------------------------------
+# --- Reports and reviewer interface ---------------------------------------
 fastapi>=0.110,<1.0
 uvicorn>=0.29,<1.0
 jinja2>=3.1,<4.0

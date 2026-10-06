@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Report package</h1>
+<div class="sub">Thirteen reports, each in HTML and CSV with a content hash. Regenerating keeps earlier versions on record.</div>
+<div class="panel">
+  <form method="post" action="/runs/{{ run.run_id }}/reports"><button {% if not user %}disabled{% endif %}>Generate report package</button>{% if not user %}<span class="disabled-reason">select an identity first</span>{% endif %}</form>
+</div>
+<div class="panel scroll">
+<table>
+  <thead><tr><th>Code</th><th>Report</th><th>Generated</th><th>Content hash</th><th></th></tr></thead>
+  <tbody>
+  {% for rpt in page.reports %}
+    <tr>
+      <td>{{ rpt.code }}</td><td>{{ rpt.title }}</td>
+      <td>{{ rpt.generated_at | timestamp if rpt.generated_at else "not generated" }}</td>
+      <td class="mono" title="{{ rpt.hash or '' }}">{{ rpt.hash | short_hash }}</td>
+      <td>{% if rpt.generated_at %}<a href="/runs/{{ run.run_id }}/reports/{{ rpt.code }}" target="_blank">View</a> · <a href="/runs/{{ run.run_id }}/reports/{{ rpt.code }}.csv">CSV</a>{% endif %}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

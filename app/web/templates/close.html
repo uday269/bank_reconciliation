@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block content %}
+{% set r = page.run %}{% set s = page.statement %}
+<h1>Close period · run {{ r.run_id }}</h1>
+<div class="sub">{{ r.period_start }} to {{ r.period_end }} · status <b>{{ r.status | replace("_", " ") }}</b></div>
+
+<div class="grid">
+<div class="panel">
+  <h2>Bank-to-book reconciliation statement</h2>
+  <table>
+    <tr><td>Bank ending balance</td><td class="num">{{ s.bank_ending_balance_cents | money }}</td></tr>
+    <tr><td>Add: deposits in transit</td><td class="num">{{ s.deposits_in_transit_cents | money }}</td></tr>
+    <tr><td>Less: outstanding checks</td><td class="num">{{ (0 - s.outstanding_checks_cents) | money }}</td></tr>
+    <tr><th>Adjusted bank balance</th><th class="num">{{ s.adjusted_bank_balance_cents | money }}</th></tr>
+    <tr><td>Book ending balance</td><td class="num">{{ s.book_ending_balance_cents | money }}</td></tr>
+    <tr><td>Add: bank credits not yet recorded</td><td class="num">{{ s.bank_originated_credits_cents | money }}</td></tr>
+    <tr><td>Less: bank debits not yet recorded</td><td class="num">{{ (0 - s.bank_originated_debits_cents) | money }}</td></tr>
+    <tr><th>Adjusted book balance</th><th class="num">{{ s.adjusted_book_balance_cents | money }}</th></tr>
+    <tr><th>Unresolved difference</th><th class="num {{ 'unmet' if s.unresolved_difference_cents else 'met' }}">{{ s.unresolved_difference_cents | money }}</th></tr>
+  </table>
+  {% for section in page.sections %}
+  <h2 style="margin-top:14px">{{ section.title }} <span class="muted">({{ section.lines | length }}, {{ section.total_cents | money }})</span></h2>
+  {% if section.lines %}
+  <div class="scroll"><table>
+    {% for line in section.lines %}<tr><td class="mono">{{ line.item_ref }}</td><td class="nowrap">{{ line.business_date }}</td><td class="num">{{ line.amount_cents | money }}</td><td class="nowrap">{{ line.exception_code or "" }}</td><td>{{ line.description }}</td></tr>{% endfor %}
+  </table></div>
+  {% else %}<p class="muted">None.</p>{% endif %}
+  {% endfor %}
+</div>
+
+<div>
+  <div class="panel">
+    <h2>Close conditions</h2>
+    <table>
+      {% for c in page.readiness.conditions %}
+      <tr><td class="{{ 'met' if c.met else 'unmet' }}">{{ '✓' if c.met else '✗' }}</td><td>{{ c.label }}</td><td class="muted">{{ c.detail }}</td></tr>
+      {% endfor %}
+    </table>
+    {% if not page.readiness.conditions[4].met %}
+    <form method="post" action="/runs/{{ r.run_id }}/reports"><button class="secondary" {% if not user %}disabled{% endif %}>Generate report package</button></form>
+    {% endif %}
+  </div>
+
+  {% if r.status not in ("closed", "reopen_requested") %}
+  <div class="panel">
+    <h2>Sign off and lock</h2>
+    <form method="post" action="/runs/{{ r.run_id }}/close">
+      <textarea name="comment" placeholder="{{ 'Required: explain the unresolved difference (CR-10)' if page.comment_required else 'Optional comment' }}"></textarea>
+      <button {% if not page.sign.allowed %}disabled{% endif %}>Sign off and lock the period</button>
+      {% if not page.sign.allowed %}<span class="disabled-reason">{{ page.sign.reason }}</span>{% endif %}
+    </form>
+    <p class="muted">Signing records the statement and the audit chain head, then locks the period: no decision, adjustment or import is accepted until it is reopened.</p>
+  </div>
+  {% endif %}
+
+  <div class="panel">
+    <h2>Reopening</h2>
+    {% if page.pending %}
+      <p>Requested by {{ page.reopenings[-1].by }}: “{{ page.pending.reason }}”</p>
+      <form method="post" action="/reopen-requests/{{ page.pending.reopen_request_id }}/decision">
+        <textarea name="comment" placeholder="Comment (required to reject)"></textarea>
+        <button name="decision" value="approve" {% if not page.decide.allowed %}disabled{% endif %}>Approve reopening</button>
+        <button name="decision" value="reject" class="secondary" {% if not page.decide.allowed %}disabled{% endif %}>Reject</button>
+        {% if not page.decide.allowed %}<span class="disabled-reason">{{ page.decide.reason }}</span>{% endif %}
+      </form>
+    {% elif r.status == "closed" %}
+      <form method="post" action="/runs/{{ r.run_id }}/reopen-request">
+        <textarea name="reason" placeholder="Reason for reopening (required)"></textarea>
+        <button {% if not page.request.allowed %}disabled{% endif %}>Request reopening</button>
+        {% if not page.request.allowed %}<span class="disabled-reason">{{ page.request.reason }}</span>{% endif %}
+      </form>
+    {% else %}<p class="muted">Available once the period is closed.</p>{% endif %}
+    {% if page.reopenings %}
+    <table style="margin-top:10px"><thead><tr><th>Requested</th><th>Reason</th><th>Decision</th></tr></thead>
+      {% for o in page.reopenings %}<tr><td>{{ o.by }}<div class="muted">{{ o.at | timestamp }}</div></td><td>{{ o.reason }}</td><td>{{ o.decision }}{% if o.decided_by %} by {{ o.decided_by }}{% endif %}<div class="muted">{{ o.comment }}</div></td></tr>{% endfor %}
+    </table>{% endif %}
+  </div>
+
+  {% if page.signoffs %}
+  <div class="panel">
+    <h2>Sign-offs</h2>
+    {% for so in page.signoffs %}
+      <p>{{ so.by }} · {{ so.at | timestamp }} · difference {{ so.difference_cents | money }}<br>
+      <span class="muted">{{ so.comment }}</span><br><span class="mono" title="{{ so.chain_head }}">chain head {{ so.chain_head | short_hash(16) }}</span></p>
+    {% endfor %}
+  </div>
+  {% endif %}
+</div>
+</div>
+{% endblock %}

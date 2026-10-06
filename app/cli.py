@@ -4,10 +4,14 @@
     python -m app.cli run --data data/august_2026    import, validate and match one dataset
     python -m app.cli status [--run 1]           run status, queue counts and chain result
     python -m app.cli verify [--run 1]           verify the audit chain
+    python -m app.cli report [--run 1]           generate the report package (RPT-01..13)
+    python -m app.cli serve                      start the reviewer interface on 127.0.0.1:8000
     python -m app.cli reset --force              delete the database file and start again
 
-The web interface arrives in Stage 8. Until then these commands are how a run is
-exercised end to end, and they are what the baseline benchmark uses.
+Reviewer decisions, adjustments, sign-off and reopening are made in the reviewer
+interface, never from the command line: every one of them needs a selected identity and
+goes through the same controls. The command line covers setup, the automated pipeline
+and evidence, which is also what the benchmarks use.
 """
 
 from __future__ import annotations
@@ -18,10 +22,10 @@ import time
 from pathlib import Path
 
 from app.config import Config, ConfigError, load_config
-from app.domain.calibration import Calibrator
 from app.infra.audit import AuditLog, utc_now
 from app.infra.db import Database, open_database
 from app.infra.repositories import Repositories
+from app.services.container import Services, load_calibrator
 from app.services.import_service import ImportError_, ImportService
 from app.services.matching_service import MatchingService
 from app.services.validation_service import ValidationService
@@ -52,21 +56,6 @@ def money(cents: int | None) -> str:
 def build(config: Config) -> tuple[Database, Repositories, AuditLog]:
     database = open_database(config.paths.database, config.paths.schema)
     return database, Repositories.for_database(database), AuditLog(database)
-
-
-def load_calibrator(path: Path) -> Calibrator:
-    """Load the fitted artefact, or fall back to reporting raw scores.
-
-    A missing artefact is not an error: the run proceeds and labels itself uncalibrated,
-    so nothing downstream can present an unfitted number as a calibrated one.
-    """
-    if path.exists():
-        try:
-            return Calibrator.load(path)
-        except (ValueError, KeyError) as error:
-            print(f"Calibration artefact could not be read ({error}); "
-                  f"raw scores will be reported.", file=sys.stderr)
-    return Calibrator.identity()
 
 
 # ---------------------------------------------------------------------------
@@ -225,6 +214,38 @@ def command_verify(config: Config, args) -> int:
     return 0 if result.intact else 1
 
 
+def command_report(config: Config, args) -> int:
+    """Generate the package. Approved items that pass the report check become reconciled."""
+    services = Services.build(config)
+    run = services.repositories.runs.get(args.run) if args.run else services.repositories.runs.latest()
+    if run is None:
+        print("No runs yet.")
+        return 0
+    result = services.reports.generate_package(run["run_id"], args.user)
+    print(f"Report package for run {run['run_id']} written to {result.directory}")
+    print(f"  {len(result.hashes)} files (13 reports, HTML and CSV)")
+    print(f"  items reconciled by the report check: {result.promoted}")
+    for failure in result.failures:
+        print(f"  report check failed: {failure}")
+    print(f"  run status: {result.run_status}")
+    return 1 if result.failures else 0
+
+
+def command_serve(config: Config, args) -> int:
+    """Start the reviewer interface. Imported here so the other commands need no web packages."""
+    try:
+        import uvicorn
+
+        from app.web.main import create_app
+    except ImportError as error:
+        print(f"The web packages are not installed ({error}). Run: pip install -r requirements.txt",
+              file=sys.stderr)
+        return 2
+    print(f"Reviewer interface: http://{args.host}:{args.port}  (Ctrl+C to stop)")
+    uvicorn.run(create_app(config), host=args.host, port=args.port)
+    return 0
+
+
 def command_reset(config: Config, args) -> int:
     if not args.force:
         print("Refusing to delete the database without --force.", file=sys.stderr)
@@ -271,6 +292,14 @@ def main(argv: list[str] | None = None) -> int:
     verify_parser = subparsers.add_parser("verify", help="verify the audit chain")
     verify_parser.add_argument("--run", type=int)
 
+    report_parser = subparsers.add_parser("report", help="generate the report package")
+    report_parser.add_argument("--run", type=int)
+    report_parser.add_argument("--user", type=int, help="identity generating the package (default: system)")
+
+    serve_parser = subparsers.add_parser("serve", help="start the reviewer interface")
+    serve_parser.add_argument("--host", default="127.0.0.1")
+    serve_parser.add_argument("--port", type=int, default=8000)
+
     reset_parser = subparsers.add_parser("reset", help="delete the database file")
     reset_parser.add_argument("--force", action="store_true")
 
@@ -283,7 +312,8 @@ def main(argv: list[str] | None = None) -> int:
         return 2
 
     commands = {"init": command_init, "run": command_run, "status": command_status,
-                "verify": command_verify, "reset": command_reset}
+                "verify": command_verify, "report": command_report, "serve": command_serve,
+                "reset": command_reset}
     return commands[args.command](config, args)
 
 
