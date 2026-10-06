@@ -37,6 +37,7 @@ from app.infra.repositories import Repositories
 from app.services.blocked import record_blocked
 
 ITEM_TYPES = ("bank", "ledger", "carry_in")
+ITEM_ID = {"bank": "bank_transaction_id", "ledger": "ledger_entry_id", "carry_in": "carry_in_item_id"}
 EXTERNAL_COLUMN = {"bank": "external_txn_id", "ledger": "external_entry_id",
                    "carry_in": "external_item_id"}
 DATE_COLUMN = {"bank": "transaction_date", "ledger": "posting_date", "carry_in": "original_date"}
@@ -126,6 +127,10 @@ class PeriodService:
             adjustments_pending=len(self.repositories.adjustments.for_run(run_id, ["proposed"])),
             chain_intact=verification.intact,
             package_generated=self._package_is_current(run_id),
+            # Condition 5 needs every approved item carried through to 'reconciled'. The
+            # report check moves an item approved -> report_verified -> reconciled in one
+            # transaction, so an item still in 'report_verified' means that step did not
+            # finish; it is counted as not yet verified on purpose, and blocks close.
             approved_not_verified=total("approved") + total("report_verified"),
             unresolved_difference_cents=statement.unresolved_difference_cents,
             signoff_comment=signoff_comment)
@@ -296,5 +301,3 @@ class PeriodService:
                 last_package = event["sequence_no"]
         return last_package > last_change
 
-
-ITEM_ID = {"bank": "bank_transaction_id", "ledger": "ledger_entry_id", "carry_in": "carry_in_item_id"}
