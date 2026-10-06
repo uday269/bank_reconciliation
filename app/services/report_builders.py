@@ -260,6 +260,11 @@ def rpt_05_ai_recommendation(facts: RunFacts) -> ReportData:
     model_rows = Table("Model versions", ["Version", "Algorithm", "Calibration dataset", "Seed", "Fitted at"])
     for version_id in sorted(v for v in versions if v is not None):
         row = facts.repositories.recommendations.model_version(version_id)
+        if row is None:
+            # The schema's foreign key makes this unreachable; if it ever happens, the report
+            # says so rather than failing, so the rest of the package is still produced.
+            model_rows.rows.append([f"model version {version_id} not found", "", "", "", ""])
+            continue
         model_rows.rows.append([row["version_label"], row["algorithm"], row["calibration_dataset"],
                                 str(row["calibration_seed"]), row["trained_at"]])
     prose = Table("Generative AI prose (labelled, never a score or decision)", ["Recommendation", "Prose"])

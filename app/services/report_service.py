@@ -174,9 +174,15 @@ class ReportService:
             context = RunContext.load(self.database, run_id)
             for rec_id, keys in sorted(promote.items()):
                 for key in keys:
-                    for current, new in (("approved", "report_verified"), ("report_verified", "reconciled")):
+                    # Two steps, in the DOC-03 order: approved -> report_verified -> reconciled.
+                    # Each step is checked against the status actually stored, read inside this
+                    # transaction, so an item changed since the check above is refused, not
+                    # promoted.
+                    current = self.repositories.items.get(key[0], key[1], connection)["status"]
+                    for new in ("report_verified", "reconciled"):
                         states.require_item_transition(current, new)
                         self.repositories.items.set_status(connection, key[0], key[1], new)
+                        current = new
                     promoted += 1
                 self.audit.write(connection, context, AuditEvent(
                     event_type="REPORT_VERIFIED", process_code="P8", entity_type="recommendation",
