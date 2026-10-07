@@ -24,7 +24,7 @@ Dependencies point downward only. The domain layer performs no input or output a
 
 ```
 app/
-├── cli.py                  Command line: init, run, status, verify, report, serve, reset
+├── cli.py                  Command line: init, run, status, verify, report, serve, evaluate, reset
 ├── config.py               Configuration load and parameter snapshot
 ├── web/
 │   ├── main.py             Application factory, session, error handling
@@ -45,6 +45,9 @@ app/
 │   ├── period_service.py       UC-11..UC-13, the bank-to-book statement
 │   ├── report_service.py       UC-10, package and report check
 │   ├── report_builders.py      Data for RPT-01..13
+│   ├── prose_service.py        Optional labelled prose (CR-13)
+│   ├── evaluation_service.py   FR-EVL; the only code that reads ground truth
+│   ├── reference_data.py       Identities and chart of accounts
 │   └── blocked.py              BLOCKED_ATTEMPT events for every service
 ├── control/
 │   ├── errors.py           ControlViolation and error codes
@@ -71,7 +74,7 @@ app/
     └── genai/              Provider-neutral adapter, offline stub, Gemini option
 ```
 
-Revised in Stage 8: the web layer separates view functions from routes so every screen can be built and checked without a server (ADR-22); repositories are one module rather than a package (ADR-29); the evaluation service arrives with the evaluation stage.
+Revised in Stage 8: the web layer separates view functions from routes so every screen can be built and checked without a server (ADR-22); repositories are one module rather than a package (ADR-29).
 
 ## 3. Technology
 
@@ -262,7 +265,7 @@ HTML routes serve the reviewer interface; two JSON routes exist where a machine-
 | GET `/api/runs/{run_id}/audit/verify` | Chain verification as JSON | — | CHAIN_VERIFIED |
 | GET `/api/runs/{run_id}/status` | Run status and queue counts as JSON | — | — |
 
-Reviewer decisions, adjustments, sign-off and reopening exist only in the interface, never on the command line, so there is one path to each and it goes through the same controls (ADR-31). Evaluation will be a command line entry point, not a route, because it reads ground truth (ADR-11).
+Reviewer decisions, adjustments, sign-off and reopening exist only in the interface, never on the command line, so there is one path to each and it goes through the same controls (ADR-31). Evaluation is a command line entry point (`evaluate`), not a route, because it reads ground truth (ADR-11).
 
 ## 11. Validation and Error Handling
 
@@ -408,6 +411,6 @@ Decisions DD-01..DD-12 are recorded in DOC-01 and are all settled as the working
 | FR-AUD | `infra/audit.py`, schema triggers |
 | FR-PER | `services/period_service.py`, `domain/statement.py`, `web/routes/period.py`, `control/period_lock.py` |
 | FR-RPT | `services/report_service.py`, `services/report_builders.py`, `infra/reports/`, `control/completion.py` |
-| FR-EVL | Evaluation command (evaluation stage) |
+| FR-EVL | `services/evaluation_service.py`, `cli.py` (`evaluate`) |
 | FR-GAI | `infra/genai/` |
 | CR-01..CR-18 | `app/control` plus schema constraints and triggers |

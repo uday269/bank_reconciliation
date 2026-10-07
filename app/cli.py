@@ -6,6 +6,8 @@
     python -m app.cli verify [--run 1]           verify the audit chain
     python -m app.cli report [--run 1]           generate the report package (RPT-01..13)
     python -m app.cli serve                      start the reviewer interface on 127.0.0.1:8000
+    python -m app.cli evaluate [--run 1]         measure against ground truth -> reports/evaluation.md
+    python -m app.cli evaluate --timing-sample --run 1   item lists for the timing study
     python -m app.cli reset --force              delete the database file and start again
 
 Reviewer decisions, adjustments, sign-off and reopening are made in the reviewer
@@ -22,32 +24,14 @@ import time
 from pathlib import Path
 
 from app.config import Config, ConfigError, load_config
-from app.infra.audit import AuditLog, utc_now
+from app.infra.audit import AuditLog
 from app.infra.db import Database, open_database
 from app.infra.repositories import Repositories
-from app.services.container import Services, load_calibrator
+from app.services.container import DEFAULT_CALIBRATION, Services, load_calibrator
 from app.services.import_service import ImportError_, ImportService
 from app.services.matching_service import MatchingService
+from app.services.reference_data import GL_ACCOUNTS, STAFF, seed
 from app.services.validation_service import ValidationService
-
-# Reviewer identities and the chart of accounts the prototype needs. Fictional (ASM-03).
-STAFF = [
-    ("Maya Castillo", "ROL-01"),
-    ("Ethan Brooks", "ROL-01"),
-    ("Priya Raman", "ROL-02"),
-    ("Daniel Okafor", "ROL-03"),
-]
-
-GL_ACCOUNTS = [
-    ("1010", "Cash - Operating", "asset"),
-    ("1210", "Accounts Receivable", "asset"),
-    ("2010", "Accounts Payable", "liability"),
-    ("6810", "Bank Service Charges", "expense"),
-    ("6820", "Returned Item Charges", "expense"),
-    ("7010", "Interest Income", "income"),
-    ("9990", "Suspense - Under Investigation", "asset"),
-]
-
 
 def money(cents: int | None) -> str:
     return "-" if cents is None else f"${cents / 100:,.2f}"
@@ -68,18 +52,7 @@ def command_init(config: Config, args) -> int:
         print(f"{config.paths.database} is already initialized.")
         return 0
 
-    with database.transaction() as connection:
-        now = utc_now()
-        for full_name, role in STAFF:
-            repositories.users.create(connection, full_name, role, now)
-        repositories.accounts.create_gl_accounts(connection, GL_ACCOUNTS)
-        repositories.accounts.create_bank_account(
-            connection,
-            bank_name=config.organization.bank_name,
-            account_label=config.organization.account_label,
-            account_mask=config.organization.account_mask,
-            gl_account_code=config.organization.gl_account_code,
-            currency_code=config.organization.currency)
+    seed(database, repositories, config)
 
     print(f"Initialized {config.paths.database}")
     print(f"  {len(STAFF)} identities, {len(GL_ACCOUNTS)} ledger accounts, 1 bank account")
@@ -246,6 +219,45 @@ def command_serve(config: Config, args) -> int:
     return 0
 
 
+def command_evaluate(config: Config, args) -> int:
+    """Measure the pipeline on fresh databases, and a reviewed run if one is named.
+
+    The only command that reads ground truth (FR-EVL-11). Pipeline measurements build
+    their own temporary databases, so the working database is only ever read.
+    """
+    from app.services.evaluation_service import EvaluationService, render_markdown, shown
+
+    evaluator = EvaluationService(config, Path(args.calibration))
+    data = Path(args.data or config.paths.evaluation_dataset)
+    services = Services.build(config, Path(args.calibration)) if args.run else None
+
+    if args.timing_sample:
+        if services is None:
+            print("--timing-sample needs --run", file=sys.stderr)
+            return 2
+        for number, items in enumerate(evaluator.timing_sample(services, args.run), start=1):
+            print(f"Person {number}: {len(items)} items")
+            print("  " + " ".join(str(item) for item in items))
+        print("Open each item at http://127.0.0.1:8000/items/<number> and decide it as you normally would.")
+        return 0
+
+    evaluation = evaluator.evaluate(data, services, args.run)
+    output = Path(args.out)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(render_markdown(evaluation), encoding="utf-8")
+    hybrid = evaluation.hybrid
+    print(f"Evaluation written to {output}")
+    # shown() prints "n/a (n=0)" when there is nothing to divide by, e.g. a dataset with no matches.
+    print(f"  precision {shown(hybrid.correct, hybrid.proposed)}, "
+          f"recall {shown(hybrid.found_groups, hybrid.true_groups)}")
+    print(f"  hypothetical false automatic match rate {hybrid.hypothetical_wrong}/{hybrid.hypothetical_accepted}")
+    if evaluation.review:
+        review = evaluation.review
+        print(f"  run {review.run_id}: {review.decided}/{review.recommendations} decided, "
+              f"audit complete {review.audit_complete}/{review.audit_total}")
+    return 0
+
+
 def command_reset(config: Config, args) -> int:
     if not args.force:
         print("Refusing to delete the database without --force.", file=sys.stderr)
@@ -300,6 +312,14 @@ def main(argv: list[str] | None = None) -> int:
     serve_parser.add_argument("--host", default="127.0.0.1")
     serve_parser.add_argument("--port", type=int, default=8000)
 
+    evaluate_parser = subparsers.add_parser("evaluate", help="measure against ground truth")
+    evaluate_parser.add_argument("--run", type=int, help="a reviewed run to measure as well")
+    evaluate_parser.add_argument("--data", help="labelled dataset (default: paths.evaluation_dataset)")
+    evaluate_parser.add_argument("--out", default="reports/evaluation.md")
+    evaluate_parser.add_argument("--calibration", default=str(DEFAULT_CALIBRATION))
+    evaluate_parser.add_argument("--timing-sample", action="store_true",
+                                 help="print the stratified item lists for the timing study")
+
     reset_parser = subparsers.add_parser("reset", help="delete the database file")
     reset_parser.add_argument("--force", action="store_true")
 
@@ -312,7 +332,7 @@ def main(argv: list[str] | None = None) -> int:
         return 2
 
     commands = {"init": command_init, "run": command_run, "status": command_status,
-                "verify": command_verify, "report": command_report, "serve": command_serve,
+                "verify": command_verify, "report": command_report, "serve": command_serve, "evaluate": command_evaluate,
                 "reset": command_reset}
     return commands[args.command](config, args)
 
