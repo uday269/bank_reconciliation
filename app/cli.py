@@ -225,7 +225,7 @@ def command_evaluate(config: Config, args) -> int:
     The only command that reads ground truth (FR-EVL-11). Pipeline measurements build
     their own temporary databases, so the working database is only ever read.
     """
-    from app.services.evaluation_service import EvaluationService, render_markdown
+    from app.services.evaluation_service import EvaluationService, render_markdown, shown
 
     evaluator = EvaluationService(config, Path(args.calibration))
     data = Path(args.data or config.paths.evaluation_dataset)
@@ -247,8 +247,9 @@ def command_evaluate(config: Config, args) -> int:
     output.write_text(render_markdown(evaluation), encoding="utf-8")
     hybrid = evaluation.hybrid
     print(f"Evaluation written to {output}")
-    print(f"  precision {hybrid.precision:.4f} ({hybrid.correct}/{hybrid.proposed}), "
-          f"recall {hybrid.recall:.4f} ({hybrid.found_groups}/{hybrid.true_groups})")
+    # shown() prints "n/a (n=0)" when there is nothing to divide by, e.g. a dataset with no matches.
+    print(f"  precision {shown(hybrid.correct, hybrid.proposed)}, "
+          f"recall {shown(hybrid.found_groups, hybrid.true_groups)}")
     print(f"  hypothetical false automatic match rate {hybrid.hypothetical_wrong}/{hybrid.hypothetical_accepted}")
     if evaluation.review:
         review = evaluation.review
