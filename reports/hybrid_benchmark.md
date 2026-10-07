@@ -23,7 +23,7 @@ scoring layer ran, so the comparison measures the AI layer rather than two syste
 | Exception accuracy | 0.8434 (n=83) | 0.8734 (n=79) |
 | Items left unmatched for a reviewer | 443 | 85 |
 | Recommendations created | 867 | 675 |
-| Elapsed | 0.1s | 0.2s |
+| Elapsed | 0.4s | 0.4s |
 
 ## Recall by scenario
 
@@ -51,14 +51,15 @@ Scored matches only. Rule-settled matches carry no confidence value.
 The artefact was fitted on data/july_2026_calibration. These figures are the first
 time it has met this dataset.
 
-- Expected calibration error: 0.0836
+- Expected calibration error: 0.1234
 - Worst band error: 0.9800
-- Brier score: 0.0640
+- Brier score: 0.0707
 
 | Band | n | Stated | Observed | Error |
 |---|---|---|---|---|
 | 0.0-0.1 | 11 | 0.020 | 1.000 | 0.980 |
-| 0.9-1.0 | 155 | 0.980 | 1.000 | 0.020 |
+| 0.8-0.9 | 52 | 0.853 | 1.000 | 0.147 |
+| 0.9-1.0 | 103 | 0.980 | 1.000 | 0.020 |
 
 ## Hypothetical automatic acceptance (DD-01)
 

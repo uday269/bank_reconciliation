@@ -2,19 +2,19 @@
 
 ## 1. Purpose and Scope
 
-This document defines how the system is tested, shows which tests cover each control rule, scenario and requirement group, and records the results. It covers everything built up to and including the controls, review, reporting and reviewer interface. The measured evaluation of matching quality (all brief section 11 metrics, performance by confidence band, error analysis) is reported separately in the Evaluation Report; this document records only the tests that guard it.
+This document defines how the system is tested, shows which tests cover each control rule, scenario and requirement group, and records the results. It covers the whole system, including the evaluator. The measured results of the evaluation (all brief section 11 metrics, performance by confidence band, error analysis) are reported in DOC-07 Evaluation Report; this document records the tests that guard them.
 
 ## 2. Strategy
 
 | Level | What it proves | ID | Tests |
 |------------------|------------------------------------------------------------------|-----------|------:|
-| Unit | Domain and control functions on fixed inputs: rules, features, scoring, calibration, risk, explanations, statement arithmetic, permissions, separation of duties, state models | TC-U-nnn | 70 |
-| Integration | Services against a real database, and the web layer through view functions and HTTP routes | TC-I-nnn | 73 |
-| Control | One or more tests per control rule: the refusal, the rule it names, and the BLOCKED_ATTEMPT event where one applies | TC-C-nnn | 64 |
+| Unit | Domain and control functions on fixed inputs: rules, features, scoring, calibration, risk, explanations, statement arithmetic, permissions, separation of duties, state models, audit completeness rules | TC-U-nnn | 71 |
+| Integration | Services against a real database, the web layer through view functions and HTTP routes, and the evaluator | TC-I-nnn | 78 |
+| Control | One or more tests per control rule: the refusal, the rule it names, and the BLOCKED_ATTEMPT event where one applies | TC-C-nnn | 65 |
 | Hybrid | The AI layer against the labelled dataset: what scoring adds and what it must never do | TC-H-nnn | 7 |
 | Scenario | SCN-01..08 against the labelled dataset, and the complete August reconciliation | TC-S-nnn | 8 |
-| Reproducibility | Same seed and data give the same results; parameters are frozen on the run | TC-R-nnn | 2 |
-| **Total** | | | **224** |
+| Reproducibility | Same seed and data give the same results; parameters are frozen on the run; the timing sample is seeded | TC-R-nnn | 3 |
+| **Total** | | | **232** |
 
 Counts are test cases; one unit test runs five parameterized cases.
 
@@ -60,6 +60,7 @@ python -m pytest -k tcc_038 -q              # one test by ID
 | `test_genai.py` | Optional prose: decision-language guard, fallback, audit, nothing else changed | 8 |
 | `test_web_views.py` | Every screen's data and template, without a server | 17 |
 | `test_web_routes.py` | The HTTP layer: identity, decisions, refusals, batch, adjustments, pairing, import, close | 13 |
+| `test_evaluation.py` | The evaluator: figures pinned to the benchmarks, review measures, audit completeness rules, timing sample, never writes to the working database | 8 |
 | `test_cli.py` | Command line: init, run, status, report, verify, reset | 2 |
 
 ## 5. Control Rule Coverage
@@ -117,22 +118,22 @@ Other controls tested: role matrix (TC-C-019, TC-C-021, TC-C-044, TC-C-062), det
 | FR-PER | `test_period.py`, `test_reports.py` |
 | FR-RPT | `test_reports.py`, `test_cli.py` |
 | FR-GAI | `test_genai.py` |
-| FR-EVL | Evaluation stage |
+| FR-EVL | `test_evaluation.py` |
 
 ## 8. Results
 
 | Item | Result |
 |-------------|--------------------------------------------------------------|
-| Suite | **224 passed, 0 failed** |
-| Duration | About 90 seconds on a laptop; the complete-reconciliation tests take most of it |
+| Suite | **232 passed, 0 failed** |
+| Duration | About 95 seconds on a laptop; the complete-reconciliation tests take most of it |
 | Warnings | None |
 
 Figures the suite holds in place, so a change that moves them fails a test:
 
 | Figure | Value | Guarded by |
 |-------------------------|----------------------------------------------|-------------------|
-| Rules-only baseline | Precision 1.0000, no incorrect match | TC-S-001 |
-| Hybrid layer | Every scored match correct; finds matches the rules cannot | TC-H-001, TC-H-002 |
+| Rules-only baseline | Precision 1.0000 (390/390), recall 0.6866 | TC-S-001, TC-I-074 |
+| Rules plus scoring | Precision 1.0000 (556/556), recall 0.9789 (556/568); hypothetical false automatic match rate 0/467 | TC-H-001, TC-H-002, TC-I-074, TC-I-075 |
 | Routed queues | 378 / 99 / 63 / 105 / 30 across CAT-01..05 (675 recommendations) | TC-I-041, TC-I-067 |
 | Statement after a correct review | Unresolved difference **-$9,392.35**, exactly the dataset's | TC-I-030, TC-S-007, TC-S-008 |
 | Complete reconciliation | Every item reconciled or unresolved; signed, locked, chain intact | TC-S-008 |
@@ -152,6 +153,7 @@ Each of these was found by a test or by writing one, fixed, and is now pinned by
 | Investigate-only exceptions could be approved, and so reconciled while unexplained | TC-S-008 | EXC-05, EXC-07 and EXC-08 cannot be approved |
 | The Reconciliation Summary hash changed on every regeneration | TC-I-038 | It shows the chain head recorded at sign-off, not the live head |
 | The generative AI adapter was built but never called, and its guards were untested | Coverage review of CR-13 | Wired as an optional reviewer action and tested with misbehaving providers |
+| The calibration benchmark passed calibrated confidence through the calibrator again, reporting an error of 0.0836 instead of 0.1234 | Writing the evaluator's calibration measure | Both now assess the raw score once; figures pinned by TC-I-074 |
 
 ## 10. Not Covered, and Why
 
@@ -161,5 +163,5 @@ Each of these was found by a test or by writing one, fixed, and is now pinned by
 | Concurrent users | Not applicable by design: one connection, one request at a time (ADR-21) |
 | Cross-site request forgery, upload size | Stated limits of a local prototype (DOC-05 section 12); not tested |
 | Lock on adjustment decisions at database level | No trigger exists for that table (ADR-30); the service lock is tested directly (TC-C-047) |
-| Time per item | Measured in timed review sessions and reported in the Evaluation Report (DD-04); the suite only checks that timings are recorded (TC-I-015) |
-| Matching quality metrics | Reported in the Evaluation Report; the suite guards the figures that must not regress |
+| Time per item | Measured in timed review sessions and reported in DOC-07 (DD-04); the suite checks that timings are recorded and attributed (TC-I-015, TC-I-076) |
+| Matching quality metrics | Measured by the evaluator and reported in DOC-07; the suite pins the figures that must not regress |

@@ -108,7 +108,7 @@ def evaluate(database, run_id: int, truth: dict, ids: dict, config) -> dict:
     """Precision, recall, confidence bands and the hypothetical auto-accept rate."""
     rows = database.query(
         """SELECT r.recommendation_id, r.source, r.rule_name, r.confidence, r.category_code,
-                  r.risk_level, cm.bank_transaction_id, cm.ledger_entry_id, cm.carry_in_item_id
+                  r.risk_level, c.score, cm.bank_transaction_id, cm.ledger_entry_id, cm.carry_in_item_id
            FROM recommendation r
            JOIN candidate c ON c.recommendation_id = r.recommendation_id AND c.rank_order = 1
            JOIN candidate_member cm ON cm.candidate_id = c.candidate_id
@@ -118,6 +118,7 @@ def evaluate(database, run_id: int, truth: dict, ids: dict, config) -> dict:
     for row in rows:
         entry = proposals.setdefault(row["recommendation_id"], {
             "source": row["source"], "rule": row["rule_name"], "confidence": row["confidence"],
+            "score": row["score"],
             "category": row["category_code"], "risk": row["risk_level"], "members": []})
         for item_type, column in (("bank", "bank_transaction_id"), ("ledger", "ledger_entry_id"),
                                   ("carry_in", "carry_in_item_id")):
@@ -152,7 +153,9 @@ def evaluate(database, run_id: int, truth: dict, ids: dict, config) -> dict:
                     else "Medium" if entry["confidence"] >= parameters.confidence_low_band
                     else "Low")
             band_counts[band][0 if correct else 1] += 1
-            calibration_points.append(CalibrationPoint(entry["confidence"], correct))
+            # The raw score, not the stored confidence: the calibrator is applied once, in
+            # assess(). Passing the confidence would calibrate twice.
+            calibration_points.append(CalibrationPoint(entry["score"], correct))
 
         # BR-19 hypothetical: what the system would have accepted without a reviewer.
         # Policy fixed before measurement (DD-01): exact category, no risk flag, and

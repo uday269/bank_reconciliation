@@ -6,7 +6,7 @@ A human-supervised bank reconciliation system. It matches a month of bank transa
 
 ## Status
 
-Feature-complete and tested: **224 automated tests passing**. Matching evaluation and the release guides are in progress; the first release will be tagged `v1.0.0`.
+Feature-complete, tested and evaluated: **232 automated tests passing**. The release guides are in progress; the first release will be tagged `v1.0.0`.
 
 ## What It Does
 
@@ -20,7 +20,7 @@ Feature-complete and tested: **224 automated tests passing**. Matching evaluatio
 | Report and close | 13 reports in HTML and CSV with content hashes; a report check confirms each approved item before it counts as reconciled; sign-off records the statement and the audit chain head, then locks the period | Controller |
 | Reopen | Requested with a reason, approved by a different person; a new sign-off is needed to close again | Accountant requests, Controller approves |
 
-On the included August 2026 dataset, the scoring layer raises recall from **0.69** (rules only) to **0.98** with **no incorrect match**, and a complete review closes at an unresolved difference of **-$9,392.35**, exactly the difference the dataset was built with.
+On the included August 2026 dataset, the scoring layer raises recall from **0.69** (rules only) to **0.98** with **no incorrect match**, and a complete review closes at an unresolved difference of **-$9,392.35**, exactly the difference the dataset was built with. The [Evaluation Report](docs/markdown/07_evaluation_report.md) covers every measure, the errors found, and the limits of what one synthetic month can show.
 
 ## Architecture
 
@@ -96,6 +96,7 @@ Identity is selected, not authenticated. Every decision is still attributed and 
 | `python3 -m app.cli report` | Generate the report package into `reports/run_<id>/` |
 | `python3 -m app.cli verify` | Recompute the audit hash chain |
 | `python3 -m app.cli serve` | Start the reviewer interface |
+| `python3 -m app.cli evaluate [--run N]` | Measure against ground truth; writes `reports/evaluation.md` |
 | `python3 -m app.cli reset --force` | Delete the database and start again |
 
 Decisions, adjustments, sign-off and reopening are made only in the interface, so each has one path, and it goes through the controls.
@@ -135,7 +136,7 @@ python3 scripts/generate_dataset.py --profile calibration  # July 2026
 python3 scripts/fit_calibration.py                         # refit models/calibration.json
 ```
 
-`ground_truth.csv` holds the correct answer for every item. Only the tests and benchmarks read it; the application never does.
+`ground_truth.csv` holds the correct answer for every item. Only the evaluator, the tests and the benchmarks read it; the reviewer interface and the services that decide never do.
 
 ## Project Structure
 
@@ -157,7 +158,7 @@ bank_reconciliation/
 ├── models/               Fitted calibration artefact
 ├── reports/              Benchmarks; generated packages go in reports/run_<id>/ (not committed)
 ├── scripts/              Dataset generation, calibration fitting, benchmarks
-└── tests/                224 tests: unit, integration, control, scenario, reproducibility
+└── tests/                232 tests: unit, integration, control, scenario, reproducibility
 ```
 
 ## Documents
@@ -170,9 +171,10 @@ bank_reconciliation/
 | DOC-04 | Data Specification | [md](docs/markdown/04_data_specification.md) | [docx](docs/word-files/04_data_specification.docx) |
 | DOC-05 | System Design | [md](docs/markdown/05_system_design.md) | [docx](docs/word-files/05_system_design.docx) |
 | DOC-06 | Test Plan and Results | [md](docs/markdown/06_test_plan_and_results.md) | [docx](docs/word-files/06_test_plan_and_results.docx) |
+| DOC-07 | Evaluation Report | [md](docs/markdown/07_evaluation_report.md) | [docx](docs/word-files/07_evaluation_report.docx) |
 | — | Reviewer Interface Wireframes | [md](docs/markdown/reviewer_interface_wireframes.md) | [docx](docs/word-files/reviewer_interface_wireframes.docx) |
 
-Benchmarks: [rules only](reports/baseline_benchmark.md) · [rules plus scoring](reports/hybrid_benchmark.md)
+Results: [evaluation](reports/evaluation.md) · [rules only](reports/baseline_benchmark.md) · [rules plus scoring](reports/hybrid_benchmark.md)
 
 ## Scope
 
