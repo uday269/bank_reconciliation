@@ -348,8 +348,11 @@ class EvaluationService:
                 metrics.by_band.setdefault(band, Counter())[final["decision"]] += 1
 
             # Did the people approve the right thing? Checked against ground truth here only.
-            if final["decision"] in ("approve", "modify") and rec["kind"] == "match" or (
-                    final["decision"] == "modify" and final["chosen_candidate_id"]):
+            # Two cases: a match approved or modified, and an exception paired by hand
+            # (a modify with a chosen candidate). Approving an exception is not a pairing.
+            approved_match = final["decision"] in ("approve", "modify") and rec["kind"] == "match"
+            hand_paired = final["decision"] == "modify" and bool(final["chosen_candidate_id"])
+            if approved_match or hand_paired:
                 candidate_id = final["chosen_candidate_id"] or repos.recommendations.candidates(rec_id)[0]["candidate_id"]
                 members = self._members(services, candidate_id)
                 groups = {truth.get((key[0], refs[key]), {}).get("true_match_group", "") for key in members}
