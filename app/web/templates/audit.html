@@ -1,30 +1,33 @@
 {% extends "base.html" %}
 {% block content %}
-<h1>Audit log</h1>
-<div class="sub">Every system and human event in run {{ run.run_id }}, in order. Nothing here is ever edited or removed; a correction is a new event (CR-09).</div>
+<div class="sub"><a href="/?run={{ run.run_id }}">← Home</a></div>
+<h1>Audit trail for {{ page.month }}</h1>
+<p class="lead">Everything people and the system did this month, in order. Entries are never changed or removed; a correction is added as a new entry.<span class="tech"> CR-09</span></p>
 <div class="panel">
-  <h2>Chain verification</h2>
-  <p class="{{ 'met' if page.verification.intact else 'unmet' }}"><b>{{ page.verification.summary() }}</b></p>
-  <p class="mono">Head {{ page.verification.head_hash }}</p>
-  <p class="muted">Each event's hash covers its content and the previous hash, so any change to a stored event breaks the chain from that point. Database triggers block changes made through the application; the hash chain makes any other change detectable (DD-06).</p>
+  <p class="{{ 'met' if page.verification.intact else 'unmet' }}"><b>{{ page.check }}</b></p>
+  <p class="hint">Each entry carries a fingerprint that includes the one before it, so changing any stored entry would show up here.</p>
+  <div class="tech"><p>{{ page.verification.summary() }}</p><p class="mono">Head {{ page.verification.head_hash }}</p>
+    <p>Database triggers block changes made through the application; the SHA-256 hash chain makes any other change detectable. This is tamper-evident, not write-once storage (DD-06).</p></div>
 </div>
 <div class="panel scroll">
   <form method="get" class="pager">
-    <label>Event type <select name="event_type" onchange="this.form.submit()">
-      <option value="">All</option>
-      {% for t in page.types %}<option value="{{ t }}" {% if t == page.event_type %}selected{% endif %}>{{ t }}</option>{% endfor %}
+    <label>Show <select name="event_type" onchange="this.form.submit()">
+      <option value="">Everything</option>
+      {% for code, name in page.types %}<option value="{{ code }}" {% if code == page.event_type %}selected{% endif %}>{{ name }}</option>{% endfor %}
     </select></label>
-    <span class="muted">{{ page.total }} event(s)</span>
+    <span class="muted">{{ "{:,}".format(page.total) }} entr{{ "y" if page.total == 1 else "ies" }}</span>
   </form>
   <table>
-    <thead><tr><th class="num">#</th><th>Time</th><th>Event</th><th>Process</th><th>Actor</th><th>Entity</th><th>Items</th><th>Decision / rule</th><th>Status</th><th>Comment</th><th>Hash</th></tr></thead>
+    <thead><tr><th>When</th><th>Who</th><th>What happened</th><th>Records</th><th>Comment</th><th class="tech">Details</th></tr></thead>
     <tbody>
     {% for e in page.rows %}
-      <tr {% if e.blocked %}class="blocked-row"{% endif %}>
-        <td class="num">{{ e.sequence }}</td><td>{{ e.created_at | timestamp }}</td><td>{{ e.event_type }}</td><td>{{ e.process }}</td>
-        <td>{{ e.actor }}</td><td>{{ e.entity }}</td><td class="mono">{{ e.items }}</td>
-        <td>{{ e.decision }}{% if e.decision and e.rule %} · {% endif %}{{ e.rule }}</td><td>{{ e.status }}</td><td>{{ e.comment }}</td>
-        <td class="mono" title="{{ e.hash }}">{{ e.hash | short_hash }}</td>
+      <tr data-event="{{ e.event_type }}" {% if e.blocked %}class="blocked-row"{% endif %}>
+        <td class="nowrap">{{ e.created_at | timestamp }}</td>
+        <td>{{ e.actor }}</td>
+        <td>{{ e.what }}{% if e.decision_text %}: {{ e.decision_text }}{% endif %}{% if e.status_text %}<div class="small">{{ e.status_text }}</div>{% endif %}</td>
+        <td class="mono small">{{ e.records }}</td>
+        <td>{{ e.comment }}</td>
+        <td class="tech mono small">#{{ e.sequence }} · {{ e.event_type }} · {{ e.process }} · {{ e.entity }}{% if e.rule %} · {{ e.rule }}{% endif %} · <span title="{{ e.hash }}">{{ e.hash | short_hash }}</span></td>
       </tr>
     {% endfor %}
     </tbody>

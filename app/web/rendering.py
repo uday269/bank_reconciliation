@@ -12,6 +12,9 @@ from typing import Any
 
 from jinja2 import Environment, FileSystemLoader, StrictUndefined, select_autoescape
 
+from app.web import labels
+from app.web.plain import long_date, readable
+
 TEMPLATES = Path(__file__).resolve().parent / "templates"
 
 
@@ -42,7 +45,24 @@ def timestamp(value: str | None) -> str:
 environment = Environment(loader=FileSystemLoader(TEMPLATES), autoescape=select_autoescape(["html"]),
                           undefined=StrictUndefined, trim_blocks=True, lstrip_blocks=True)
 environment.filters.update(money=money, percent=percent, confidence=confidence,
-                           short_hash=short_hash, timestamp=timestamp)
+                           short_hash=short_hash, timestamp=timestamp, day=long_date, readable=readable,
+                           **labels.FILTERS)
+environment.globals.update(labels=labels)
+
+STATIC = Path(__file__).resolve().parent / "static"
+
+
+def asset_url(name: str) -> str:
+    """A static file's URL with its modification time attached, so a browser never keeps
+    an outdated stylesheet after it changes."""
+    try:
+        version = int((STATIC / name).stat().st_mtime)
+    except OSError:
+        version = 0
+    return f"/static/{name}?v={version}"
+
+
+environment.globals.update(asset_url=asset_url)
 
 
 def render(template: str, **context: Any) -> str:

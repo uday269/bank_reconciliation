@@ -6,7 +6,7 @@ from fastapi import APIRouter, Form, Request
 from fastapi.responses import HTMLResponse
 
 from app.domain.statement import money
-from app.web import views
+from app.web import plain, views
 from app.web.common import back, current_user, flash, redirect, require_user, services
 from app.web.common import page as render_page
 
@@ -27,9 +27,11 @@ async def sign_off(request: Request, run_id: int, comment: str = Form("")):
     svc = services(request)
     svc.period.sign_off(run_id, user["user_id"], comment.strip() or None)
     signoff = svc.repositories.periods.latest_signoff(run_id)
-    flash(request, "ok", f"Period signed off and locked. Unresolved difference "
-                         f"{money(signoff['unresolved_difference_cents'])}; chain head {signoff['chain_head_hash'][:16]}…",
-          ["Generate the report package again to archive the signed Reconciliation Summary."])
+    month = plain.month_name(svc.repositories.runs.get(run_id)["period_start"])
+    flash(request, "ok", f"{month} is signed off and closed. Difference explained at sign-off: "
+                         f"{money(signoff['unresolved_difference_cents'])}.",
+          ["Update the reports once more to keep a copy of the signed reconciliation summary."],
+          f"Period locked; chain head {signoff['chain_head_hash'][:16]}…")
     return redirect(f"/runs/{run_id}/close")
 
 
@@ -39,7 +41,8 @@ async def request_reopen(request: Request, run_id: int, reason: str = Form("")):
     if user is None:
         return back(request, f"/runs/{run_id}/close")
     services(request).period.request_reopen(run_id, user["user_id"], reason)
-    flash(request, "ok", "Reopening requested. A Controller other than you must decide it (CR-06).")
+    flash(request, "ok", "Request sent. The Controller will decide whether to reopen the month.",
+          technical="CR-06: the requester cannot decide their own request.")
     return redirect(f"/runs/{run_id}/close")
 
 
@@ -51,6 +54,6 @@ async def decide_reopen(request: Request, request_id: int, decision: str = Form(
     if user is None:
         return back(request, f"/runs/{run_id}/close")
     status = svc.period.decide_reopen(request_id, user["user_id"], decision, comment.strip() or None)
-    flash(request, "ok", "Reopening approved: the run is back in review and needs a new sign-off to close."
-          if status == "in_review" else "Reopening rejected: the period stays closed.")
+    flash(request, "ok", "Reopening allowed: the month is back in review and must be signed off again."
+          if status == "in_review" else "Request refused: the month stays closed.")
     return redirect(f"/runs/{run_id}/close")

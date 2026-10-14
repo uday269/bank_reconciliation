@@ -1,31 +1,44 @@
 {% extends "base.html" %}
 {% block content %}
-<h1>Adjustments</h1>
-<div class="sub">Proposed correcting entries and their approval. Approval never posts anything (CR-12); the preparer cannot approve their own (CR-04).</div>
+<div class="sub"><a href="/?run={{ run.run_id }}">← Home</a></div>
+<h1>Adjustments for {{ page.month }}</h1>
+<p class="lead">Correcting entries reviewers have suggested for the books, such as recording a bank fee. Each one needs approval from someone other than the person who proposed it. This tool never posts an entry; the accounting team does that after approval.<span class="tech"> CR-04, CR-12</span></p>
+
 <div class="panel stats">
-  <div class="stat"><b>{{ page.totals.proposed | money }}</b><span>awaiting approval</span></div>
+  <div class="stat"><b>{{ page.waiting }}</b><span>waiting for approval</span></div>
+  <div class="stat"><b>{{ page.totals.proposed | money }}</b><span>value waiting</span></div>
   <div class="stat"><b>{{ page.totals.approved | money }}</b><span>approved</span></div>
   <div class="stat"><b>{{ page.totals.rejected | money }}</b><span>rejected</span></div>
 </div>
-<div class="panel scroll">
-  {% if page.rows %}
+
+{% if page.rows %}
+{% for row in page.rows %}
+<div class="panel">
+  <div class="row-head">
+    <h2>{{ row.kind }} · {{ row.amount_cents | money }}</h2>
+    <span class="badge {{ 'risk-medium' if row.status == 'proposed' else ('risk-low' if row.status == 'approved' else 'risk-high') }}">{{ row.status_text }}</span>
+  </div>
+  <div class="sub">{{ row.description }} · {{ row.date | day }} · <a href="/items/{{ row.recommendation_id }}">Open the item</a>
+    <span class="tech mono">· adjustment {{ row.adjustment_id }} · {{ row.record }} · {{ row.exception_code }}</span></div>
   <table>
-    <thead><tr><th>#</th><th>Record</th><th>Exception</th><th class="num">Amount</th><th>Entry</th><th>Rationale</th><th>Prepared by</th><th>Status</th><th>Decision</th></tr></thead>
-    {% for row in page.rows %}
-    <tr>
-      <td>{{ row.adjustment_id }}</td><td class="mono"><a href="/items/{{ row.recommendation_id }}">{{ row.record }}</a></td><td>{{ row.exception_code }}</td>
-      <td class="num">{{ row.amount_cents | money }}</td><td>Dr {{ row.debit }} / Cr {{ row.credit }}</td><td>{{ row.rationale }}</td>
-      <td>{{ row.prepared_by }}</td><td>{{ row.status }}{% if row.decided_by %} <span class="muted">by {{ row.decided_by }}</span>{% endif %}</td>
-      <td>{% if row.status == "proposed" %}
-        <form method="post" action="/adjustments/{{ row.adjustment_id }}/decision">
-          <input type="text" name="comment" placeholder="Comment (required to reject)">
-          <button name="decision" value="approve" {% if not row.allowed %}disabled{% endif %}>Approve</button>
-          <button name="decision" value="reject" class="secondary" {% if not row.allowed %}disabled{% endif %}>Reject</button>
-          {% if not row.allowed %}<div class="disabled-reason">{{ row.reason }}</div>{% endif %}
-        </form>{% endif %}</td>
-    </tr>
-    {% endfor %}
+    <tr><th>Entry</th><td>Debit <b>{{ row.debit_name }}</b>, credit <b>{{ row.credit_name }}</b>, {{ row.amount_cents | money }}
+      <span class="tech mono">Dr {{ row.debit }} / Cr {{ row.credit }}</span></td></tr>
+    <tr><th>Reason</th><td>{{ row.rationale }}</td></tr>
+    <tr><th>Proposed by</th><td>{{ row.prepared_by }} <span class="muted">· {{ row.prepared_at | timestamp }}</span></td></tr>
+    {% if row.decided_by %}<tr><th>Decided by</th><td>{{ row.decided_by }}</td></tr>{% endif %}
   </table>
-  {% else %}<p class="muted">No adjustments have been proposed.</p>{% endif %}
+  {% if row.status == "proposed" %}
+  <form method="post" action="/adjustments/{{ row.adjustment_id }}/decision" style="margin-top:10px">
+    <label for="comment-{{ row.adjustment_id }}">Your comment <span class="muted">(needed to reject)</span></label>
+    <textarea id="comment-{{ row.adjustment_id }}" name="comment"></textarea>
+    <button name="decision" value="approve" {% if not row.allowed %}disabled{% endif %}>Approve the entry</button>
+    <button name="decision" value="reject" class="secondary" {% if not row.allowed %}disabled{% endif %}>Reject</button>
+    {% if not row.allowed %}<span class="disabled-reason">{{ row.reason }}</span>{% endif %}
+  </form>
+  {% endif %}
 </div>
+{% endfor %}
+{% else %}
+<div class="panel"><p class="muted">No adjustments have been proposed this month. Reviewers propose them from an unmatched item, such as a bank fee, using "Propose a correcting entry".</p></div>
+{% endif %}
 {% endblock %}

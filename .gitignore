@@ -23,6 +23,8 @@ env/
 *.sqlite
 *.sqlite3
 *.db-journal
+*.db-wal
+*.db-shm
 
 # --- macOS ---
 .DS_Store

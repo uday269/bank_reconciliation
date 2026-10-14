@@ -35,13 +35,15 @@ def events(services, run_id, event_type):
 def test_tci_047_dashboard_and_identity_selection(web):
     client, services, users, run_id = web
     response = client.get("/")
-    assert response.status_code == 200 and f"Run {run_id}" in response.text
+    assert response.status_code == 200 and "August 2026 reconciliation" in response.text
+    assert f"run {run_id}," in response.text
     assert "no identity selected" in response.text
 
     response = act_as(client, users, "Maya Castillo")
-    assert response.status_code == 200 and "Acting as Maya Castillo" in response.text
+    assert response.status_code == 200 and "acting as Maya Castillo" in response.text
     assert events(services, run_id, "IDENTITY_SELECTED")[-1]["actor_user_id"] == users["Maya Castillo"]
     assert client.get("/static/app.css").status_code == 200
+    assert client.get("/help").status_code == 200
 
 
 def test_tci_048_queues_and_unknown_records(web):
@@ -56,18 +58,18 @@ def test_tci_049_audit_log_page_and_filter(web):
     client, _, _, run_id = web
     response = client.get(f"/runs/{run_id}/audit", params={"event_type": "IMPORT", "page": 1})
     assert response.status_code == 200 and "Chain intact" in response.text
-    assert response.text.count("<td>IMPORT</td>") == 3
+    assert response.text.count('data-event="IMPORT"') == 3
 
 
 def test_tci_050_report_package_view_and_export(web):
     client, services, users, run_id = web
     response = client.post(f"/runs/{run_id}/reports")
-    assert "Select an identity" in response.text                      # nothing generated without one
+    assert "Choose who you are" in response.text                      # nothing generated without one
     assert services.repositories.reports.current(run_id) == []
 
     act_as(client, users, "Maya Castillo")
     response = client.post(f"/runs/{run_id}/reports")
-    assert response.status_code == 200 and "Report package generated" in response.text
+    assert response.status_code == 200 and "Reports updated" in response.text
     summary = client.get(f"/runs/{run_id}/reports/RPT-09")
     assert summary.status_code == 200 and "Reconciliation Summary" in summary.text
     export = client.get(f"/runs/{run_id}/reports/RPT-09.csv")
@@ -120,7 +122,7 @@ def test_tci_060_a_refused_action_names_the_rule_and_leaves_evidence(web):
     client.get(f"/items/{rec['recommendation_id']}")
     response = client.post(f"/items/{rec['recommendation_id']}/decision",
                            data={"decision": "approve", "comment": "Looks right"})
-    assert "Not allowed" in response.text and "CR-02" in response.text
+    assert "This needs a Senior Accountant or the Controller." in response.text and "Rule CR-02" in response.text
     assert events(services, run_id, "BLOCKED_ATTEMPT")[-1]["rule_name"] == "CR-02"
     assert services.repositories.decisions.for_recommendation(rec["recommendation_id"]) == []
 
@@ -188,16 +190,16 @@ def test_tci_067_a_run_started_entirely_from_the_screens(tmp_path):
     assert client.get("/import").status_code == 200
 
     response = client.post("/runs", data={"period_start": "2026-08-01", "period_end": "2026-08-31"})
-    assert "Import its files next" in response.text
+    assert "Upload its files next" in response.text
     run_id = services.repositories.runs.latest()["run_id"]
 
     uploads = dataset_uploads()
     files = {name: (UPLOAD_NAMES[name], content, "text/csv") for name, content in uploads.items()}
     response = client.post(f"/runs/{run_id}/import", files=files)
-    assert "Imported" in response.text and len(services.repositories.source_files.for_run(run_id)) == 3
+    assert "Files loaded" in response.text and len(services.repositories.source_files.for_run(run_id)) == 3
 
     response = client.post(f"/runs/{run_id}/match")
-    assert "675 recommendations" in response.text
+    assert "675 suggestions" in response.text
     assert services.repositories.runs.get(run_id)["status"] == "in_review"
 
 
@@ -212,7 +214,7 @@ def test_tci_068_sign_off_and_reopening_through_the_close_screen(web):
     response = client.post(f"/runs/{run_id}/close", data={"comment": ""})
     assert "CR-10" in response.text                                  # a difference needs a comment
     response = client.post(f"/runs/{run_id}/close", data={"comment": "Duplicates under bank research"})
-    assert "signed off and locked" in response.text
+    assert "signed off and closed" in response.text
     assert services.repositories.runs.get(run_id)["status"] == "closed"
 
     act_as(client, users, "Maya Castillo")

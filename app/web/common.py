@@ -32,11 +32,14 @@ def current_user(request: Request) -> sqlite3.Row | None:
     return user if user["is_active"] else None
 
 
-def flash(request: Request, kind: str, text: str, details: list[str] | None = None) -> None:
+def flash(request: Request, kind: str, text: str, details: list[str] | None = None,
+          technical: str = "") -> None:
+    """Queue a message for the next page. `technical` is shown only under Show details."""
     details = list(details or [])
     if len(details) > MAX_FLASH_DETAILS:
         details = details[:MAX_FLASH_DETAILS] + [f"… and {len(details) - MAX_FLASH_DETAILS} more"]
-    request.session.setdefault("flashes", []).append({"kind": kind, "text": text, "details": details})
+    request.session.setdefault("flashes", []).append(
+        {"kind": kind, "text": text, "details": details, "technical": technical})
 
 
 def take_flashes(request: Request) -> list[dict[str, Any]]:
@@ -67,5 +70,5 @@ def require_user(request: Request) -> sqlite3.Row | None:
     """The identity for a write, or None after queuing a message asking for one."""
     user = current_user(request)
     if user is None:
-        flash(request, "error", "Select an identity before taking an action.")
+        flash(request, "error", "Choose who you are from \"Acting as\" at the top right, then try again.")
     return user
