@@ -148,12 +148,44 @@ def test_tci_073_the_item_screen_labels_prose_as_generated_text(web):
     maya = services.repositories.users.get(users["Maya Castillo"])
     page = views.item_detail(services, rec["recommendation_id"], maya)
     html = render("item.html", **views.base(services, maya, page["run"], [], "x"), page=page)
-    assert "plain-language summary" not in html.lower()          # off by default: no button, no prose
+    assert "plain-words summary" not in html.lower()             # off by default: no button, no prose
 
     services.prose = ProseService(enabled(services), services.database, services.repositories, services.audit,
                                   adapter=ScriptedAdapter("A deposit with two candidate receipts."))
     services.prose.generate(rec["recommendation_id"], users["Maya Castillo"])
     page = views.item_detail(services, rec["recommendation_id"], maya)
     html = render("item.html", **views.base(services, maya, page["run"], [], "x"), page=page)
-    assert "generated text, not evidence" in html and "Supporting evidence" in html
-    assert "Regenerate plain-language summary" in html
+    assert "written by AI, not evidence" in html and "What supports it" in html
+    assert "Rewrite a plain-words summary" in html
+
+
+def test_tci_074_a_provider_that_does_not_answer_leaves_the_stored_summary_alone(web):
+    """A 503 or a network failure writes no summary; the attempt is still audited."""
+    services, users, run_id = web
+    rec = first_scored(services, run_id)
+    good = ProseService(enabled(services), services.database, services.repositories, services.audit,
+                        adapter=ScriptedAdapter("A deposit with two candidate receipts."))
+    good.generate(rec["recommendation_id"], users["Maya Castillo"])
+    busy = ProseService(enabled(services), services.database, services.repositories, services.audit,
+                        adapter=ScriptedAdapter(TimeoutError("HTTP 503: overloaded")))
+    result = busy.generate(rec["recommendation_id"], users["Maya Castillo"])
+    assert result.provider_failed and not result.generated
+    stored = services.repositories.recommendations.get(rec["recommendation_id"])["genai_prose"]
+    assert stored == "A deposit with two candidate receipts."
+    assert len([e for e in services.audit.events(run_id) if e["event_type"] == "GENAI_PROSE"]) == 2
+
+
+def test_tci_075_the_item_screen_says_who_wrote_the_summary(web):
+    """Offline text is never presented as written by AI."""
+    from app.web import views
+    from app.web.rendering import render
+    services, users, run_id = web
+    rec = first_scored(services, run_id)
+    maya = services.repositories.users.get(users["Maya Castillo"])
+    rejecting = ProseService(enabled(services), services.database, services.repositories, services.audit,
+                             adapter=ScriptedAdapter("I recommend approving this match."))
+    rejecting.generate(rec["recommendation_id"], users["Maya Castillo"])     # stores the offline summary
+    page = views.item_detail(services, rec["recommendation_id"], maya)
+    html = render("item.html", **views.base(services, maya, page["run"], [], "x"), page=page)
+    assert not page["prose_by_ai"]
+    assert "written by the system, not by AI" in html and "written by AI, not evidence" not in html

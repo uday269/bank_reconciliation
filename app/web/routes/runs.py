@@ -6,7 +6,7 @@ from fastapi import APIRouter, Form, Request
 from fastapi.responses import HTMLResponse
 
 from app.services.run_service import UPLOADS
-from app.web import views
+from app.web import labels, plain, views
 from app.web.common import back, current_user, flash, redirect, require_user, services
 from app.web.common import page as render_page
 
@@ -25,7 +25,8 @@ async def create_run(request: Request, period_start: str = Form(""), period_end:
     if user is None:
         return back(request, "/import")
     run_id = services(request).runs.create(user["user_id"], period_start.strip(), period_end.strip())
-    flash(request, "ok", f"Run {run_id} created for {period_start} to {period_end}. Import its files next.")
+    flash(request, "ok", f"{plain.month_name(period_start.strip())} started. Upload its files next.",
+          technical=f"Run {run_id} for {period_start} to {period_end}.")
     return redirect(f"/runs/{run_id}/import")
 
 
@@ -46,8 +47,9 @@ async def import_files(request: Request, run_id: int):
         upload = form.get(name)
         files[name] = await upload.read() if hasattr(upload, "read") else b""
     result = services(request).runs.import_files(run_id, user["user_id"], files)
-    flash(request, "ok", f"Imported {result.total_rows} rows from {len(result.files)} files.",
-          [f"{f.file_type}: {f.stored_rows} stored, {len(f.rejected_rows)} unreadable" for f in result.files])
+    flash(request, "ok", f"Files loaded: {result.total_rows:,} rows from {len(result.files)} files.",
+          [f"{labels.FILE_NAMES.get(f.file_type, f.file_type)}: {f.stored_rows:,} rows loaded"
+           + (f", {len(f.rejected_rows)} couldn't be read" if f.rejected_rows else "") for f in result.files])
     return redirect(f"/runs/{run_id}/import")
 
 
@@ -58,10 +60,11 @@ async def validate_and_match(request: Request, run_id: int):
         return back(request, f"/runs/{run_id}/import")
     result = services(request).runs.process(run_id, user["user_id"])
     if result.matching is None:
-        flash(request, "error", "Validation failed at file level, so matching was not started (CR-17).",
-              result.validation.failures)
+        flash(request, "error", "A file failed its checks, so nothing was matched. The problems are listed below.",
+              technical="CR-17: " + result.validation.summary())
         return redirect(f"/runs/{run_id}/import")
     m = result.matching
-    flash(request, "ok", f"{result.validation.summary().rstrip('.')}. Matching produced {m.recommendations} "
-                         f"recommendations for review.", [f"{code}: {count}" for code, count in sorted(m.by_category.items())])
+    flash(request, "ok", f"The files passed their checks. The system made {m.recommendations} suggestions for review.",
+          [f"{labels.queue_name(code)}: {count}" for code, count in sorted(m.by_category.items())],
+          result.validation.summary())
     return redirect(f"/?run={run_id}")

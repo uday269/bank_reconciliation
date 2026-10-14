@@ -56,6 +56,21 @@ class GenAIError(Exception):
     """Raised only by provider implementations; callers never see it."""
 
 
+# The words the prompt and the offline summary use for review lists and kinds of
+# unmatched item. They match the reviewer interface (app/web/labels.py; a test keeps the
+# two in step), so a summary never shows a code the screens have stopped showing.
+QUEUE_WORDS = {
+    "CAT-01": "Exact matches", "CAT-02": "Likely matches", "CAT-03": "Matches to check closely",
+    "CAT-04": "Unmatched items", "CAT-05": "Senior review",
+}
+EXCEPTION_WORDS = {
+    "EXC-01": "Check not yet cleared", "EXC-02": "Deposit not yet at the bank",
+    "EXC-03": "Bank fee not yet recorded", "EXC-04": "Interest not yet recorded",
+    "EXC-05": "Possible duplicate", "EXC-06": "Bank item missing from the books",
+    "EXC-07": "Unexplained item", "EXC-08": "Search not finished; pair by hand",
+}
+
+
 @dataclass(frozen=True)
 class ProseRequest:
     """The whitelist of fields an adapter may send.
@@ -79,15 +94,16 @@ class ProseRequest:
             "accountant. Describe only what the evidence says.",
             "Do not give an opinion, a recommendation, a score, a probability or a decision.",
             "Do not suggest approving, rejecting or matching anything.",
+            "Use plain words. Do not mention internal codes, list names or rule numbers.",
             "",
             f"Item: {self.item_summary}",
             f"Amount: {self.amount_cents / 100:.2f}",
             f"Date: {self.item_date}",
-            f"Queue: {self.category_code}",
+            f"Review list: {QUEUE_WORDS.get(self.category_code, self.category_code)}",
             f"Risk level assigned by rule: {self.risk_level}",
         ]
         if self.exception_code:
-            parts.append(f"Exception category: {self.exception_code}")
+            parts.append(f"Kind of unmatched item: {EXCEPTION_WORDS.get(self.exception_code, self.exception_code)}")
         if self.supporting_evidence:
             parts.append("Supporting evidence: " + "; ".join(self.supporting_evidence))
         if self.conflicting_evidence:
@@ -111,6 +127,12 @@ class ProseResult:
     prompt_sha256: str = ""
     output_sha256: str = ""
     elapsed_ms: int = 0
+
+    @property
+    def provider_failed(self) -> bool:
+        """The provider did not answer (busy, unreachable, misconfigured), as opposed to
+        answering with text the guard rejected."""
+        return bool(self.rejected_reason) and self.rejected_reason.startswith("provider error")
 
     @property
     def label(self) -> str:
@@ -205,7 +227,7 @@ def offline_prose(request: ProseRequest) -> str:
     if request.conflicting_evidence:
         sentences.append("Conflicting evidence: " + "; ".join(request.conflicting_evidence) + ".")
     if request.exception_code:
-        sentences.append(f"Classified as {request.exception_code}.")
+        sentences.append(f"Classified as: {EXCEPTION_WORDS.get(request.exception_code, request.exception_code)}.")
     sentences.append(f"Rule-based risk level: {request.risk_level}.")
     return " ".join(sentences)
 

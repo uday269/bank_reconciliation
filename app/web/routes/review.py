@@ -18,8 +18,8 @@ from app.web.common import page as render_page
 
 router = APIRouter()
 
-PAST_TENSE = {"approve": "approved", "modify": "approved with the selected candidate", "reject": "rejected",
-              "escalate": "escalated", "unresolved": "left unresolved"}
+PAST_TENSE = {"approve": "approved", "modify": "approved with the match you selected", "reject": "marked as not a match",
+              "escalate": "sent to a senior reviewer", "unresolved": "left open for investigation"}
 
 
 def _origin_queue(svc, rec) -> str:
@@ -58,12 +58,14 @@ async def decide(request: Request, recommendation_id: int, decision: str = Form(
     origin = _origin_queue(svc, rec)
     chosen = int(chosen_candidate_id) if decision == "modify" and chosen_candidate_id else None
     outcome = svc.review.decide(recommendation_id, user["user_id"], decision, comment.strip() or None, chosen)
-    details = []
+    details, technical = [], [f"Recommendation {recommendation_id}."]
     if outcome.requeued:
-        details.append(f"Re-proposed as exception recommendation(s) {', '.join(map(str, outcome.requeued))}.")
+        details.append("Its records went back to the unmatched list.")
+        technical.append(f"Re-proposed as exception recommendation(s) {', '.join(map(str, outcome.requeued))}.")
     if outcome.superseded:
-        details.append(f"Superseded recommendation(s) {', '.join(map(str, outcome.superseded))}.")
-    flash(request, "ok", f"Recommendation {recommendation_id} {PAST_TENSE[decision]}.", details)
+        details.append("Other suggestions for the same records were withdrawn.")
+        technical.append(f"Superseded recommendation(s) {', '.join(map(str, outcome.superseded))}.")
+    flash(request, "ok", f"Saved. The item was {PAST_TENSE[decision]}.", details, " ".join(technical))
     return redirect(_next_in_queue(svc, rec["run_id"], origin))
 
 
@@ -82,8 +84,10 @@ async def manual_match(request: Request, recommendation_id: int):
     origin = _origin_queue(svc, rec)
     outcome = svc.review.manual_match(recommendation_id, user["user_id"], counterparts,
                                       str(form.get("comment", "")).strip() or None)
-    flash(request, "ok", f"Recommendation {recommendation_id} paired by hand with {len(counterparts)} record(s).",
-          [f"Superseded recommendation(s) {', '.join(map(str, outcome.superseded))}."] if outcome.superseded else [])
+    flash(request, "ok", f"Saved. The item was paired by hand with {len(counterparts)} record(s).",
+          ["Other suggestions for the same records were withdrawn."] if outcome.superseded else [],
+          f"Recommendation {recommendation_id}." + (f" Superseded recommendation(s) "
+                                                    f"{', '.join(map(str, outcome.superseded))}." if outcome.superseded else ""))
     return redirect(_next_in_queue(svc, rec["run_id"], origin))
 
 
@@ -94,12 +98,17 @@ async def generate_prose(request: Request, recommendation_id: int):
     if user is None:
         return back(request)
     result = services(request).prose.generate(recommendation_id, user["user_id"])
-    if result.rejected_reason:
-        flash(request, "error", f"Provider text discarded ({result.rejected_reason}); "
-                                "the offline summary was stored instead.")
+    if result.provider_failed:
+        flash(request, "error", "The AI service didn't answer (it may be busy or unreachable), so no summary "
+                                "was written. Try again in a few minutes. The evidence on this page is unchanged.",
+              technical=result.rejected_reason)
+    elif result.rejected_reason:
+        flash(request, "error", "The AI's wording was discarded because it went beyond restating the evidence. "
+                                "A plain summary of the evidence was saved instead.", technical=result.rejected_reason)
     else:
-        flash(request, "ok", f"{result.label} stored." if result.generated else
-              "Offline summary of the evidence stored (no external provider is configured).")
+        flash(request, "ok", "Summary saved." if result.generated else
+              "A summary of the evidence was saved. No AI service is set up, so it was written without one.",
+              technical=result.label if result.generated else "")
     return redirect(f"/items/{recommendation_id}")
 
 
@@ -129,8 +138,9 @@ async def decide_batch(request: Request, run_id: int):
         result = svc.review.reject_batch(run_id, user["user_id"], ids, comment)
     else:
         result = svc.review.approve_batch(run_id, user["user_id"], ids, comment)
-    flash(request, "ok", f"Batch {result.review_batch_id}: {len(result.outcomes)} item(s) "
-                         f"{'rejected' if action == 'reject' else 'approved'}, one decision record each.")
+    flash(request, "ok", f"{len(result.outcomes)} item(s) "
+                         f"{'marked as not matching' if action == 'reject' else 'approved'}, "
+                         "each recorded separately under your name.", technical=f"Batch {result.review_batch_id}.")
     return redirect(f"/runs/{run_id}/batch")
 
 
@@ -158,8 +168,8 @@ async def propose_adjustment(request: Request, recommendation_id: int, amount: s
     adjustment_id = services(request).adjustments.propose(
         recommendation_id, user["user_id"], amount_cents=_cents(amount), debit_account_code=debit,
         credit_account_code=credit, rationale=rationale, evidence_refs=evidence.strip() or None)
-    flash(request, "ok", f"Adjustment {adjustment_id} proposed. It awaits approval by someone else; "
-                         "nothing has been posted.")
+    flash(request, "ok", "Adjustment proposed. Someone else must approve it; nothing has been posted.",
+          technical=f"Adjustment {adjustment_id}.")
     return redirect(f"/items/{recommendation_id}")
 
 
@@ -178,5 +188,5 @@ async def decide_adjustment(request: Request, adjustment_id: int, decision: str 
     svc = services(request)
     run_id = svc.repositories.adjustments.get(adjustment_id)["run_id"]
     status = svc.adjustments.decide(adjustment_id, user["user_id"], decision, comment.strip() or None)
-    flash(request, "ok", f"Adjustment {adjustment_id} {status}. Nothing has been posted.")
+    flash(request, "ok", f"Adjustment {status}. Nothing has been posted.", technical=f"Adjustment {adjustment_id}.")
     return redirect(f"/runs/{run_id}/adjustments")

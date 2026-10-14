@@ -2,82 +2,89 @@
 {% block content %}
 {% if not page.run %}
   <div class="panel">
-    <h1>No reconciliation run yet</h1>
+    <h1>No month started yet</h1>
     {% if page.initialized %}
-      <p>Start a run from the import screen, or from the command line with <span class="mono">python -m app.cli run</span>.</p>
+      <p>Choose who you are at the top right, then use <a href="/import">Start a new month</a> to upload the bank statement and the books.</p>
     {% else %}
-      <p>The database has no identities yet. Run <span class="mono">python -m app.cli init</span> first.</p>
+      <p>The system has not been set up yet. Ask whoever installed it to run the setup step (<span class="mono">python -m app.cli init</span>).</p>
     {% endif %}
   </div>
 {% else %}
 {% set r = page.run %}
-<h1>Run {{ r.run_id }} · {{ r.period_start }} to {{ r.period_end }}</h1>
-<div class="sub">Status <b>{{ r.status | replace("_", " ") }}</b>{% if user %} · acting as {{ user.full_name }} ({{ role_names[user.role_code] }}){% else %} · no identity selected{% endif %}</div>
+<h1>{{ page.month }} reconciliation</h1>
+<div class="sub">{{ r.status | run_status }}{% if user %} · you are acting as {{ user.full_name }}, {{ role_names[user.role_code] }}{% else %} · no identity selected{% endif %}
+  <span class="tech">· run {{ r.run_id }}, status {{ r.status }}</span></div>
 
-<div class="panel stats">
-  <div class="stat"><b>{{ page.counts.bank }}</b><span>bank transactions</span></div>
-  <div class="stat"><b>{{ page.counts.ledger }}</b><span>ledger entries</span></div>
-  <div class="stat"><b>{{ page.counts.carry_in }}</b><span>carry-in items</span></div>
-  <div class="stat"><b>{{ page.counts.decided }}</b><span>decided of {{ page.counts.retained }}</span></div>
-  <div class="stat"><b>{{ page.counts.awaiting }}</b><span>awaiting a decision</span></div>
-  <div class="stat"><b>{{ page.counts.reconciled }}</b><span>reconciled</span></div>
-  <div class="stat"><b>{{ page.counts.unresolved }}</b><span>unresolved</span></div>
+<div class="steps">
+  {% for step in page.steps %}
+  <div class="step {{ step.state }}"><b>{{ loop.index }}. {{ step.name }}</b><span class="state">{{ step.detail }}</span></div>
+  {% endfor %}
 </div>
 
-{% if not page.matching_started %}
-<div class="panel">
-  <h2>Import and validation</h2>
-  {% if page.actions.import.allowed %}<a class="button" href="/runs/{{ r.run_id }}/import">Open import screen</a>
-  {% else %}<button disabled>Open import screen</button><span class="disabled-reason">{{ page.actions.import.reason }}</span>{% endif %}
+<div class="panel next">
+  <div><b>What to do next</b><div>{{ page.next.text }}</div></div>
+  {% if page.next.action %}
+    {% if page.next.method == "post" %}
+      <form method="post" action="{{ page.next.url }}"><button>{{ page.next.action }}</button></form>
+    {% else %}
+      <a class="button" href="{{ page.next.url }}">{{ page.next.action }}</a>
+    {% endif %}
+  {% endif %}
 </div>
-{% endif %}
 
+{% if page.matching_started %}
 <div class="grid">
 <div class="panel">
-  <h2>Review queues</h2>
-  <p class="muted">Each queue lists highest risk first, then lowest confidence, so the items most likely to be wrong come first.</p>
+  <h2>Review lists</h2>
+  <p class="hint">Each list shows the riskiest and least certain items first.</p>
   <table>
-    <thead><tr><th>Queue</th><th class="num">Open</th><th class="num">Value</th><th class="num">High risk</th><th></th></tr></thead>
+    <thead><tr><th>List</th><th class="num">To review</th><th class="num">Amount</th><th></th></tr></thead>
     <tbody>
     {% for q in page.queues %}
       <tr>
-        <td><a href="/runs/{{ r.run_id }}/queues/{{ q.code }}">{{ q.code }} {{ q.name }}</a>{% if q.code == "CAT-05" %} <span class="muted">(incl. escalated)</span>{% endif %}</td>
-        <td class="num">{{ q.open }}</td><td class="num">{{ q.value_cents | money }}</td><td class="num">{{ q.high_risk }}</td>
+        <td><a href="/runs/{{ r.run_id }}/queues/{{ q.code }}">{{ q.name }}</a>
+          <div class="small">{{ q.help }}</div><span class="tech">{{ q.code }}{% if q.high_risk %} · {{ q.high_risk }} high risk{% endif %}</span></td>
+        <td class="num">{{ "{:,}".format(q.open) }}</td><td class="num">{{ q.value_cents | money }}</td>
         <td>{% if q.code == "CAT-01" and q.open %}
-              {% if page.actions.batch.allowed %}<a href="/runs/{{ r.run_id }}/batch">Batch review</a>
-              {% else %}<span class="disabled-reason">batch: {{ page.actions.batch.reason }}</span>{% endif %}
+              {% if page.actions.batch.allowed %}<a href="/runs/{{ r.run_id }}/batch">Approve in one go</a>{% endif %}
             {% endif %}</td>
       </tr>
     {% endfor %}
     </tbody>
   </table>
-  {% if page.adjustments_awaiting %}<p>{{ page.adjustments_awaiting }} adjustment(s) await approval · <a href="/runs/{{ r.run_id }}/adjustments">Review adjustments</a></p>{% endif %}
+  {% if page.adjustments_awaiting %}<p>{{ page.adjustments_awaiting }} proposed adjustment(s) are waiting for approval. <a href="/runs/{{ r.run_id }}/adjustments">Review adjustments</a></p>{% endif %}
 </div>
 
 <div class="panel">
-  <h2>Close readiness</h2>
-  {% if page.readiness %}
+  <h2>Ready to close?</h2>
   <table>
-    {% for c in page.readiness.conditions %}
-    <tr><td class="{{ 'met' if c.met else 'unmet' }}">{{ '✓' if c.met else '✗' }}</td><td>{{ c.label }}</td><td class="muted">{{ c.detail }}</td></tr>
+    {% for c in page.checklist %}
+    <tr><td class="{{ 'met' if c.met else 'unmet' }}">{{ '✓' if c.met else '✗' }}</td><td>{{ c.label }}</td>
+        <td class="muted">{{ c.detail }}<div class="tech">{{ c.technical }}</div></td></tr>
     {% endfor %}
   </table>
-  <p>Unresolved difference: <b>{{ page.readiness.statement.unresolved_difference_cents | money }}</b></p>
+  <p>Difference still to explain: <b>{{ page.readiness.statement.unresolved_difference_cents | money }}</b></p>
   <p>
-    <form method="post" action="/runs/{{ r.run_id }}/reports" style="display:inline"><button class="secondary" {% if not user %}disabled{% endif %}>Generate report package</button></form>
+    <form method="post" action="/runs/{{ r.run_id }}/reports" style="display:inline"><button class="secondary" {% if not user %}disabled{% endif %}>Update the reports</button></form>
     {% if r.status == "closed" %}
-      {% if page.actions.request_reopen.allowed and not page.pending_reopen %}<a class="button secondary" href="/runs/{{ r.run_id }}/close">Request reopening</a>{% endif %}
+      <a class="button secondary" href="/runs/{{ r.run_id }}/close">View the closed month</a>
     {% elif page.actions.sign_off.allowed %}
-      <a class="button" href="/runs/{{ r.run_id }}/close">Open close screen</a>
+      <a class="button" href="/runs/{{ r.run_id }}/close">Close the month</a>
     {% else %}
-      <button disabled>Close period</button><span class="disabled-reason">{{ page.actions.sign_off.reason }}</span>
+      <button disabled>Close the month</button><span class="disabled-reason block">{{ page.actions.sign_off.reason }}</span>
     {% endif %}
   </p>
-  {% if page.pending_reopen %}<p>A reopening request is awaiting a decision · <a href="/runs/{{ r.run_id }}/close">View</a></p>{% endif %}
-  {% else %}
-  <p class="muted">Available once matching has run.</p>
-  {% endif %}
 </div>
 </div>
+
+<div class="panel stats">
+  <div class="stat"><b>{{ "{:,}".format(page.counts.retained) }}</b><span>records this month</span></div>
+  <div class="stat"><b>{{ "{:,}".format(page.counts.decided) }}</b><span>decided</span></div>
+  <div class="stat"><b>{{ "{:,}".format(page.counts.awaiting) }}</b><span>still to review</span></div>
+  <div class="stat"><b>{{ "{:,}".format(page.counts.reconciled) }}</b><span>reconciled</span></div>
+  <div class="stat"><b>{{ "{:,}".format(page.counts.unresolved) }}</b><span>left open</span></div>
+  <div class="stat tech"><b>{{ page.counts.bank }} / {{ page.counts.ledger }} / {{ page.counts.carry_in }}</b><span>bank / books / carried in</span></div>
+</div>
+{% endif %}
 {% endif %}
 {% endblock %}

@@ -1,20 +1,24 @@
 {% extends "base.html" %}
 {% block content %}
-<h1>Report package</h1>
-<div class="sub">Thirteen reports, each in HTML and CSV with a content hash. Regenerating keeps earlier versions on record.</div>
+<div class="sub"><a href="/?run={{ run.run_id }}">← Home</a></div>
+<h1>Reports for {{ page.month }}</h1>
+<p class="lead">Thirteen reports, each as a page to read and a CSV file for a spreadsheet. Update them after reviewing, so they reflect every decision. Earlier versions are kept on record.</p>
 <div class="panel">
-  <form method="post" action="/runs/{{ run.run_id }}/reports"><button {% if not user %}disabled{% endif %}>Generate report package</button>{% if not user %}<span class="disabled-reason">select an identity first</span>{% endif %}</form>
+  {% if page.current %}<p class="met"><b>The reports are up to date.</b></p>
+  {% elif page.generated %}<p class="unmet"><b>Decisions have changed since the reports were last updated.</b></p>
+  {% else %}<p class="muted">The reports haven't been created yet.</p>{% endif %}
+  <form method="post" action="/runs/{{ run.run_id }}/reports"><button {% if not user %}disabled{% endif %}>{{ "Update the reports" if page.generated else "Create the reports" }}</button>{% if not user %}<span class="disabled-reason">Choose who you are from "Acting as" at the top right.</span>{% endif %}</form>
+  <p class="hint">Updating also confirms each approved item against the reports, which is the last step before it counts as reconciled.</p>
 </div>
 <div class="panel scroll">
 <table>
-  <thead><tr><th>Code</th><th>Report</th><th>Generated</th><th>Content hash</th><th></th></tr></thead>
+  <thead><tr><th>Report</th><th>Last updated</th><th></th></tr></thead>
   <tbody>
   {% for rpt in page.reports %}
     <tr>
-      <td>{{ rpt.code }}</td><td>{{ rpt.title }}</td>
-      <td>{{ rpt.generated_at | timestamp if rpt.generated_at else "not generated" }}</td>
-      <td class="mono" title="{{ rpt.hash or '' }}">{{ rpt.hash | short_hash }}</td>
-      <td>{% if rpt.generated_at %}<a href="/runs/{{ run.run_id }}/reports/{{ rpt.code }}" target="_blank">View</a> · <a href="/runs/{{ run.run_id }}/reports/{{ rpt.code }}.csv">CSV</a>{% endif %}</td>
+      <td><b>{{ rpt.title }}</b><div class="small">{{ rpt.about }}</div><span class="tech mono">{{ rpt.code }}{% if rpt.hash %} · SHA-256 <span title="{{ rpt.hash }}">{{ rpt.hash | short_hash }}</span>{% endif %}</span></td>
+      <td class="nowrap">{{ rpt.generated_at | timestamp if rpt.generated_at else "Not yet" }}</td>
+      <td class="nowrap">{% if rpt.generated_at %}<a href="/runs/{{ run.run_id }}/reports/{{ rpt.code }}" target="_blank">Open</a> · <a href="/runs/{{ run.run_id }}/reports/{{ rpt.code }}.csv">Download CSV</a>{% endif %}</td>
     </tr>
   {% endfor %}
   </tbody>

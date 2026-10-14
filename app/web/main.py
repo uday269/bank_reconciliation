@@ -35,6 +35,7 @@ from app.services.period_service import PeriodInputError
 from app.services.review_service import ManualMatchError
 from app.services.prose_service import ProseUnavailable
 from app.services.run_service import RunInputError
+from app.web import labels
 from app.web.common import back, flash, page
 from app.web.routes import dashboard, period, review, runs
 
@@ -64,13 +65,16 @@ def create_app(config: Config | None = None, calibration_path: Path = DEFAULT_CA
 def _register_error_handlers(app: FastAPI) -> None:
     @app.exception_handler(ControlViolation)
     async def control_refused(request: Request, error: ControlViolation):
-        flash(request, "error", f"Not allowed: {error.message} ({error.rule}, {error.code}). "
-                                "The attempt has been recorded.", error.details)
+        explained = labels.refusal(error.rule, error.message)
+        flash(request, "error", explained.text, error.details,
+              technical=f"Rule {error.rule} · {error.code} · {error.message}. "
+                        "The attempt is recorded in the audit trail.")
         return back(request)
 
     async def input_problems(request: Request, error: Exception):
         problems = getattr(error, "problems", None) or [str(error)]
-        flash(request, "error", "Nothing was saved. Please correct the following:", problems)
+        flash(request, "error", "Nothing was saved. Please fix the following and try again:",
+              [problem[:1].upper() + problem[1:] for problem in problems])
         return back(request)
 
     for error_class in (AdjustmentInputError, ManualMatchError, PeriodInputError, ImportError_, RunInputError, ProseUnavailable):
@@ -78,7 +82,9 @@ def _register_error_handlers(app: FastAPI) -> None:
 
     async def not_found(request: Request, error: Exception):
         return page(request, "error.html", "Not found", status_code=404,
-                    heading="Not found", message=str(error) or "That record does not exist.")
+                    heading="We couldn't find that page",
+                    message="The item, run or report may not exist, or the link may be out of date.",
+                    technical=str(error))
 
     for error_class in (RepositoryError, FileNotFoundError, KeyError):
         app.add_exception_handler(error_class, not_found)

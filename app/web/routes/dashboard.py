@@ -8,7 +8,7 @@ from fastapi import APIRouter, Form, Request
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 
 from app.infra.audit import AuditEvent, RunContext
-from app.web import views
+from app.web import labels, views
 from app.web.common import back, current_user, flash, require_user, services
 from app.web.common import page as render_page
 
@@ -36,8 +36,15 @@ async def select_identity(request: Request, user_id: str = Form(""), run_id: str
             svc.audit.write(connection, RunContext.load(svc.database, run["run_id"]), AuditEvent(
                 event_type="IDENTITY_SELECTED", process_code="P6", entity_type="app_user",
                 entity_id=user["user_id"], actor_type="human", actor_user_id=user["user_id"]))
-    flash(request, "ok", f"Acting as {user['full_name']}.")
+    flash(request, "ok", f"You are now acting as {user['full_name']}.")
     return back(request)
+
+
+@router.get("/help", response_class=HTMLResponse)
+async def help_page(request: Request):
+    """Plain explanations of the workflow, the lists, the choices and the terms."""
+    svc = services(request)
+    return render_page(request, "help.html", "Help", svc.repositories.runs.latest())
 
 
 @router.get("/runs/{run_id}/queues/{category}", response_class=HTMLResponse)
@@ -64,10 +71,12 @@ async def generate_reports(request: Request, run_id: int):
     if user is None:
         return back(request)
     result = services(request).reports.generate_package(run_id, user["user_id"])
-    details = [f"{result.promoted} item(s) reconciled by the report check."] if result.promoted else []
+    details = [f"{result.promoted:,} approved item(s) confirmed and now reconciled."] if result.promoted else []
     if result.failures:
-        flash(request, "error", f"{len(result.failures)} approved item(s) failed the report check.", result.failures)
-    flash(request, "ok", f"Report package generated. Run status: {result.run_status.replace('_', ' ')}.", details)
+        flash(request, "error", f"{len(result.failures)} approved item(s) didn't agree with the reports and "
+                                "are not reconciled yet.", result.failures)
+    flash(request, "ok", f"Reports updated. This month is now: {labels.run_status(result.run_status).lower()}.",
+          details, technical=f"Run status {result.run_status}.")
     return back(request, f"/runs/{run_id}/reports")
 
 

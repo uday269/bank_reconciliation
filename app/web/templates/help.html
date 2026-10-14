@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="help">
+<h1>Help</h1>
+<p class="lead">This tool compares the bank statement with the company's books for one month, suggests how each record should be treated, and asks people to confirm every suggestion. Nothing is accepted automatically.</p>
+
+<div class="panel">
+<h2>How a month is reconciled</h2>
+<ol>
+  <li><b>Start a new month.</b> Upload the bank statement, the ledger cash detail and last month's open items. The files are checked before anything else happens.</li>
+  <li><b>Review.</b> The system sorts every record into a list. Work through each list: confirm the matches, explain the items with no partner, and send anything doubtful to a senior reviewer.</li>
+  <li><b>Update the reports.</b> The reports confirm every approved item. An item counts as reconciled only after this check.</li>
+  <li><b>Close the month.</b> The Controller reviews the reconciliation statement, explains any remaining difference, and signs off. The month is then locked.</li>
+</ol>
+</div>
+
+<div class="panel">
+<h2>The review lists</h2>
+<dl>
+  {% for code, name in labels.QUEUE_NAMES.items() %}
+  <dt>{{ name }} <span class="tech">({{ code }})</span></dt><dd>{{ labels.QUEUE_HELP[code] }}</dd>
+  {% endfor %}
+</dl>
+</div>
+
+<div class="panel">
+<h2>Records with no partner</h2>
+<dl>
+  {% for code, name in labels.EXCEPTION_NAMES.items() %}
+  <dt>{{ name }} <span class="tech">({{ code }})</span></dt><dd>{{ labels.EXCEPTION_HELP[code] }}</dd>
+  {% endfor %}
+</dl>
+</div>
+
+<div class="panel">
+<h2>Your choices on each item</h2>
+<dl>
+  {% for code, name in labels.DECISION_BUTTONS.items() %}
+  <dt>{{ name }}</dt><dd>{{ labels.DECISION_HELP[code] }}</dd>
+  {% endfor %}
+  <dt>Pair by hand</dt><dd>For a record with no suggested partner: pick the records that belong with it. They must add up to exactly the same amount.</dd>
+</dl>
+<p class="hint">A comment is required whenever you don't simply approve, and when you approve a high-risk item. It tells the next person why.</p>
+</div>
+
+<div class="panel">
+<h2>Confidence and risk</h2>
+<dl>
+  <dt>Confidence</dt><dd>How sure the system is that a suggested match is right. It decides only the order you see items in, never the outcome. A low-confidence suggestion can still be correct: read the evidence.</dd>
+  <dt>Evidence for and against</dt><dd>Every suggestion lists what supports it and what doesn't. Anything that doesn't fit is shown in red, never left out.</dd>
+  <dt>Risk</dt><dd>Set by fixed rules, not by the system's guess: large amounts, possible duplicates and unexplained items are high risk and go to a senior reviewer.</dd>
+</dl>
+</div>
+
+<div class="panel">
+<h2>Why a button might be greyed out</h2>
+<p>Some steps need a particular role, or a second person, so that no one checks their own work. The reason is always written next to the button. The common ones:</p>
+<ul>
+  <li>{{ labels.RULE_TEXT["CR-02"] }}</li>
+  <li>{{ labels.RULE_TEXT["CR-03"] }}</li>
+  <li>{{ labels.RULE_TEXT["CR-04"] }}</li>
+  <li>{{ labels.RULE_TEXT["FR-REV-10"] }}</li>
+  <li>{{ labels.RULE_TEXT["CR-18"] }}</li>
+</ul>
+<p class="hint">If you try a blocked step anyway, nothing changes, and the attempt is noted in the audit trail.</p>
+</div>
+
+<div class="panel">
+<h2>Who does what</h2>
+<dl>
+  {% for code, name in role_names.items() %}
+  <dt>{{ name }}</dt><dd>{{ labels.ROLE_DESCRIPTIONS[code] }}</dd>
+  {% endfor %}
+</dl>
+<p class="hint">Choosing a name under "Acting as" is not a login. It records who made each decision.</p>
+</div>
+
+<div class="panel">
+<h2>Words used on the statement</h2>
+<dl>
+  <dt>Bank-to-book reconciliation statement</dt><dd>Starts from the bank's balance and the company's balance and shows every reason they differ. If everything is explained, the two adjusted balances are equal.</dd>
+  <dt>Adjusted bank balance</dt><dd>The bank's balance plus deposits it hasn't received yet, minus checks it hasn't paid yet.</dd>
+  <dt>Adjusted book balance</dt><dd>The company's balance plus or minus bank fees, interest and other bank items not yet in the books.</dd>
+  <dt>Unresolved difference</dt><dd>What is left unexplained. It must be explained in a comment before the month can close.</dd>
+  <dt>Adjustment</dt><dd>A correcting entry the accounting team should make in the books. This tool proposes and approves adjustments; it never posts them.</dd>
+  <dt>Audit trail</dt><dd>A permanent, numbered record of every action. Each entry is linked to the one before, so any change to a past entry would be detected.</dd>
+  <dt>Reopening</dt><dd>Unlocking a closed month to correct it. It needs a reason and a second person's approval, and the month must be signed off again.</dd>
+</dl>
+</div>
+<p class="hint">Turn on <b>Show details</b> at the top right to see the rule references, scores and record codes behind every screen.</p>
+</div>
+{% endblock %}

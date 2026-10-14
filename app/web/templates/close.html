@@ -1,90 +1,116 @@
 {% extends "base.html" %}
 {% block content %}
 {% set r = page.run %}{% set s = page.statement %}
-<h1>Close period · run {{ r.run_id }}</h1>
-<div class="sub">{{ r.period_start }} to {{ r.period_end }} · status <b>{{ r.status | replace("_", " ") }}</b></div>
+<div class="sub"><a href="/?run={{ r.run_id }}">← Home</a></div>
+<h1>Close {{ page.month }}</h1>
+<div class="sub">{{ r.period_start | day }} to {{ r.period_end | day }} · {{ r.status | run_status }}<span class="tech"> · run {{ r.run_id }}, status {{ r.status }}</span></div>
 
-<div class="grid">
 <div class="panel">
-  <h2>Bank-to-book reconciliation statement</h2>
-  <table>
-    <tr><td>Bank ending balance</td><td class="num">{{ s.bank_ending_balance_cents | money }}</td></tr>
-    <tr><td>Add: deposits in transit</td><td class="num">{{ s.deposits_in_transit_cents | money }}</td></tr>
-    <tr><td>Less: outstanding checks</td><td class="num">{{ (0 - s.outstanding_checks_cents) | money }}</td></tr>
-    <tr><th>Adjusted bank balance</th><th class="num">{{ s.adjusted_bank_balance_cents | money }}</th></tr>
-    <tr><td>Book ending balance</td><td class="num">{{ s.book_ending_balance_cents | money }}</td></tr>
-    <tr><td>Add: bank credits not yet recorded</td><td class="num">{{ s.bank_originated_credits_cents | money }}</td></tr>
-    <tr><td>Less: bank debits not yet recorded</td><td class="num">{{ (0 - s.bank_originated_debits_cents) | money }}</td></tr>
-    <tr><th>Adjusted book balance</th><th class="num">{{ s.adjusted_book_balance_cents | money }}</th></tr>
-    <tr><th>Unresolved difference</th><th class="num {{ 'unmet' if s.unresolved_difference_cents else 'met' }}">{{ s.unresolved_difference_cents | money }}</th></tr>
-  </table>
+  <h2>Does the bank agree with the books?</h2>
+  {% if s.unresolved_difference_cents == 0 %}
+  <p class="lead met">Yes. After timing differences and corrections, the two balances agree.</p>
+  {% else %}
+  <p class="lead">Not yet. After timing differences and corrections, they differ by <b class="unmet">{{ s.unresolved_difference_cents | money }}</b>.
+    The person who signs off must explain this difference in their comment.</p>
+  {% endif %}
+  <div class="grid">
+    <table>
+      <tr><td>Balance on the bank statement</td><td class="num">{{ s.bank_ending_balance_cents | money }}</td></tr>
+      <tr><td>Add deposits not yet at the bank</td><td class="num">{{ s.deposits_in_transit_cents | money }}</td></tr>
+      <tr><td>Less checks not yet cleared</td><td class="num">{{ (0 - s.outstanding_checks_cents) | money }}</td></tr>
+      <tr><th>Bank balance after timing differences</th><th class="num">{{ s.adjusted_bank_balance_cents | money }}</th></tr>
+    </table>
+    <table>
+      <tr><td>Balance in the books</td><td class="num">{{ s.book_ending_balance_cents | money }}</td></tr>
+      <tr><td>Add money the bank received that the books don't show</td><td class="num">{{ s.bank_originated_credits_cents | money }}</td></tr>
+      <tr><td>Less money the bank took that the books don't show</td><td class="num">{{ (0 - s.bank_originated_debits_cents) | money }}</td></tr>
+      <tr><th>Book balance after corrections</th><th class="num">{{ s.adjusted_book_balance_cents | money }}</th></tr>
+    </table>
+  </div>
+  <p><b>Difference still to explain: <span class="{{ 'unmet' if s.unresolved_difference_cents else 'met' }}">{{ s.unresolved_difference_cents | money }}</span></b>
+    <span class="tech"> BR-17 reconciliation statement; unresolved difference = adjusted bank − adjusted book</span></p>
+
+  <h3 style="margin-top:14px">The items behind these figures</h3>
   {% for section in page.sections %}
-  <h2 style="margin-top:14px">{{ section.title }} <span class="muted">({{ section.lines | length }}, {{ section.total_cents | money }})</span></h2>
-  {% if section.lines %}
-  <div class="scroll"><table>
-    {% for line in section.lines %}<tr><td class="mono">{{ line.item_ref }}</td><td class="nowrap">{{ line.business_date }}</td><td class="num">{{ line.amount_cents | money }}</td><td class="nowrap">{{ line.exception_code or "" }}</td><td>{{ line.description }}</td></tr>{% endfor %}
-  </table></div>
-  {% else %}<p class="muted">None.</p>{% endif %}
+  <details class="section">
+    <summary><b>{{ section.title }}</b> <span class="muted">· {{ section.lines | length }} item(s), {{ section.total_cents | money }}</span></summary>
+    <p class="hint">{{ section.help }}</p>
+    {% if section.lines %}
+    <div class="scroll"><table>
+      <thead><tr><th>Date</th><th class="num">Amount</th><th>Description</th><th>Kind</th></tr></thead>
+      {% for line in section.lines %}<tr><td class="nowrap">{{ line.business_date | day }}</td><td class="num">{{ line.amount_cents | money }}</td><td>{{ line.description }}<span class="tech mono"> {{ line.item_ref }}</span></td><td>{{ line.exception_code | exception_name }}<span class="tech"> {{ line.exception_code or "" }}</span></td></tr>{% endfor %}
+    </table></div>
+    {% else %}<p class="muted">None.</p>{% endif %}
+  </details>
   {% endfor %}
 </div>
 
+<div class="grid">
 <div>
   <div class="panel">
-    <h2>Close conditions</h2>
+    <h2>Before you can close</h2>
     <table>
-      {% for c in page.readiness.conditions %}
-      <tr><td class="{{ 'met' if c.met else 'unmet' }}">{{ '✓' if c.met else '✗' }}</td><td>{{ c.label }}</td><td class="muted">{{ c.detail }}</td></tr>
+      {% for c in page.checklist %}
+      <tr><td class="{{ 'met' if c.met else 'unmet' }}">{{ '✓' if c.met else '✗' }}</td><td>{{ c.label }}</td><td class="muted">{{ c.detail }}<span class="tech"> {{ c.technical }}</span></td></tr>
       {% endfor %}
     </table>
     {% if not page.readiness.conditions[4].met %}
-    <form method="post" action="/runs/{{ r.run_id }}/reports"><button class="secondary" {% if not user %}disabled{% endif %}>Generate report package</button></form>
+    <form method="post" action="/runs/{{ r.run_id }}/reports"><button class="secondary" {% if not user %}disabled{% endif %}>Update the reports</button>
+      {% if not user %}<span class="disabled-reason">Choose who you are from "Acting as" at the top right.</span>{% endif %}</form>
     {% endif %}
   </div>
 
   {% if r.status not in ("closed", "reopen_requested") %}
   <div class="panel">
-    <h2>Sign off and lock</h2>
+    <h2>Sign off and close the month</h2>
+    <p class="hint">Signing records this statement and locks {{ page.month }}. After that, no decision, adjustment or import can change until the month is reopened.</p>
     <form method="post" action="/runs/{{ r.run_id }}/close">
-      <textarea name="comment" placeholder="{{ 'Required: explain the unresolved difference (CR-10)' if page.comment_required else 'Optional comment' }}"></textarea>
-      <button {% if not page.sign.allowed %}disabled{% endif %}>Sign off and lock the period</button>
-      {% if not page.sign.allowed %}<span class="disabled-reason">{{ page.sign.reason }}</span>{% endif %}
+      <label for="close-comment">Your comment{% if page.comment_required %} <span class="muted">(needed: explain the difference of {{ s.unresolved_difference_cents | money }})</span>{% endif %}</label>
+      <textarea id="close-comment" name="comment"></textarea>
+      <button {% if not page.sign.allowed %}disabled{% endif %}>Sign off and close the month</button>
+      {% if not page.sign.allowed %}<span class="disabled-reason block">{{ page.sign.reason }}</span>{% endif %}
+      {% if page.sign.rule %}<span class="tech"> {{ page.sign.rule }}</span>{% endif %}
     </form>
-    <p class="muted">Signing records the statement and the audit chain head, then locks the period: no decision, adjustment or import is accepted until it is reopened.</p>
   </div>
   {% endif %}
+</div>
 
-  <div class="panel">
-    <h2>Reopening</h2>
-    {% if page.pending %}
-      <p>Requested by {{ page.reopenings[-1].by }}: “{{ page.pending.reason }}”</p>
-      <form method="post" action="/reopen-requests/{{ page.pending.reopen_request_id }}/decision">
-        <textarea name="comment" placeholder="Comment (required to reject)"></textarea>
-        <button name="decision" value="approve" {% if not page.decide.allowed %}disabled{% endif %}>Approve reopening</button>
-        <button name="decision" value="reject" class="secondary" {% if not page.decide.allowed %}disabled{% endif %}>Reject</button>
-        {% if not page.decide.allowed %}<span class="disabled-reason">{{ page.decide.reason }}</span>{% endif %}
-      </form>
-    {% elif r.status == "closed" %}
-      <form method="post" action="/runs/{{ r.run_id }}/reopen-request">
-        <textarea name="reason" placeholder="Reason for reopening (required)"></textarea>
-        <button {% if not page.request.allowed %}disabled{% endif %}>Request reopening</button>
-        {% if not page.request.allowed %}<span class="disabled-reason">{{ page.request.reason }}</span>{% endif %}
-      </form>
-    {% else %}<p class="muted">Available once the period is closed.</p>{% endif %}
-    {% if page.reopenings %}
-    <table style="margin-top:10px"><thead><tr><th>Requested</th><th>Reason</th><th>Decision</th></tr></thead>
-      {% for o in page.reopenings %}<tr><td>{{ o.by }}<div class="muted">{{ o.at | timestamp }}</div></td><td>{{ o.reason }}</td><td>{{ o.decision }}{% if o.decided_by %} by {{ o.decided_by }}{% endif %}<div class="muted">{{ o.comment }}</div></td></tr>{% endfor %}
-    </table>{% endif %}
-  </div>
-
+<div>
   {% if page.signoffs %}
   <div class="panel">
-    <h2>Sign-offs</h2>
+    <h2>Signed off</h2>
     {% for so in page.signoffs %}
-      <p>{{ so.by }} · {{ so.at | timestamp }} · difference {{ so.difference_cents | money }}<br>
-      <span class="muted">{{ so.comment }}</span><br><span class="mono" title="{{ so.chain_head }}">chain head {{ so.chain_head | short_hash(16) }}</span></p>
+      <p><b>{{ so.by }}</b> · {{ so.at | timestamp }} · difference {{ so.difference_cents | money }}<br>
+      <span class="muted">{{ so.comment }}</span><span class="tech mono" title="{{ so.chain_head }}"> · audit trail fingerprint {{ so.chain_head | short_hash(16) }}</span></p>
     {% endfor %}
   </div>
   {% endif %}
+
+  <div class="panel">
+    <h2>Reopen the month</h2>
+    {% if page.pending %}
+      <p>{{ page.reopenings[-1].by }} asked to reopen it: “{{ page.pending.reason }}”</p>
+      <form method="post" action="/reopen-requests/{{ page.pending.reopen_request_id }}/decision">
+        <label for="reopen-comment">Your comment <span class="muted">(needed to refuse)</span></label>
+        <textarea id="reopen-comment" name="comment"></textarea>
+        <button name="decision" value="approve" {% if not page.decide.allowed %}disabled{% endif %}>Allow reopening</button>
+        <button name="decision" value="reject" class="secondary" {% if not page.decide.allowed %}disabled{% endif %}>Keep it closed</button>
+        {% if not page.decide.allowed %}<span class="disabled-reason block">{{ page.decide.reason }}</span>{% endif %}
+      </form>
+    {% elif r.status == "closed" %}
+      <p class="hint">If something needs to change after closing, ask to reopen. The Controller decides, and the month must be signed off again afterwards.</p>
+      <form method="post" action="/runs/{{ r.run_id }}/reopen-request">
+        <label for="reopen-reason">Why it needs reopening <span class="muted">(needed)</span></label>
+        <textarea id="reopen-reason" name="reason"></textarea>
+        <button {% if not page.request.allowed %}disabled{% endif %}>Ask to reopen</button>
+        {% if not page.request.allowed %}<span class="disabled-reason block">{{ page.request.reason }}</span>{% endif %}
+      </form>
+    {% else %}<p class="muted">Available once the month is closed.</p>{% endif %}
+    {% if page.reopenings %}
+    <table style="margin-top:10px"><thead><tr><th>Asked by</th><th>Reason</th><th>Outcome</th></tr></thead>
+      {% for o in page.reopenings %}<tr><td>{{ o.by }}<div class="muted">{{ o.at | timestamp }}</div></td><td>{{ o.reason }}</td><td>{{ {"approve": "Reopened", "reject": "Kept closed"}.get(o.decision, "Waiting for the Controller") }}{% if o.decided_by %} by {{ o.decided_by }}{% endif %}<div class="muted">{{ o.comment }}</div></td></tr>{% endfor %}
+    </table>{% endif %}
+  </div>
 </div>
 </div>
 {% endblock %}

@@ -80,7 +80,10 @@ class ProseService:
         # hold the database. Only the result is written, with its audit event.
         result = self.adapter.prose(self.request_for(recommendation_id))
         with self.database.transaction() as connection:
-            self.repositories.recommendations.set_prose(connection, recommendation_id, result.text)
+            # A provider that did not answer wrote nothing, so nothing replaces what is
+            # stored. The attempt is still audited below.
+            if not result.provider_failed:
+                self.repositories.recommendations.set_prose(connection, recommendation_id, result.text)
             self.audit.write(connection, RunContext.load(self.database, run_id), AuditEvent(
                 event_type="GENAI_PROSE", process_code="P4", entity_type="recommendation",
                 entity_id=recommendation_id, actor_type="human", actor_user_id=user_id,

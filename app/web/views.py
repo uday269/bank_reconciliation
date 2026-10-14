@@ -25,6 +25,7 @@ from app.domain.explanation import split_stored
 from app.domain.risk import RISK_RULES, confidence_band
 from app.services.adjustment_service import ADJUSTABLE_EXCEPTIONS, LIVE_STATUSES
 from app.services.container import Services
+from app.web import labels, plain
 
 CATEGORIES = ("CAT-01", "CAT-02", "CAT-03", "CAT-04", "CAT-05")
 ITEM_TYPES = ("bank", "ledger", "carry_in")
@@ -36,17 +37,29 @@ AUDIT_PAGE_SIZE = 200
 
 @dataclass(frozen=True)
 class Permission:
+    """Whether an action is available. `reason` is plain text; `rule` is shown under details."""
+
     allowed: bool
     reason: str = ""
+    rule: str = ""
+
+    @classmethod
+    def refused(cls, explained: labels.Refusal) -> "Permission":
+        return cls(False, explained.text, explained.rule)
+
+
+def explain(violation: ControlViolation) -> labels.Refusal:
+    return labels.refusal(violation.rule, violation.message)
 
 
 def can(user: sqlite3.Row | None, action: str) -> Permission:
     """Whether the selected identity may perform an action, and if not, why."""
     if user is None:
-        return Permission(False, "select an identity first")
+        return Permission.refused(labels.no_identity())
     if not permissions.is_permitted(user["role_code"], action):
         allowed = ", ".join(ROLE_NAMES[r] for r in sorted(permissions.PERMISSION_MATRIX[action]))
-        return Permission(False, f"{ROLE_NAMES[user['role_code']]} cannot {action} (permitted for {allowed})")
+        return Permission.refused(labels.refusal(
+            "ROLE", f"{ROLE_NAMES[user['role_code']]} cannot {action}; permitted for {allowed}"))
     return Permission(True)
 
 
@@ -89,12 +102,25 @@ def dashboard(services: Services, run_id: int | None, user: sqlite3.Row | None) 
     for category in CATEGORIES:
         rows = queue_rows(services, run_id, category)
         value = sum(repos.items.get(r["subject_item_type"], r["subject_item_id"])["amount_cents"] for r in rows)
-        queues.append({"code": category, "name": CATEGORY_NAMES[category], "open": len(rows),
+        queues.append({"code": category, "name": labels.queue_name(category), "help": labels.QUEUE_HELP[category],
+                       "open": len(rows),
                        "value_cents": value, "high_risk": sum(1 for r in rows if r["risk_level"] == "high")})
 
     matching_started = run["status"] not in ("created", "validating", "validation_failed")
     readiness = services.period.readiness(run_id) if matching_started else None
+    count_summary = {"retained": retained, "decided": retained - awaiting, "awaiting": awaiting}
+    lists = {q["code"]: q["open"] for q in queues}
+    adjustments_waiting = len(services.adjustments.awaiting_approval(run_id))
+    reports_current = bool(readiness) and readiness.conditions[4].met
+    pending_reopen = repos.periods.pending_reopen_request(run_id)
     return {
+        "month": plain.month_name(run["period_start"]),
+        "next": plain.next_step(run, user, count_summary, lists, adjustments_waiting, reports_current,
+                                pending_reopen is not None),
+        "steps": plain.progress_steps(run, count_summary, reports_current),
+        "checklist": plain.close_checklist(readiness.conditions, count_summary, total.get("escalated", 0),
+                                           adjustments_waiting, readiness.statement.unresolved_difference_cents)
+                     if readiness else [],
         "run": run,
         "counts": {"bank": sum(counts["bank"].values()), "ledger": sum(counts["ledger"].values()),
                   "carry_in": sum(counts["carry_in"].values()), "retained": retained,
@@ -124,7 +150,17 @@ def queue(services: Services, run_id: int, category: str, user: sqlite3.Row | No
     rows = []
     for rec in queue_rows(services, run_id, category):
         item = repos.items.get(rec["subject_item_type"], rec["subject_item_id"])
+        members = 0
+        if rec["kind"] == "match":
+            candidates = repos.recommendations.candidates(rec["recommendation_id"])
+            members = len(repos.recommendations.candidate_members(candidates[0]["candidate_id"])) - 1 if candidates else 0
+        band = confidence_band(rec["confidence"], *_bands(services, run_id)) if rec["confidence"] is not None else None
         rows.append({
+            "what": plain.kind_of_record(rec["subject_item_type"], item["direction"]),
+            "flow": plain.flow(rec["subject_item_type"], item["direction"]),
+            "suggestion": (f"Matches {members} record{'s' if members != 1 else ''}" if rec["kind"] == "match"
+                           else labels.exception_name(rec["exception_code"])),
+            "sureness": plain.sureness(band, rec["source"] == "rule" and rec["kind"] == "match"),
             "recommendation_id": rec["recommendation_id"], "kind": rec["kind"],
             "record": item[EXTERNAL[rec["subject_item_type"]]], "item_type": rec["subject_item_type"],
             "date": item[DATE[rec["subject_item_type"]]], "amount_cents": item["amount_cents"],
@@ -134,8 +170,13 @@ def queue(services: Services, run_id: int, category: str, user: sqlite3.Row | No
             "risk_rules": json.loads(rec["risk_rules"] or "[]"),
             "escalated": item["status"] == "escalated", "category": rec["category_code"],
             "senior": senior_context(services, rec["recommendation_id"], user) if category == "CAT-05" else None})
-    return {"code": category, "name": CATEGORY_NAMES[category], "rows": rows,
-            "run": repos.runs.get(run_id)}
+    return {"code": category, "name": labels.queue_name(category), "help": labels.QUEUE_HELP[category],
+            "rows": rows, "run": repos.runs.get(run_id)}
+
+
+def _bands(services: Services, run_id: int) -> tuple[float, float]:
+    snapshot = json.loads(services.repositories.runs.get(run_id)["parameter_snapshot"])["parameters"]
+    return snapshot["confidence_high_band"], snapshot["confidence_low_band"]
 
 
 # ---------------------------------------------------------------------------
@@ -155,14 +196,26 @@ def audit_log(services: Services, run_id: int, event_type: str | None = None, pa
              "process": e["process_code"],
              "actor": users.get(e["actor_user_id"], f"user {e['actor_user_id']}") if e["actor_type"] == "human" else "System",
              "entity": f"{e['entity_type']} {e['entity_id'] or ''}".strip(),
-             "items": ", ".join(json.loads(e["item_refs"] or "[]")[:4]),
+             "records": ", ".join(json.loads(e["item_refs"] or "[]")[:4]),
              "decision": e["decision"] or "", "rule": e["rule_name"] or "",
              "status": (f"{e['previous_status'] or ''} → {e['new_status'] or ''}"
                         if e["previous_status"] or e["new_status"] else ""),
              "comment": e["comment"] or "", "hash": e["event_hash"],
-             "blocked": e["event_type"] == "BLOCKED_ATTEMPT"} for e in shown]
-    return {"verification": services.audit.verify(run_id), "rows": rows, "types": types,
-            "event_type": event_type or "", "page": page, "pages": pages, "total": len(events)}
+             "blocked": e["event_type"] == "BLOCKED_ATTEMPT",
+             "what": labels.event_name(e["event_type"]),
+             "decision_text": labels.decision_name(e["decision"]) if e["decision"] else "",
+             "status_text": (f"{labels.any_status(e['previous_status'])} → {labels.any_status(e['new_status'])}"
+                             if e["previous_status"] and e["new_status"] else "")} for e in shown]
+    verification = services.audit.verify(run_id)
+    if verification.intact:
+        check = f"No tampering detected. All {verification.events_checked:,} entries check out."
+    else:
+        check = (f"Tampering detected at entry {verification.first_broken_sequence}. Entries before it check out; "
+                 "contact the system administrator.")
+    return {"verification": verification, "check": check, "rows": rows,
+            "types": [(t, labels.event_name(t)) for t in types],
+            "event_type": event_type or "", "page": page, "pages": pages, "total": len(events),
+            "month": plain.month_name(services.repositories.runs.get(run_id)["period_start"])}
 
 
 # ---------------------------------------------------------------------------
@@ -177,8 +230,13 @@ def reports_index(services: Services, run_id: int) -> dict[str, Any]:
         code = f"RPT-{number:02d}"
         html = current.get((code, "html"))
         reports.append({"code": code, "title": title, "generated_at": html["generated_at"] if html else None,
-                        "hash": html["content_sha256"] if html else None})
-    return {"reports": reports, "generated": bool(current)}
+                        "hash": html["content_sha256"] if html else None,
+                        "about": labels.REPORT_DESCRIPTIONS[code]})
+    run = services.repositories.runs.get(run_id)
+    readiness = services.period.readiness(run_id) if run["status"] not in (
+        "created", "validating", "validation_failed") else None
+    return {"reports": reports, "generated": bool(current), "month": plain.month_name(run["period_start"]),
+            "current": bool(readiness) and readiness.conditions[4].met}
 
 
 REPORT_TITLES = ("Data Import Report", "Data Quality Report", "Transformation Report", "Exact Match Report",
@@ -201,9 +259,8 @@ def run_status(services: Services, run_id: int) -> dict[str, Any]:
 # ---------------------------------------------------------------------------
 
 DECISIONS = ("approve", "modify", "reject", "escalate", "unresolved")
-DECISION_LABELS = {"approve": "Approve the proposal", "modify": "Approve the selected candidate",
-                   "reject": "Reject: this pairing is wrong", "escalate": "Escalate to a senior reviewer",
-                   "unresolved": "Leave unresolved"}
+
+
 def split_explanation(text: str | None) -> dict[str, Any]:
     """The stored explanation in the blocks W3 shows; conflicting evidence stays separate (CR-15)."""
     return split_stored(text)
@@ -227,16 +284,17 @@ def _action_states(services: Services, rec: sqlite3.Row, subject_status: str, ru
     The service re-checks everything when the form is posted; this only decides what the
     screen offers, so a reviewer sees why an action is unavailable before trying it.
     """
-    common: str | None = None
+    common: labels.Refusal | None = None
     if user is None:
-        common = "select an identity first"
+        common = labels.no_identity()
     elif rec["status"] != "open":
-        common = "this recommendation has already been decided"
+        common = labels.Refusal("This item has already been decided.", "STATE")
     elif run["status"] not in period_lock.WORKING:
-        common = ("the period is closed" if run["status"] in period_lock.LOCKED
-                  else f"the run is {run['status'].replace('_', ' ')}")
+        common = (labels.refusal("CR-18", "period closed") if run["status"] in period_lock.LOCKED
+                  else labels.Refusal(f"Decisions open once matching has finished "
+                                      f"(this run is: {labels.run_status(run['status']).lower()}).", "STATE"))
 
-    independence: str | None = None
+    independence: labels.Refusal | None = None
     if common is None and permissions.decision_level(rec, subject_status) == "senior":
         history = services.repositories.decisions.for_recommendation(rec["recommendation_id"])
         try:
@@ -244,7 +302,7 @@ def _action_states(services: Services, rec: sqlite3.Row, subject_status: str, ru
                 user["user_id"], services.repositories.decisions.escalated_by(rec["recommendation_id"]),
                 [row["decided_by"] for row in history if row["decision_level"] == "first"])
         except ControlViolation as violation:
-            independence = f"{violation.message} ({violation.rule})"
+            independence = explain(violation)
 
     states = []
     for decision in DECISIONS:
@@ -253,14 +311,16 @@ def _action_states(services: Services, rec: sqlite3.Row, subject_status: str, ru
             try:
                 permissions.require_decision_permitted(user, rec, subject_status, decision)
             except ControlViolation as violation:
-                reason = f"{violation.message} ({violation.rule})"
+                reason = explain(violation)
         if reason is None and decision == "modify" and not has_alternative:
-            reason = "there is no other candidate to select; for an exception, use manual pairing"
+            reason = labels.Refusal("There's no other suggestion to choose from.", "STATE")
         comment_required = decision in permissions.COMMENT_REQUIRED or (
             decision == "approve" and rec["risk_level"] == "high")
         offered = decision in permissions.offered_actions(rec, subject_status)
-        states.append({"decision": decision, "label": DECISION_LABELS[decision], "allowed": reason is None,
-                       "reason": reason or "", "comment_required": comment_required, "offered": offered})
+        states.append({"decision": decision, "label": labels.DECISION_BUTTONS[decision],
+                       "help": labels.DECISION_HELP[decision], "allowed": reason is None,
+                       "reason": reason.text if reason else "", "rule": reason.rule if reason else "",
+                       "comment_required": comment_required, "offered": offered})
     return states
 
 
@@ -273,12 +333,14 @@ def item_detail(services: Services, recommendation_id: int, user: sqlite3.Row | 
     subject_status = subject["status"]
 
     fields = [{"label": label, "original": subject[f"{column}_original"],
-               "normalized": subject[f"{column}_normalized"] if f"{column}_normalized" in subject.keys() else None}
+               "normalized": subject[f"{column}_normalized"] if f"{column}_normalized" in subject.keys() else None,
+               "derived": False}
               for column, label in (("description", "Description"), ("reference", "Reference"))
               if f"{column}_original" in subject.keys()]
-    for column, label in (("payee_normalized", "Payee"), ("counterparty_normalized", "Counterparty")):
+    for column in ("payee_normalized", "counterparty_normalized"):
         if column in subject.keys() and subject[column]:
-            fields.append({"label": label, "original": "", "normalized": subject[column]})
+            fields.append({"label": "Other party", "original": subject[column], "normalized": None,
+                           "derived": True})
 
     snapshot = json.loads(run["parameter_snapshot"])["parameters"]
     candidates = []
@@ -314,27 +376,116 @@ def item_detail(services: Services, recommendation_id: int, user: sqlite3.Row | 
         "queue": "CAT-05" if subject_status == "escalated" else rec["category_code"],
         "manual": None, "adjustment": None,
         "prose_enabled": services.prose.enabled,
+        "prose_by_ai": _prose_by_ai(services, rec),
     }
+    subject_kind = plain.kind_of_record(subject_key[0], subject["direction"])
+    leading_members = len(candidates[0]["members"]) if candidates and rec["kind"] == "match" else 0
+    page["plain"] = {
+        "kind": subject_kind, "flow": plain.flow(subject_key[0], subject["direction"]),
+        "source": plain.source_name(subject_key[0]), "date": plain.long_date(page["subject_date"]),
+        "suggestion": plain.suggestion_sentence(rec["kind"], subject_kind, leading_members, rec["exception_code"]),
+        "confidence": labels.CONFIDENCE_TEXT.get(page["band"], ""),
+        "exact": rec["source"] == "rule" and rec["kind"] == "match" and rec["rule_name"] == "BR-01",
+        "carried": rec["source"] == "rule" and rec["kind"] == "match" and rec["rule_name"] == "BR-11",
+        "supporting": ([plain.evidence_sentence(line) for line in page["explanation"]["supporting"]]
+                       if rec["source"] != "rule" else plain.rule_evidence(rec["explanation"])),
+        "conflicting": [plain.evidence_sentence(line) for line in page["explanation"]["conflicting"]],
+        "risk_reasons": [labels.RISK_RULE_TEXT.get(r["code"], r["name"]) for r in risk_rules
+                         if r["code"] != "RR-07"],
+        "queue_name": labels.queue_name(page["queue"]),
+        "status": labels.item_status(subject_status),
+    }
+    for number, candidate in enumerate(candidates):
+        candidate["title"] = ("" if len(candidates) == 1 and candidate["origin"] == "system"
+                              else "Suggested match" if number == 0 and rec["kind"] == "match"
+                              else "Matched by a reviewer" if candidate["origin"] == "reviewer"
+                              else f"Other possibility {number}")
+        candidate["facts"] = plain.match_facts(candidate["features"])
+        for member in candidate["members"]:
+            member["source"] = plain.source_name(member["item_type"])
+    for entry in history:
+        entry["what"] = labels.decision_name(entry["decision"])
     if rec["kind"] == "exception" and rec["status"] == "open":
         keys = []
         for row in services.review.manual_match_options(recommendation_id, limit=40):
             item_type = next(t for t in ITEM_TYPES if ID_COLUMN[t] in row.keys())
             keys.append((item_type, row[ID_COLUMN[item_type]]))
         reason = _manual_reason(rec, subject_status, run, user)
-        page["manual"] = {"options": _member_rows(services, keys), "allowed": reason is None, "reason": reason or ""}
+        page["manual"] = {"options": _member_rows(services, keys), "allowed": reason is None,
+                          "reason": reason.text if reason else "", "rule": reason.rule if reason else ""}
     page["adjustment"] = adjustment_panel(services, rec, user)
+    keys = [subject_key] + [(m["item_type"], m["item_id"]) for c in candidates for m in c["members"]]
+    page["originals"] = original_records(services, rec["run_id"], list(dict.fromkeys(keys)))
     return page
 
 
-def _manual_reason(rec: sqlite3.Row, subject_status: str, run: sqlite3.Row, user: sqlite3.Row | None) -> str | None:
+# Each file's columns, in file order, with the item column that holds the value as loaded.
+# Amounts are shown the way the file states them (dollars with two decimals), not reformatted.
+ORIGINAL_COLUMNS = {
+    "bank": (("txn_id", "external_txn_id"), ("txn_date", "transaction_date"), ("amount", "amount_cents"),
+             ("direction", "direction"), ("description", "description_original"),
+             ("reference", "reference_original"), ("bank_type_code", "bank_type_code"),
+             ("running_balance", "running_balance_cents")),
+    "ledger": (("entry_id", "external_entry_id"), ("posting_date", "posting_date"), ("amount", "amount_cents"),
+               ("direction", "direction"), ("description", "description_original"),
+               ("reference", "reference_original"), ("gl_account", "gl_account_code"),
+               ("source_journal", "source_journal")),
+    "carry_in": (("item_id", "external_item_id"), ("item_type", "item_type"), ("original_date", "original_date"),
+                 ("amount", "amount_cents"), ("direction", "direction"), ("description", "description_original"),
+                 ("reference", "reference_original")),
+}
+
+
+def original_records(services: Services, run_id: int, keys: list[tuple[str, int]]) -> list[dict[str, Any]]:
+    """Each record exactly as it arrived, with the file it came from (FR-NRM: originals kept).
+
+    This is what a reviewer compares against: the bank's line and the book entry as
+    loaded, before any tidying for comparison.
+    """
+    files = {f["source_file_id"]: f for f in services.repositories.source_files.for_run(run_id)}
+    records = []
+    for item_type, item_id in keys:
+        item = services.repositories.items.get(item_type, item_id)
+        source = files.get(item["source_file_id"])
+        fields = []
+        for column, attribute in ORIGINAL_COLUMNS[item_type]:
+            value = item[attribute]
+            if attribute.endswith("_cents") and value is not None:
+                value = f"{value / 100:.2f}"
+            fields.append((column, "" if value is None else str(value)))
+        records.append({"source": plain.source_name(item_type), "file_name": source["file_name"] if source else "",
+                        "sha256": source["sha256"] if source else "", "fields": fields})
+    return records
+
+
+def _prose_by_ai(services: Services, rec: sqlite3.Row) -> bool:
+    """Whether the stored summary was written by an AI provider or is the offline summary.
+
+    The audit event that stored the text records which; the stored text alone does not.
+    """
+    if not rec["genai_prose"]:
+        return False
+    rows = services.database.connect().execute(
+        "SELECT revised_values FROM audit_event WHERE run_id = ? AND event_type = 'GENAI_PROSE' "
+        "AND entity_type = 'recommendation' AND entity_id = ? ORDER BY sequence_no DESC",
+        (rec["run_id"], rec["recommendation_id"])).fetchall()
+    for row in rows:
+        values = json.loads(row["revised_values"] or "{}")
+        if values.get("text") == rec["genai_prose"]:
+            return bool(values.get("generated"))
+    return False
+
+
+def _manual_reason(rec: sqlite3.Row, subject_status: str, run: sqlite3.Row,
+                   user: sqlite3.Row | None) -> labels.Refusal | None:
     if user is None:
-        return "select an identity first"
+        return labels.no_identity()
     if run["status"] not in period_lock.WORKING:
-        return "the period is not open for decisions"
+        return labels.refusal("CR-18", "period not open")
     try:
         permissions.require_manual_match_permitted(user, rec, subject_status)
     except ControlViolation as violation:
-        return f"{violation.message} ({violation.rule})"
+        return explain(violation)
     return None
 
 
@@ -349,9 +500,10 @@ def adjustment_panel(services: Services, rec: sqlite3.Row, user: sqlite3.Row | N
                 for row in services.repositories.adjustments.for_recommendation(rec["recommendation_id"])]
     permission = can(user, permissions.PROPOSE_ADJUSTMENT)
     live = [row for row in existing if row["status"] in LIVE_STATUSES]
-    reason = permission.reason or (f"adjustment {live[0]['adjustment_id']} is already {live[0]['status']}" if live else "")
+    reason = permission.reason or (
+        f"An adjustment for this item is already {labels.ADJUSTMENT_STATUS[live[0]['status']].lower()}." if live else "")
     if not reason and rec["status"] == "superseded":
-        reason = "this recommendation was superseded"
+        reason = "This suggestion was replaced; open the newer one."
     return {"suggestion": services.adjustments.suggestion(rec["recommendation_id"]), "existing": existing,
             "accounts": services.repositories.accounts.gl_accounts(), "allowed": not reason, "reason": reason}
 
@@ -372,7 +524,8 @@ def batch(services: Services, run_id: int, user: sqlite3.Row | None) -> dict[str
                        (rec["subject_item_type"], rec["subject_item_id"]))
         rows.append({"recommendation_id": rec["recommendation_id"], "rule": rec["rule_name"], "subject": subject,
                      "counterparts": [m for m in members if m is not subject]})
-    return {"rows": rows, "run": services.repositories.runs.get(run_id), "permission": can(user, permissions.BATCH)}
+    return {"rows": rows, "run": services.repositories.runs.get(run_id), "permission": can(user, permissions.BATCH),
+            "total_cents": sum(row["subject"]["amount_cents"] for row in rows)}
 
 
 def senior_context(services: Services, recommendation_id: int, user: sqlite3.Row | None) -> dict[str, Any]:
@@ -383,21 +536,23 @@ def senior_context(services: Services, recommendation_id: int, user: sqlite3.Row
     if user is not None:
         reviewers = {row["decided_by"] for row in history if row["decision_level"] == "first"}
         if (escalation is not None and escalation["decided_by"] == user["user_id"]) or user["user_id"] in reviewers:
-            blocked = "you reviewed or escalated this item (CR-03)"
+            blocked = labels.RULE_TEXT["CR-03"]
     return {"escalated_by": services.repositories.users.get(escalation["decided_by"])["full_name"] if escalation else "",
             "escalation_reason": escalation["comment"] if escalation else "", "blocked": blocked}
 
 
 def adjustment_queue(services: Services, run_id: int, user: sqlite3.Row | None) -> dict[str, Any]:
     rows = []
+    accounts = {a["gl_account_code"]: a["account_name"] for a in services.repositories.accounts.gl_accounts()}
     for row in services.repositories.adjustments.for_run(run_id):
         rec = services.repositories.recommendations.get(row["recommendation_id"])
         item = services.repositories.items.get(rec["subject_item_type"], rec["subject_item_id"])
-        reason = can(user, permissions.DECIDE_ADJUSTMENT).reason
+        permission = can(user, permissions.DECIDE_ADJUSTMENT)
+        reason, rule = permission.reason, permission.rule
         if not reason and user is not None and user["user_id"] == row["prepared_by"]:
-            reason = "you prepared this adjustment (CR-04)"
+            reason, rule = labels.RULE_TEXT["CR-04"], "CR-04"
         if not reason and row["status"] != "proposed":
-            reason = f"already {row['status']}"
+            reason, rule = f"Already {labels.ADJUSTMENT_STATUS[row['status']].lower()}.", "STATE"
         decisions = services.repositories.adjustments.decisions(row["adjustment_id"])
         rows.append({"adjustment_id": row["adjustment_id"], "recommendation_id": row["recommendation_id"],
                      "record": item[EXTERNAL[rec["subject_item_type"]]], "exception_code": rec["exception_code"],
@@ -406,8 +561,15 @@ def adjustment_queue(services: Services, run_id: int, user: sqlite3.Row | None) 
                      "prepared_by": services.repositories.users.get(row["prepared_by"])["full_name"],
                      "prepared_at": row["prepared_at"], "status": row["status"],
                      "decided_by": services.repositories.users.get(decisions[-1]["decided_by"])["full_name"] if decisions else "",
-                     "allowed": not reason, "reason": reason})
-    return {"rows": rows, "run": services.repositories.runs.get(run_id),
+                     "allowed": not reason, "reason": reason, "rule": rule,
+                     "kind": labels.exception_name(rec["exception_code"]), "description": item["description_original"],
+                     "date": item[DATE[rec["subject_item_type"]]],
+                     "debit_name": accounts.get(row["debit_account_code"], row["debit_account_code"]),
+                     "credit_name": accounts.get(row["credit_account_code"], row["credit_account_code"]),
+                     "status_text": labels.ADJUSTMENT_STATUS.get(row["status"], row["status"])})
+    run = services.repositories.runs.get(run_id)
+    return {"rows": rows, "run": run, "month": plain.month_name(run["period_start"]),
+            "waiting": sum(1 for row in rows if row["status"] == "proposed"),
             "totals": services.repositories.adjustments.totals_cents(run_id)}
 
 
@@ -426,7 +588,13 @@ def import_page(services: Services, run_id: int | None, user: sqlite3.Row | None
     file_failures = [r for r in results if r["scope"] == "file" and r["outcome"] == "fail"]
     row_failures = [r for r in results if r["scope"] == "row" and r["outcome"] == "fail"]
     warnings = [r for r in results if r["outcome"] == "warning"]
+    files = [{**dict(f), "name": labels.FILE_NAMES.get(f["file_type"], f["file_type"])} for f in files]
+    def checks(rows):
+        return [{"name": labels.CHECK_NAMES.get(r["test_code"], r["test_name"]), "code": r["test_code"],
+                 "row": r["row_reference"] or "", "message": plain.check_message(r["message"])} for r in rows]
+    file_failures, row_failures, warnings = checks(file_failures), checks(row_failures), checks(warnings)
     return {
+        "month": plain.month_name(run["period_start"]),
         "run": run, "permission": permission, "files": files, "tests": results,
         "summary": {"passed": sum(1 for r in results if r["outcome"] == "pass"), "file_failures": file_failures,
                     "row_failures": row_failures, "warnings": warnings} if results else None,
@@ -439,9 +607,19 @@ def import_page(services: Services, run_id: int | None, user: sqlite3.Row | None
 # W7 close period and reopening
 # ---------------------------------------------------------------------------
 
-STATEMENT_SECTIONS = (("deposits_in_transit", "Deposits in transit"), ("outstanding_checks", "Outstanding checks"),
-                      ("bank_originated", "Bank-originated items not yet recorded"),
-                      ("unresolved", "Unresolved items carried forward"))
+STATEMENT_SECTIONS = ("deposits_in_transit", "outstanding_checks", "bank_originated", "unresolved")
+
+
+def review_counts(services: Services, run_id: int) -> dict[str, int]:
+    """Items kept this month, how many have a decision, and how many still wait (or wait for a senior)."""
+    total: dict[str, int] = {}
+    for item_type in ITEM_TYPES:
+        for status, count in services.repositories.items.status_counts(run_id, item_type).items():
+            total[status] = total.get(status, 0) + count
+    retained = sum(total.values()) - total.get("excluded", 0)
+    awaiting = total.get("proposed", 0) + total.get("escalated", 0)
+    return {"retained": retained, "decided": retained - awaiting, "awaiting": awaiting,
+            "escalated": total.get("escalated", 0)}
 
 
 def close_page(services: Services, run_id: int, user: sqlite3.Row | None) -> dict[str, Any]:
@@ -450,26 +628,26 @@ def close_page(services: Services, run_id: int, user: sqlite3.Row | None) -> dic
     readiness = services.period.readiness(run_id)
     statement = readiness.statement
 
-    sign_reason = can(user, permissions.SIGN_OFF).reason
-    if not sign_reason and run["status"] in period_lock.LOCKED:
-        sign_reason = "the period is already closed"
-    if not sign_reason and not readiness.ready_for_signoff:
-        sign_reason = "every close condition must be met first (CR-10)"
-    if not sign_reason and run["status"] != "ready_to_close":
-        sign_reason = "generate the report package to move the run to ready to close"
-    if not sign_reason and user is not None:
+    sign = can(user, permissions.SIGN_OFF)
+    if sign.allowed and run["status"] in period_lock.LOCKED:
+        sign = Permission(False, "The period is already closed.", "STATE")
+    if sign.allowed and not readiness.ready_for_signoff:
+        sign = Permission(False, "Finish the steps marked ✗ above first.", "CR-10")
+    if sign.allowed and run["status"] != "ready_to_close":
+        sign = Permission(False, "Update the reports first, using the button above.", "CR-10")
+    if sign.allowed and user is not None:
         try:
             duties.require_independent_signer(user["user_id"], repos.decisions.deciders(run_id, "first"))
         except ControlViolation as violation:
-            sign_reason = f"{violation.message} ({violation.rule})"
+            sign = Permission.refused(explain(violation))
 
     pending = repos.periods.pending_reopen_request(run_id)
-    request_reason = can(user, permissions.REQUEST_REOPEN).reason
-    if not request_reason and run["status"] != "closed":
-        request_reason = "only a closed period can be reopened"
-    decide_reason = can(user, permissions.DECIDE_REOPEN).reason
-    if not decide_reason and pending is not None and user is not None and pending["requested_by"] == user["user_id"]:
-        decide_reason = "you requested this reopening (CR-06)"
+    request = can(user, permissions.REQUEST_REOPEN)
+    if request.allowed and run["status"] != "closed":
+        request = Permission(False, "Only a closed period can be reopened.", "STATE")
+    decide = can(user, permissions.DECIDE_REOPEN)
+    if decide.allowed and pending is not None and user is not None and pending["requested_by"] == user["user_id"]:
+        decide = Permission(False, labels.RULE_TEXT["CR-06"], "CR-06")
 
     names = {u["user_id"]: u["full_name"] for u in repos.users.active()}
     signoffs = [{"by": names.get(row["signed_by"], row["signed_by"]), "at": row["signed_at"],
@@ -480,14 +658,18 @@ def close_page(services: Services, run_id: int, user: sqlite3.Row | None) -> dic
                    "decided_by": names.get(row["decided_by"], "") if row["decided_by"] else "",
                    "comment": row["comment"] or "", "revised": row["revised_status"] or ""}
                   for row in repos.periods.reopen_history(run_id)]
+    counts = review_counts(services, run_id)
+    adjustments_waiting = len(services.adjustments.awaiting_approval(run_id))
     return {
+        "month": plain.month_name(run["period_start"]),
+        "checklist": plain.close_checklist(readiness.conditions, counts, counts["escalated"], adjustments_waiting,
+                                           statement.unresolved_difference_cents),
         "run": run, "readiness": readiness, "statement": statement,
-        "sections": [{"title": title, "lines": statement.section(name),
+        "sections": [{"title": labels.STATEMENT_SECTIONS[name][0], "help": labels.STATEMENT_SECTIONS[name][1],
+                      "lines": statement.section(name),
                       "total_cents": sum(line.amount_cents for line in statement.section(name))}
-                     for name, title in STATEMENT_SECTIONS],
+                     for name in STATEMENT_SECTIONS],
         "comment_required": statement.unresolved_difference_cents != 0,
         "signoffs": signoffs, "reopenings": reopenings, "pending": pending,
-        "sign": Permission(not sign_reason, sign_reason),
-        "request": Permission(not request_reason, request_reason),
-        "decide": Permission(not decide_reason, decide_reason),
+        "sign": sign, "request": request, "decide": decide,
     }

@@ -1,35 +1,37 @@
 {% extends "base.html" %}
 {% block content %}
 {% if not page.run %}
-<h1>Start a reconciliation run</h1>
-<div class="sub">One account, one month. The run's parameters are frozen when it is created, so its results can be reproduced.</div>
+<h1>Start a new month</h1>
+<p class="lead">Choose the month to reconcile. You'll upload the bank statement and the books for it next.</p>
 <div class="panel">
   <form method="post" action="/runs">
-    <table>
-      <tr><th>Period start</th><td><input type="text" name="period_start" value="2026-08-01"></td></tr>
-      <tr><th>Period end</th><td><input type="text" name="period_end" value="2026-08-31"></td></tr>
+    <table style="width:auto; margin-bottom:12px">
+      <tr><th><label for="period-start">First day</label></th><td><input type="date" id="period-start" name="period_start" value="2026-08-01"></td></tr>
+      <tr><th><label for="period-end">Last day</label></th><td><input type="date" id="period-end" name="period_end" value="2026-08-31"></td></tr>
     </table>
-    <button {% if not page.permission.allowed %}disabled{% endif %}>Create run</button>
+    <button {% if not page.permission.allowed %}disabled{% endif %}>Start the month</button>
     {% if not page.permission.allowed %}<span class="disabled-reason">{{ page.permission.reason }}</span>{% endif %}
   </form>
+  <p class="hint">One bank account, one month. The settings in force today are saved with the month, so its results can be reproduced later.</p>
 </div>
 {% else %}
 {% set r = page.run %}
-<h1>Run {{ r.run_id }} · import and validation</h1>
-<div class="sub">{{ r.period_start }} to {{ r.period_end }} · status <b>{{ r.status | replace("_", " ") }}</b></div>
+<div class="sub"><a href="/?run={{ r.run_id }}">← Home</a></div>
+<h1>{{ page.month }}: files</h1>
+<div class="sub">{{ r.period_start | day }} to {{ r.period_end | day }} · {{ r.status | run_status }}<span class="tech"> · run {{ r.run_id }}, status {{ r.status }}</span></div>
 
 {% if page.can_upload %}
 <div class="panel">
-  <h2>1. Import files</h2>
-  <p class="muted">CSV only. The three files are imported together or not at all; each is hashed, and a file already imported cannot be imported again.</p>
+  <h2>Step 1 of 2: upload the files</h2>
+  <p class="hint">CSV files only. All three are loaded together or not at all, and the same file can't be loaded twice.</p>
   <form method="post" action="/runs/{{ r.run_id }}/import" enctype="multipart/form-data">
     <table>
-      <tr><th>Bank statement</th><td><input type="file" name="bank" accept=".csv"></td><td class="muted">required</td></tr>
-      <tr><th>Ledger cash detail</th><td><input type="file" name="ledger" accept=".csv"></td><td class="muted">required</td></tr>
-      <tr><th>Prior-period carry-in items</th><td><input type="file" name="carry_in" accept=".csv"></td><td class="muted">required</td></tr>
-      <tr><th>Control totals</th><td><input type="file" name="control" accept=".csv"></td><td class="muted">optional; balances and totals to check against</td></tr>
+      <tr><th>Bank statement</th><td><input type="file" name="bank" accept=".csv"></td><td class="muted">needed</td></tr>
+      <tr><th>Company books (cash account)</th><td><input type="file" name="ledger" accept=".csv"></td><td class="muted">needed</td></tr>
+      <tr><th>Open items from last month</th><td><input type="file" name="carry_in" accept=".csv"></td><td class="muted">needed</td></tr>
+      <tr><th>Control totals</th><td><input type="file" name="control" accept=".csv"></td><td class="muted">optional: expected balances and totals to check against</td></tr>
     </table>
-    <button {% if not page.permission.allowed %}disabled{% endif %}>Import</button>
+    <button {% if not page.permission.allowed %}disabled{% endif %}>Upload the files</button>
     {% if not page.permission.allowed %}<span class="disabled-reason">{{ page.permission.reason }}</span>{% endif %}
   </form>
 </div>
@@ -37,14 +39,13 @@
 
 {% if page.files %}
 <div class="panel scroll">
-  <h2>Imported files</h2>
+  <h2>Files loaded</h2>
   <table>
-    <thead><tr><th>Type</th><th>File</th><th class="num">Rows</th><th class="num">Control debits</th><th class="num">Control credits</th><th class="num">Opening</th><th class="num">Closing</th><th>SHA-256</th></tr></thead>
+    <thead><tr><th>File</th><th class="num">Rows</th><th class="num">Opening balance</th><th class="num">Closing balance</th><th class="tech">Details</th></tr></thead>
     {% for f in page.files %}
-    <tr><td>{{ f.file_type }}</td><td>{{ f.file_name }}</td><td class="num">{{ f.row_count }}</td>
-      <td class="num">{{ f.control_total_debits_cents | money }}</td><td class="num">{{ f.control_total_credits_cents | money }}</td>
+    <tr><td>{{ f.name }}<div class="small muted">{{ f.file_name }}</div></td><td class="num">{{ f.row_count }}</td>
       <td class="num">{{ f.opening_balance_cents | money }}</td><td class="num">{{ f.closing_balance_cents | money }}</td>
-      <td class="mono" title="{{ f.sha256 }}">{{ f.sha256 | short_hash }}</td></tr>
+      <td class="tech mono small">debits {{ f.control_total_debits_cents | money }} · credits {{ f.control_total_credits_cents | money }} · SHA-256 <span title="{{ f.sha256 }}">{{ f.sha256 | short_hash }}</span></td></tr>
     {% endfor %}
   </table>
 </div>
@@ -52,34 +53,41 @@
 
 {% if page.can_process %}
 <div class="panel">
-  <h2>2. Validate and match</h2>
-  <p class="muted">Runs every validation test, normalizes the data (originals kept), then applies the matching rules and scoring. Matching starts only if every file-level test passes (CR-17).</p>
-  <form method="post" action="/runs/{{ r.run_id }}/match"><button {% if not page.permission.allowed %}disabled{% endif %}>Validate and match</button>
+  <h2>Step 2 of 2: check and match</h2>
+  <p class="hint">The system checks the files, tidies descriptions for comparison (the originals are kept), then matches bank and book records and sorts them into review lists. If a file fails a check, nothing is matched.<span class="tech"> CR-17</span></p>
+  <form method="post" action="/runs/{{ r.run_id }}/match"><button {% if not page.permission.allowed %}disabled{% endif %}>Check and match</button>
   {% if not page.permission.allowed %}<span class="disabled-reason">{{ page.permission.reason }}</span>{% endif %}</form>
 </div>
 {% endif %}
 
 {% if page.summary %}
 <div class="panel">
-  <h2>Validation results</h2>
+  <h2>Results of the file checks</h2>
+  {% if page.failed %}
+  <p class="unmet"><b>A file failed its checks, so nothing was matched.</b> Correct the files and start the month again. This attempt is kept on record.</p>
+  {% else %}
+  <p class="met"><b>The files passed their checks.</b></p>
+  {% endif %}
   <div class="stats">
-    <div class="stat"><b>{{ page.summary.passed }}</b><span>tests passed</span></div>
-    <div class="stat"><b class="{{ 'unmet' if page.summary.file_failures else '' }}">{{ page.summary.file_failures | length }}</b><span>file-level failures (block matching)</span></div>
-    <div class="stat"><b>{{ page.summary.row_failures | length }}</b><span>rows excluded</span></div>
-    <div class="stat"><b>{{ page.summary.warnings | length }}</b><span>warnings for review</span></div>
+    <div class="stat"><b>{{ page.summary.passed }}</b><span>checks passed</span></div>
+    <div class="stat"><b class="{{ 'unmet' if page.summary.file_failures else '' }}">{{ page.summary.file_failures | length }}</b><span>problems that stop matching</span></div>
+    <div class="stat"><b>{{ page.summary.row_failures | length }}</b><span>rows set aside</span></div>
+    <div class="stat"><b>{{ page.summary.warnings | length }}</b><span>things to look at</span></div>
   </div>
-  {% if page.failed %}<p class="unmet">Matching was blocked. Correct the files and start a new run; this run stays as the record of the failed import.</p>{% endif %}
-  {% for title, rows in (("File-level failures", page.summary.file_failures), ("Excluded rows", page.summary.row_failures), ("Warnings: possible duplicates and out-of-period dates are kept for human judgment", page.summary.warnings)) if rows %}
-  <h2 style="margin-top:14px">{{ title }}</h2>
-  <table><thead><tr><th>Test</th><th>Row</th><th>Message</th></tr></thead>
-    {% for row in rows %}<tr><td>{{ row.test_code }} {{ row.test_name }}</td><td class="mono">{{ row.row_reference or "" }}</td><td>{{ row.message or "" }}</td></tr>{% endfor %}
-  </table>
+  {% for title, help, rows in (("Problems that stop matching", "", page.summary.file_failures), ("Rows set aside", "These rows couldn't be read and were left out.", page.summary.row_failures), ("Things to look at", "Kept in the month, but flagged: possible duplicates and dates outside the month. Reviewers will see them.", page.summary.warnings)) if rows %}
+  <details class="section" {% if loop.first and page.failed %}open{% endif %}>
+    <summary><b>{{ title }}</b> <span class="muted">· {{ rows | length }}</span></summary>
+    {% if help %}<p class="hint">{{ help }}</p>{% endif %}
+    <div class="scroll"><table><thead><tr><th>Check</th><th>Record</th><th>What was found</th></tr></thead>
+      {% for row in rows %}<tr><td>{{ row.name }}<span class="tech"> {{ row.code }}</span></td><td class="mono">{{ row.row }}</td><td>{{ row.message }}</td></tr>{% endfor %}
+    </table></div>
+  </details>
   {% endfor %}
 </div>
 {% endif %}
 
 {% if r.status not in ("created", "validating", "validation_failed") %}
-<div class="panel"><a class="button" href="/?run={{ r.run_id }}">Go to the review queues</a></div>
+<div class="panel"><a class="button" href="/?run={{ r.run_id }}">Go to the review lists</a></div>
 {% endif %}
 {% endif %}
 {% endblock %}
