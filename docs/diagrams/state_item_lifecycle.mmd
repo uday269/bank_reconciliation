@@ -15,7 +15,9 @@ stateDiagram-v2
     escalated --> proposed: senior rejects
     escalated --> unresolved: senior keeps unresolved
     approved --> report_verified: report check
+    approved --> proposed: reversed (CR-19)
     report_verified --> reconciled: CR-07 met
+    report_verified --> proposed: reversed (CR-19)
     reconciled --> proposed: reopened, reversed
     unresolved --> proposed: new evidence / reopened
     excluded --> [*]

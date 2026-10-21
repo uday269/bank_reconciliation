@@ -91,6 +91,19 @@ async def manual_match(request: Request, recommendation_id: int):
     return redirect(_next_in_queue(svc, rec["run_id"], origin))
 
 
+@router.post("/items/{recommendation_id}/reverse")
+async def reverse_decision(request: Request, recommendation_id: int, comment: str = Form("")):
+    """CR-19: a senior reverses a decision; both stay on record and the item returns to review."""
+    user = require_user(request)
+    if user is None:
+        return back(request)
+    outcome = services(request).review.reverse(recommendation_id, user["user_id"], comment.strip() or None)
+    flash(request, "ok", "Decision reversed. The item is back in review, and the earlier decision stays on record.",
+          technical=f"Recommendation {recommendation_id} superseded by {outcome.new_recommendation_id}; "
+                    f"review decision {outcome.reversed_decision_id} reversed.")
+    return redirect(f"/items/{outcome.new_recommendation_id}")
+
+
 @router.post("/items/{recommendation_id}/prose")
 async def generate_prose(request: Request, recommendation_id: int):
     """Optional prose (DD-10). Restates the evidence; never a score or a decision (CR-13)."""

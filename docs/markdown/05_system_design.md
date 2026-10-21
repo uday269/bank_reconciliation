@@ -30,9 +30,11 @@ app/
 │   ├── main.py             Application factory, session, error handling
 │   ├── common.py           Identity, messages, page and redirect helpers
 │   ├── views.py            What each screen shows; no web framework imports
+│   ├── labels.py           Plain-language names, help text and refusal sentences (ADR-33)
+│   ├── plain.py            Sentences built from evidence and state: next step, checklist (ADR-33)
 │   ├── rendering.py        Jinja2 environment and formatting filters
 │   ├── routes/             dashboard.py, review.py, runs.py, period.py
-│   ├── templates/          One template per screen (W1..W8) plus shared layout
+│   ├── templates/          One template per screen (W1..W8), Help, and shared layout
 │   └── static/app.css      Stylesheet
 ├── services/
 │   ├── container.py            Builds every service from configuration
@@ -40,7 +42,7 @@ app/
 │   ├── import_service.py       UC-01
 │   ├── validation_service.py   UC-02, includes normalization
 │   ├── matching_service.py     UC-03, orchestrates the domain layer; re-proposal of released items
-│   ├── review_service.py       UC-04..UC-07, batches, manual pairing
+│   ├── review_service.py       UC-04..UC-07, batches, manual pairing, reversal (CR-19)
 │   ├── adjustment_service.py   UC-08, UC-09
 │   ├── period_service.py       UC-11..UC-13, the bank-to-book statement
 │   ├── report_service.py       UC-10, package and report check
@@ -74,7 +76,7 @@ app/
     └── genai/              Provider-neutral adapter, offline stub, Gemini option
 ```
 
-Revised in Stage 8: the web layer separates view functions from routes so every screen can be built and checked without a server (ADR-22); repositories are one module rather than a package (ADR-29).
+The web layer separates view functions from routes so every screen can be built and checked without a server (ADR-22); repositories are one module rather than a package (ADR-29). For release 1.0 the screens lead with plain language (ADR-33), show original records as received (ADR-34), and a wrong decision can be reversed without editing evidence (ADR-32).
 
 ## 3. Technology
 
@@ -86,9 +88,9 @@ Every dependency is free, installs with pip, and earns its place.
 | FastAPI | HTTP routing | Typed request handling and automatic input validation; Flask would need the same checks written by hand. Brings `python-multipart` for form posts and file uploads, and uses `itsdangerous` to sign the session cookie |
 | Uvicorn | Server | Single-process local server, no configuration |
 | Jinja2 | HTML rendering | Server-rendered pages keep the whole request path inspectable; a front-end framework would add build tooling without changing what reviewers see. Also renders the 13 reports |
-| Standard library `sqlite3` | Database access | The schema is the source of truth and repositories write explicit SQL, so an abstraction layer would wrap `sqlite3` without replacing anything. Parameterized statements, transactions and row factories are all native (revised in Stage 6; see ADR-01) |
+| Standard library `sqlite3` | Database access | The schema is the source of truth and repositories write explicit SQL, so an abstraction layer would wrap `sqlite3` without replacing anything. Parameterized statements, transactions and row factories are all native (see ADR-01) |
 | SQLite | Storage | Single file, zero setup, supports triggers and CHECK constraints, which is where the controls live |
-| `app/domain/text.py` | Text similarity | One token-set function written on `difflib`, about forty lines. A dependency for a single function is hard to justify, and bank abbreviations that drop vowels (SLVR for SILVER) need a subsequence test that off-the-shelf ratios handle poorly (revised in Stage 6) |
+| `app/domain/text.py` | Text similarity | One token-set function written on `difflib`, about forty lines. A dependency for a single function is hard to justify, and bank abbreviations that drop vowels (SLVR for SILVER) need a subsequence test that off-the-shelf ratios handle poorly |
 | scikit-learn | Confidence calibration | Isotonic regression is exactly the calibration tool needed. Used for nothing else, and never for matching decisions (DD-11) |
 | pytest, httpx | Tests | Standard test runner plus an HTTP client for route tests |
 
@@ -202,6 +204,7 @@ If the optional GenAI adapter is enabled, its prose is stored in a separate fiel
 | Escalate | Item status escalated; the escalating user is read later for CR-03 |
 | Manual pairing | For exceptions only. The reviewer selects records from the other side; the system checks they are free and agree to the cent, adds the pairing as an unscored candidate, and records a modify decision (ADR-23) |
 | Settling a record | Approve, modify and unresolved settle every other open proposal for the same records: an exception raised for the record is superseded; another open match refuses the decision. Superseding a CAT-05 or escalated exception requires an independent senior (ADR-26) |
+| Reversal | A Senior Accountant or Controller other than the decider reverses an approve, modify or unresolved decision in an open period, with a comment, when no adjustment for the item is proposed or approved (CR-19). The decision row and its audit event are unchanged; a DECISION_REVERSED event references both; the recommendation is marked superseded and reissued as an open copy with its system candidates, and the settled records return to proposed (FR-REV-12, ADR-32) |
 | Refusals | Every check runs inside the transaction. A refusal rolls back, then a BLOCKED_ATTEMPT event names the rule (ADR-12) |
 
 ### 7.1 Batch approval (DD-02)
@@ -249,6 +252,8 @@ HTML routes serve the reviewer interface; two JSON routes exist where a machine-
 | GET `/items/{recommendation_id}` | Item detail (W3, W5) | — | DETAIL_OPENED |
 | POST `/items/{recommendation_id}/decision` | Approve, modify, reject, escalate, unresolved | ROL-01..03 by level | DECISION or BLOCKED_ATTEMPT |
 | POST `/items/{recommendation_id}/manual-match` | Pair an exception by hand | ROL-01..03 by level | DECISION or BLOCKED_ATTEMPT |
+| POST `/items/{recommendation_id}/reverse` | Reverse a final decision | ROL-02, ROL-03, not the decider | DECISION_REVERSED or BLOCKED_ATTEMPT |
+| POST `/items/{recommendation_id}/prose` | Optional plain-words summary | any identity | GENAI_PROSE |
 | GET `/runs/{run_id}/batch` | Exact-match batch (W4) | — | — |
 | POST `/runs/{run_id}/batch` | Batch approve or reject | ROL-01, ROL-02 | DECISION per item |
 | POST `/items/{recommendation_id}/adjustment` | Propose an adjustment | ROL-01, ROL-02 | ADJUSTMENT_PROPOSED |
@@ -264,6 +269,7 @@ HTML routes serve the reviewer interface; two JSON routes exist where a machine-
 | GET `/runs/{run_id}/audit` | Audit log and verification (W8) | — | — |
 | GET `/api/runs/{run_id}/audit/verify` | Chain verification as JSON | — | CHAIN_VERIFIED |
 | GET `/api/runs/{run_id}/status` | Run status and queue counts as JSON | — | — |
+| GET `/help` | Plain-language help: lists, choices, roles, statement terms | — | — |
 
 Reviewer decisions, adjustments, sign-off and reopening exist only in the interface, never on the command line, so there is one path to each and it goes through the same controls (ADR-31). Evaluation is a command line entry point (`evaluate`), not a route, because it reads ground truth (ADR-11).
 
@@ -274,7 +280,7 @@ Reviewer decisions, adjustments, sign-off and reopening exist only in the interf
 | File validation | VAL-nn results | File-level failures leave the run in `validation_failed` and block matching (CR-17); row-level failures exclude the row; warnings are kept for review. The correction is a new run (ADR-28) |
 | Input problems | `AdjustmentInputError`, `ManualMatchError`, `PeriodInputError`, `RunInputError`, `ImportError_` | Every problem listed at once, nothing written, the form is shown again. Not a control, so no BLOCKED_ATTEMPT event |
 | Control refusal | `ControlViolation`, E-CTL-001..030 | Permission, level, offered action, comment, detail view, separation of duties, batch contents, lock, stage, state transition. Rolled back; a BLOCKED_ATTEMPT event names the rule; the screen shows rule and code |
-| Conflict | E-CTL-030 (STATE) | Already decided, already closed, a record another match proposes, a run at the wrong stage. Handled as a control refusal, so it is also evidenced (revised in Stage 8: one class instead of a separate E-CON range) |
+| Conflict | E-CTL-030 (STATE) | Already decided, already closed, a record another match proposes, a run at the wrong stage. Handled as a control refusal, so it is also evidenced (one class rather than a separate E-CON range) |
 | Not found | 404 page | Unknown run, recommendation, report or queue |
 | System | Server error | The transaction rolls back and nothing is saved; the stack trace stays in the server console |
 
@@ -295,7 +301,7 @@ The prototype runs locally on synthetic data with no authentication (DD-05). Wit
 | Authorization | Every state-changing route calls a service, which checks role and control rules. The interface shows unavailable actions disabled with the blocking rule; the screen is guidance, never the control |
 | Injection | Parameterized statements only; no string-built SQL |
 | Cross-site scripting | Jinja2 autoescaping on; bank descriptions are treated as untrusted text |
-| Cross-site request forgery | The session cookie is `SameSite=Lax`, so browsers do not send it with a form posted from another site; such a post arrives with no identity and is refused. No separate form token (revised in Stage 8: the application listens on 127.0.0.1 only) |
+| Cross-site request forgery | The session cookie is `SameSite=Lax`, so browsers do not send it with a form posted from another site; such a post arrives with no identity and is refused. No separate form token: the application listens on 127.0.0.1 only |
 | File upload | Parsed with the standard CSV reader, never evaluated, and validated before anything is matched. Written to a temporary directory under fixed names, so the uploaded file name is never used as a path. No upload size limit: a stated limit of a local prototype |
 | Secrets | The optional provider key is read from `.env`, which `.gitignore` excludes. No key is required to run the system |
 | External calls | Disabled by default. Enabling requires both a configuration flag and a `data_classification = synthetic` assertion; the adapter refuses to send otherwise (NFR-05) |
@@ -319,6 +325,7 @@ Checks are implemented once, in `app/control`, and called by services rather tha
 | Sign off and close | no | no | yes | CR-05, CR-10 |
 | Request reopening | yes | yes | no | — |
 | Approve reopening | no | no | yes | CR-06 |
+| Reverse a decision | no | yes, not their own | yes, not their own | CR-19 |
 | View reports and audit log | yes | yes | yes | — |
 
 Separation-of-duties checks compare user identifiers across records: the escalating user on the item, the preparer on the adjustment, the first-level reviewers in the run, and the requester on the reopen request.
@@ -365,7 +372,7 @@ Decisions DD-01..DD-12 are recorded in DOC-01 and are all settled as the working
 
 | ID | Decision | Reason | Consequence |
 |---------|------------------|--------------------------------|--------------------------|
-| ADR-01 | Schema in SQL, accessed through the standard library | Constraints and triggers are the control layer; restating them in Python would create two sources of truth. With no ORM and no migrations, SQLAlchemy would wrap `sqlite3` rather than replace it (revised in Stage 6) | `sqlite3` with explicit SQL in repositories; no migrations framework |
+| ADR-01 | Schema in SQL, accessed through the standard library | Constraints and triggers are the control layer; restating them in Python would create two sources of truth. With no ORM and no migrations, SQLAlchemy would wrap `sqlite3` rather than replace it | `sqlite3` with explicit SQL in repositories; no migrations framework |
 | ADR-02 | Separate control layer | One implementation and one test per control rule | Services must call control functions; routers never check rules themselves |
 | ADR-03 | Server-rendered HTML | Keeps the request path inspectable and matches the wireframes | No client-side state; full page loads |
 | ADR-04 | Domain layer performs no input or output | Reproducible, testable rules and scoring | Services assemble data and persist results |
@@ -396,6 +403,9 @@ Decisions DD-01..DD-12 are recorded in DOC-01 and are all settled as the working
 | ADR-29 | Repositories in one module | Splitting into a package would change every import for no functional gain | Section 2.1 revised; one class per aggregate |
 | ADR-30 | Adjustment decisions locked by the service only | The `adjustment_decision` table has no run column, so no trigger can see the period | The service check is the only lock for that table; tested directly and stated as a limit |
 | ADR-31 | Decisions only through the interface | A command line shortcut would be a second, weaker path to the same actions | The command line covers setup, the automated pipeline and evidence |
+| ADR-32 | Reversal by reissue, not by edit | A wrong decision must be correctable (FR-AUD-06) without editing evidence or changing the schema. Reopening the same recommendation would mix two decision histories on one row | The reversed recommendation keeps its one decision; the open copy carries the next. Evaluation counts reversed decisions but measures the item on its copy. No migration was needed |
+| ADR-33 | Plain language first, codes behind Show details | Reviewers are accountants, not readers of rule IDs; auditors still need every code | Every screen leads with plain words from `labels.py` and `plain.py`; codes, scores and hashes sit in elements shown by Show details. Tests fail if a code appears with details off (TC-I-080, TC-I-082) |
+| ADR-34 | Original records shown as received | A reviewer checks against the source, not the tidied comparison values | The item screen shows each record's file columns untouched, from the stored `*_original` values; no document images are generated, because the input is CSV only (DD-08) |
 
 ## 18. Traceability
 
@@ -413,4 +423,4 @@ Decisions DD-01..DD-12 are recorded in DOC-01 and are all settled as the working
 | FR-RPT | `services/report_service.py`, `services/report_builders.py`, `infra/reports/`, `control/completion.py` |
 | FR-EVL | `services/evaluation_service.py`, `cli.py` (`evaluate`) |
 | FR-GAI | `infra/genai/` |
-| CR-01..CR-18 | `app/control` plus schema constraints and triggers |
+| CR-01..CR-19 | `app/control` plus schema constraints and triggers |

@@ -25,6 +25,7 @@ ERROR_CODES: dict[str, str] = {
     "CR-16": "E-CTL-016",       # comment required
     "CR-17": "E-CTL-017",       # matching before validation
     "CR-18": "E-CTL-018",       # locked period
+    "CR-19": "E-CTL-019",       # decision reversal: senior, not the decider, open period
     "FR-REV-04": "E-CTL-020",   # action not offered for this category
     "FR-REV-10": "E-CTL-021",   # detail view not opened
     "FR-ADJ-01": "E-CTL-022",   # adjustment proposed for an item that does not take one

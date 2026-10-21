@@ -435,9 +435,11 @@ The decision record and its audit event commit together. If the audit write fail
 | escalated | proposed | Senior rejects the recommendation |
 | escalated | unresolved | Senior keeps the item unresolved |
 | approved | report_verified | Item appears correctly in the reconciliation report (FR-RPT-05) |
+| approved | proposed | A senior reverses the decision in an open period (CR-19, FR-REV-12) |
 | report_verified | reconciled | All six conditions hold (CR-07) |
+| report_verified | proposed | A senior reverses the decision in an open period (CR-19, FR-REV-12) |
 | reconciled | proposed | Period reopened and the decision reversed (CR-18) |
-| unresolved | proposed | New evidence before close, or period reopened |
+| unresolved | proposed | New evidence before close, a decision reversed (CR-19), or period reopened |
 
 An approved exception disposition, such as an outstanding check carried forward, reaches reconciled in the same way as a match. Only unresolved items remain open at close, and they are carried forward.
 
@@ -497,7 +499,7 @@ Statuses on item and run records are current-state fields. Their history is reco
 | UC-04 | FR-REV-01, FR-REV-06 | CR-01, CR-11, CR-18 |
 | UC-05 | FR-REV-02..05, FR-REV-07, FR-REV-09..11 | CR-01, CR-15, CR-16, CR-18 |
 | UC-06 | FR-REV-08 | CR-16, ESC-01, ESC-02 |
-| UC-07 | FR-REV-04, FR-REV-05 | CR-02, CR-03 |
+| UC-07 | FR-REV-04, FR-REV-05, FR-REV-12 | CR-02, CR-03, CR-19 |
 | UC-08 | FR-ADJ-01 | CR-12, CR-16 |
 | UC-09 | FR-ADJ-02..04 | CR-04 |
 | UC-10 | FR-RPT-01..05 | CR-07 |

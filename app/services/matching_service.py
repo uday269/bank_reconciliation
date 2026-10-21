@@ -10,7 +10,7 @@ Nothing here decides anything. Every recommendation, scored or not, goes to a re
 queue and waits for a person (CR-01). Confidence orders the work; it never replaces
 approval.
 
-Running with `use_scoring=False` reproduces the Stage 6 baseline exactly, which is what
+Running with `use_scoring=False` reproduces the rules-only baseline exactly, which is what
 makes the rules-only and hybrid comparison in DOC-07 a like-for-like measurement.
 """
 

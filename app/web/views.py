@@ -203,7 +203,8 @@ def audit_log(services: Services, run_id: int, event_type: str | None = None, pa
              "comment": e["comment"] or "", "hash": e["event_hash"],
              "blocked": e["event_type"] == "BLOCKED_ATTEMPT",
              "what": labels.event_name(e["event_type"]),
-             "decision_text": labels.decision_name(e["decision"]) if e["decision"] else "",
+             "decision_text": labels.decision_name(e["decision"])
+                              if e["decision"] and e["event_type"] != "DECISION_REVERSED" else "",
              "status_text": (f"{labels.any_status(e['previous_status'])} → {labels.any_status(e['new_status'])}"
                              if e["previous_status"] and e["new_status"] else "")} for e in shown]
     verification = services.audit.verify(run_id)
@@ -405,6 +406,23 @@ def item_detail(services: Services, recommendation_id: int, user: sqlite3.Row | 
             member["source"] = plain.source_name(member["item_type"])
     for entry in history:
         entry["what"] = labels.decision_name(entry["decision"])
+    reversals = _reversals(services, rec["run_id"])
+    names = {u["user_id"]: u["full_name"] for u in repos.users.active()}
+    for event in reversals.get(recommendation_id, []):
+        history.append({"decision": "reverse", "what": "Decision reversed", "level": "senior",
+                        "by": names.get(event["actor_user_id"], ""), "comment": event["comment"] or "",
+                        "at": event["created_at"], "batch": None, "status": ""})
+    page["replaced_by"] = next((json.loads(e["revised_values"])["reissued_as"]
+                                for e in reversals.get(recommendation_id, [])), None)
+    page["replaces"] = next(({"recommendation_id": old_id, "by": names.get(e["actor_user_id"], ""),
+                              "comment": e["comment"] or "", "at": e["created_at"]}
+                             for old_id, events in reversals.items() for e in events
+                             if json.loads(e["revised_values"])["reissued_as"] == recommendation_id), None)
+    page["reverse"] = None
+    if rec["status"] == "decided":
+        refusal = services.review.reversal_refusal(recommendation_id, user)
+        page["reverse"] = Permission(True) if refusal is None else Permission.refused(
+            labels.no_identity() if user is None else explain(refusal))
     if rec["kind"] == "exception" and rec["status"] == "open":
         keys = []
         for row in services.review.manual_match_options(recommendation_id, limit=40):
@@ -456,6 +474,17 @@ def original_records(services: Services, run_id: int, keys: list[tuple[str, int]
         records.append({"source": plain.source_name(item_type), "file_name": source["file_name"] if source else "",
                         "sha256": source["sha256"] if source else "", "fields": fields})
     return records
+
+
+def _reversals(services: Services, run_id: int) -> dict[int, list[sqlite3.Row]]:
+    """DECISION_REVERSED events in the run, by the recommendation whose decision was reversed."""
+    rows = services.database.connect().execute(
+        "SELECT * FROM audit_event WHERE run_id = ? AND event_type = 'DECISION_REVERSED' ORDER BY sequence_no",
+        (run_id,)).fetchall()
+    found: dict[int, list[sqlite3.Row]] = {}
+    for row in rows:
+        found.setdefault(int(row["entity_id"]), []).append(row)
+    return found
 
 
 def _prose_by_ai(services: Services, rec: sqlite3.Row) -> bool:

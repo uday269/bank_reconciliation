@@ -296,7 +296,7 @@ def main(argv: list[str] | None = None) -> int:
     run_parser.add_argument("--calibration", default="models/calibration.json",
                             help="calibration artefact to load")
     run_parser.add_argument("--rules-only", action="store_true",
-                            help="skip scoring, reproducing the Stage 6 baseline")
+                            help="skip scoring, reproducing the rules-only baseline")
 
     status_parser = subparsers.add_parser("status", help="run status and queue counts")
     status_parser.add_argument("--run", type=int)

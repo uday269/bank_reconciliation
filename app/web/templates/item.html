@@ -7,6 +7,13 @@
   {% if page.level == "senior" %} · <span class="badge risk-medium">needs a senior reviewer</span>{% endif %}
   <span class="tech">· {{ page.subject_ref }} · recommendation {{ rec.recommendation_id }} · {{ rec.category_code }} · {{ rec.kind }}{% if rec.relationship %} {{ rec.relationship }}{% endif %} · {{ page.level }} level · {{ rec.status }}</span></div>
 
+{% if page.replaced_by %}
+<p class="notice">This decision was reversed and the item went back for review. <a href="/items/{{ page.replaced_by }}">Open the item as it is now</a>.</p>
+{% endif %}
+{% if page.replaces %}
+<p class="notice">This item was decided before. {{ page.replaces.by }} reversed that decision on {{ page.replaces.at | timestamp }}: “{{ page.replaces.comment }}” <a href="/items/{{ page.replaces.recommendation_id }}">See the earlier decision</a>.</p>
+{% endif %}
+
 <div class="panel">
   <h2>What the system suggests</h2>
   <p class="lead">{{ p.suggestion }}</p>
@@ -158,6 +165,20 @@
       <p class="hint">Filled in from the kind of item. Check the accounts before proposing.</p>
     </form>
     {% endif %}
+  </div>
+  {% endif %}
+
+  {% if page.reverse %}
+  <div class="panel">
+    <h2>Correct this decision</h2>
+    <p class="hint">If this decision was wrong, a Senior Accountant or the Controller who did not make it can reverse it while the month is open. The decision stays on record, and the item goes back for review.</p>
+    <form method="post" action="/items/{{ rec.recommendation_id }}/reverse">
+      <label for="reverse-comment">Why it was wrong <span class="muted">(needed)</span></label>
+      <textarea id="reverse-comment" name="comment"></textarea>
+      <button class="secondary" {% if not page.reverse.allowed %}disabled{% endif %}>Reverse this decision</button>
+      {% if not page.reverse.allowed %}<span class="disabled-reason block">{{ page.reverse.reason }}</span>{% endif %}
+      {% if page.reverse.rule %}<span class="tech"> {{ page.reverse.rule }}</span>{% endif %}
+    </form>
   </div>
   {% endif %}
 

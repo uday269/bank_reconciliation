@@ -277,7 +277,7 @@ def build_adapter(config) -> GenAIAdapter:
         if not api_key:
             return StubAdapter(max_words=settings.max_prose_words)
         return GeminiAdapter(api_key=api_key,
-                             model=settings.model or "gemini-2.0-flash",
+                             model=settings.model,
                              max_words=settings.max_prose_words)
 
     return StubAdapter(max_words=settings.max_prose_words)

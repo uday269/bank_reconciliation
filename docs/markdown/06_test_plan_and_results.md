@@ -8,13 +8,13 @@ This document defines how the system is tested, shows which tests cover each con
 
 | Level | What it proves | ID | Tests |
 |------------------|------------------------------------------------------------------|-----------|------:|
-| Unit | Domain and control functions on fixed inputs: rules, features, scoring, calibration, risk, explanations, statement arithmetic, permissions, separation of duties, state models, audit completeness rules | TC-U-nnn | 71 |
-| Integration | Services against a real database, the web layer through view functions and HTTP routes, and the evaluator | TC-I-nnn | 78 |
-| Control | One or more tests per control rule: the refusal, the rule it names, and the BLOCKED_ATTEMPT event where one applies | TC-C-nnn | 65 |
+| Unit | Domain and control functions on fixed inputs: rules, features, scoring, calibration, risk, explanations, statement arithmetic, permissions, separation of duties, state models, audit completeness rules | TC-U-nnn | 76 |
+| Integration | Services against a real database, the web layer through view functions and HTTP routes, and the evaluator | TC-I-nnn | 90 |
+| Control | One or more tests per control rule: the refusal, the rule it names, and the BLOCKED_ATTEMPT event where one applies | TC-C-nnn | 70 |
 | Hybrid | The AI layer against the labelled dataset: what scoring adds and what it must never do | TC-H-nnn | 7 |
 | Scenario | SCN-01..08 against the labelled dataset, and the complete August reconciliation | TC-S-nnn | 8 |
 | Reproducibility | Same seed and data give the same results; parameters are frozen on the run; the timing sample is seeded | TC-R-nnn | 3 |
-| **Total** | | | **232** |
+| **Total** | | | **254** |
 
 Counts are test cases; one unit test runs five parameterized cases.
 
@@ -57,9 +57,10 @@ python -m pytest -k tcc_038 -q              # one test by ID
 | `test_adjustments.py` | Proposal, approval, CR-04, never posted | 11 |
 | `test_period.py` | Statement arithmetic, readiness, sign-off, lock, reopening | 11 |
 | `test_reports.py` | Package, content hashes, report check, export, the complete reconciliation | 8 |
-| `test_genai.py` | Optional prose: decision-language guard, fallback, audit, nothing else changed | 8 |
-| `test_web_views.py` | Every screen's data and template, without a server | 17 |
-| `test_web_routes.py` | The HTTP layer: identity, decisions, refusals, batch, adjustments, pairing, import, close | 13 |
+| `test_genai.py` | Optional prose: decision-language guard, fallback, audit, a failed provider never overwrites, labelling of who wrote it | 10 |
+| `test_web_views.py` | Every screen's data and template, without a server; plain language with codes behind Show details; original records as received | 27 |
+| `test_web_routes.py` | The HTTP layer: identity, decisions, refusals, batch, adjustments, pairing, reversal, import, close | 14 |
+| `test_reversal.py` | Reversing a decision: records back to review, the decision kept, the correcting event's references, each refusal | 9 |
 | `test_evaluation.py` | The evaluator: figures pinned to the benchmarks, review measures, audit completeness rules, timing sample, never writes to the working database | 8 |
 | `test_cli.py` | Command line: init, run, status, report, verify, reset | 2 |
 
@@ -86,7 +87,8 @@ Every control rule has at least one test that tries to break it.
 | CR-15 | Every candidate and all conflicting evidence are kept and shown; no queue hides low confidence | TC-U-140..142, TC-H-003, TC-H-005, TC-I-042, TC-I-053 |
 | CR-16 | Reject, modify, escalate, unresolved and High-risk approval need a comment | TC-C-023, TC-C-036, TC-C-048, TC-C-058 |
 | CR-17 | Matching cannot start before validation; a file-level failure blocks the run | TC-C-007, TC-C-008, TC-C-032, TC-I-065 |
-| CR-18 | No import, decision, adjustment or prose in a closed period, or while a reopening is pending | TC-C-004, TC-C-005, TC-C-017, TC-C-032, TC-C-040, TC-C-047, TC-C-061, TC-C-064 |
+| CR-18 | No import, decision, adjustment or prose in a closed period, or while a reopening is pending | TC-C-004, TC-C-005, TC-C-017, TC-C-032, TC-C-040, TC-C-047, TC-C-061, TC-C-064, TC-C-069 |
+| CR-19 | A decision is reversed only by a senior who did not make it, with a comment, in an open period, never behind a live adjustment; the decision is kept and the correction references it | TC-C-066..070, TC-I-086..090 |
 
 Other controls tested: role matrix (TC-C-019, TC-C-021, TC-C-044, TC-C-062), detail view before approval (TC-C-024, TC-C-035, TC-I-023), offered actions per category (TC-C-022, TC-C-042, TC-C-059), state models (TC-C-030, TC-C-031, TC-C-041), duplicate import (TC-C-009), original values kept (TC-C-010), generative AI off by default and synthetic-only (TC-C-063).
 
@@ -112,9 +114,9 @@ Other controls tested: role matrix (TC-C-019, TC-C-021, TC-C-044, TC-C-062), det
 | FR-IMP, FR-VAL, FR-NRM | `test_pipeline.py`, `test_controls.py`, `test_domain.py`, `test_web_views.py` (W2) |
 | FR-MAT, FR-AI | `test_domain.py`, `test_scoring.py`, `test_pipeline.py` |
 | FR-RSK, FR-EXC | `test_domain.py`, `test_pipeline.py` |
-| FR-REV | `test_review.py`, `test_manual_match.py`, `test_control.py`, `test_web_*.py` |
+| FR-REV | `test_review.py`, `test_manual_match.py`, `test_reversal.py`, `test_control.py`, `test_web_*.py` |
 | FR-ADJ | `test_adjustments.py` |
-| FR-AUD | `test_controls.py`, `test_repositories.py`, every service test through BLOCKED_ATTEMPT |
+| FR-AUD | `test_controls.py`, `test_repositories.py`, `test_reversal.py` (FR-AUD-06), every service test through BLOCKED_ATTEMPT |
 | FR-PER | `test_period.py`, `test_reports.py` |
 | FR-RPT | `test_reports.py`, `test_cli.py` |
 | FR-GAI | `test_genai.py` |
@@ -124,8 +126,8 @@ Other controls tested: role matrix (TC-C-019, TC-C-021, TC-C-044, TC-C-062), det
 
 | Item | Result |
 |-------------|--------------------------------------------------------------|
-| Suite | **232 passed, 0 failed** |
-| Duration | About 95 seconds on a laptop; the complete-reconciliation tests take most of it |
+| Suite | **254 passed, 0 failed** |
+| Duration | About two minutes on a laptop; the complete-reconciliation tests take most of it |
 | Warnings | None |
 
 Figures the suite holds in place, so a change that moves them fails a test:
@@ -154,6 +156,11 @@ Each of these was found by a test or by writing one, fixed, and is now pinned by
 | The Reconciliation Summary hash changed on every regeneration | TC-I-038 | It shows the chain head recorded at sign-off, not the live head |
 | The generative AI adapter was built but never called, and its guards were untested | Coverage review of CR-13 | Wired as an optional reviewer action and tested with misbehaving providers |
 | The calibration benchmark passed calibrated confidence through the calibrator again, reporting an error of 0.0836 instead of 0.1234 | Writing the evaluator's calibration measure | Both now assess the raw score once; figures pinned by TC-I-074 |
+| A recorded decision could not be corrected, so FR-AUD-06 was not met for reviewer decisions | Writing the FAQ | Reversal by a second, senior person (CR-19, ADR-32); TC-C-066..070, TC-I-086..090 |
+| The audit trail's Records column showed a Python method name instead of record numbers | Rendering the screen for review | The view's key no longer collides with a dictionary method; TC-I-082 |
+| Items clearing last month's open items were described as agreeing on amount, date and reference | Reading the evidence wording against the rule | Exact-match wording only for the exact rule; TC-I-081 |
+| A provider that did not answer replaced a stored summary and was reported as rejected text; offline text was labelled as written by AI | Reviewing a live provider failure | A failed call stores nothing; the summary's author is shown; TC-I-084, TC-I-085 |
+| Two tests shared the IDs TC-I-074 and TC-I-075 | ID check before release | Renumbered TC-I-084 and TC-I-085; IDs are unique |
 
 ## 10. Not Covered, and Why
 
@@ -163,5 +170,5 @@ Each of these was found by a test or by writing one, fixed, and is now pinned by
 | Concurrent users | Not applicable by design: one connection, one request at a time (ADR-21) |
 | Cross-site request forgery, upload size | Stated limits of a local prototype (DOC-05 section 12); not tested |
 | Lock on adjustment decisions at database level | No trigger exists for that table (ADR-30); the service lock is tested directly (TC-C-047) |
-| Time per item | Measured in timed review sessions and reported in DOC-07 (DD-04); the suite checks that timings are recorded and attributed (TC-I-015, TC-I-076) |
+| Time per item | Not measured: no timed review by two people has been run (DOC-07 section 7, DD-04). The suite checks that timings are recorded and attributed (TC-I-015, TC-I-076) |
 | Matching quality metrics | Measured by the evaluator and reported in DOC-07; the suite pins the figures that must not regress |
