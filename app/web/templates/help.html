@@ -7,7 +7,7 @@
 <div class="panel">
 <h2>How a month is reconciled</h2>
 <ol>
-  <li><b>Start a new month.</b> Upload the bank statement, the ledger cash detail and last month's open items. The files are checked before anything else happens.</li>
+  <li><b>Start a new month.</b> Upload the bank statement, the company books for the cash account and last month's open items. The files are checked before anything else happens.</li>
   <li><b>Review.</b> The system sorts every record into a list. Work through each list: confirm the matches, explain the items with no partner, and send anything doubtful to a senior reviewer.</li>
   <li><b>Update the reports.</b> The reports confirm every approved item. An item counts as reconciled only after this check.</li>
   <li><b>Close the month.</b> The Controller reviews the reconciliation statement, explains any remaining difference, and signs off. The month is then locked.</li>
@@ -38,6 +38,7 @@
   {% for code, name in labels.DECISION_BUTTONS.items() %}
   <dt>{{ name }}</dt><dd>{{ labels.DECISION_HELP[code] }}</dd>
   {% endfor %}
+  <dt>Reverse this decision</dt><dd>For a Senior Accountant or the Controller, when a decision someone else made was wrong. The decision stays on record and the item goes back for review. Only while the month is open.</dd>
   <dt>Pair by hand</dt><dd>For a record with no suggested partner: pick the records that belong with it. They must add up to exactly the same amount.</dd>
 </dl>
 <p class="hint">A comment is required whenever you don't simply approve, and when you approve a high-risk item. It tells the next person why.</p>
@@ -78,10 +79,10 @@
 <div class="panel">
 <h2>Words used on the statement</h2>
 <dl>
-  <dt>Bank-to-book reconciliation statement</dt><dd>Starts from the bank's balance and the company's balance and shows every reason they differ. If everything is explained, the two adjusted balances are equal.</dd>
-  <dt>Adjusted bank balance</dt><dd>The bank's balance plus deposits it hasn't received yet, minus checks it hasn't paid yet.</dd>
-  <dt>Adjusted book balance</dt><dd>The company's balance plus or minus bank fees, interest and other bank items not yet in the books.</dd>
-  <dt>Unresolved difference</dt><dd>What is left unexplained. It must be explained in a comment before the month can close.</dd>
+  <dt>Bank-to-book reconciliation statement</dt><dd>Starts from the bank's balance and the company's balance and shows every reason they differ. If everything is explained, the bank balance after timing differences equals the book balance after corrections.</dd>
+  <dt>Bank balance after timing differences</dt><dd>The bank's balance plus deposits it hasn't received yet, minus checks it hasn't paid yet.</dd>
+  <dt>Book balance after corrections</dt><dd>The company's balance plus or minus bank fees, interest and other bank items not yet in the books.</dd>
+  <dt>Difference still to explain</dt><dd>What is left unexplained. It must be explained in a comment before the month can close.</dd>
   <dt>Adjustment</dt><dd>A correcting entry the accounting team should make in the books. This tool proposes and approves adjustments; it never posts them.</dd>
   <dt>Audit trail</dt><dd>A permanent, numbered record of every action. Each entry is linked to the one before, so any change to a past entry would be detected.</dd>
   <dt>Reopening</dt><dd>Unlocking a closed month to correct it. It needs a reason and a second person's approval, and the month must be signed off again.</dd>

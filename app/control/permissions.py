@@ -28,6 +28,7 @@ DECIDE_ADJUSTMENT = "approve or reject an adjustment"
 SIGN_OFF = "sign off and close the period"
 REQUEST_REOPEN = "request reopening"
 DECIDE_REOPEN = "approve or reject reopening"
+REVERSE = "reverse a decision"
 VIEW = "view items, reports and the audit log"
 
 # Human roles only. ROL-04 (the system) acts through services, never through this matrix.
@@ -42,6 +43,7 @@ PERMISSION_MATRIX: dict[str, frozenset[str]] = {
     SIGN_OFF: frozenset({CONTROLLER}),
     REQUEST_REOPEN: frozenset({STAFF, SENIOR}),
     DECIDE_REOPEN: frozenset({CONTROLLER}),
+    REVERSE: frozenset({SENIOR, CONTROLLER}),
     VIEW: frozenset({STAFF, SENIOR, CONTROLLER}),
 }
 
@@ -67,6 +69,10 @@ MATCH_ONLY_ACTIONS = frozenset({"reject", "modify"})
 NOT_APPROVABLE_DISPOSITIONS = frozenset({"unresolved", "investigate"})
 
 COMMENT_REQUIRED = frozenset({"reject", "modify", "escalate", "unresolved"})   # CR-16
+
+# CR-19: final decisions that can be reversed. A rejection is not reversed: it already
+# returned the records to review as exceptions, where they can be decided again.
+REVERSIBLE_DECISIONS = frozenset({"approve", "modify", "unresolved"})
 
 
 def is_permitted(role_code: str, action: str) -> bool:
@@ -177,7 +183,7 @@ def require_detail_opened(recommendation: Mapping[str, Any], decision: str,
 
 def require_batch_eligible(run_id: int, recommendations: list[Mapping[str, Any]],
                            item_statuses: Mapping[int, str]) -> None:
-    """CR-11 (DD-02, pending): a batch holds only open CAT-01 Low-risk items of one run.
+    """CR-11 (DD-02): a batch holds only open CAT-01 Low-risk items of one run.
 
     `item_statuses` maps recommendation_id to the subject item's current status. The
     reviewer may remove items before approving; whatever remains must all qualify, and

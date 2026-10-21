@@ -16,8 +16,8 @@ ITEM_TRANSITIONS: dict[str, frozenset[str]] = {
     "validated": frozenset({"proposed"}),
     "proposed": frozenset({"approved", "escalated", "proposed", "unresolved"}),
     "escalated": frozenset({"approved", "proposed", "unresolved"}),
-    "approved": frozenset({"report_verified"}),
-    "report_verified": frozenset({"reconciled"}),
+    "approved": frozenset({"report_verified", "proposed"}),      # proposed: decision reversed (CR-19)
+    "report_verified": frozenset({"reconciled", "proposed"}),    # proposed: decision reversed (CR-19)
     "reconciled": frozenset({"proposed"}),                       # reopened and reversed
     "unresolved": frozenset({"proposed"}),                       # new evidence or reopened
     "excluded": frozenset(),

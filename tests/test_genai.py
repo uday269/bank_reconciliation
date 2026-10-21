@@ -159,7 +159,7 @@ def test_tci_073_the_item_screen_labels_prose_as_generated_text(web):
     assert "Rewrite a plain-words summary" in html
 
 
-def test_tci_074_a_provider_that_does_not_answer_leaves_the_stored_summary_alone(web):
+def test_tci_084_a_provider_that_does_not_answer_leaves_the_stored_summary_alone(web):
     """A 503 or a network failure writes no summary; the attempt is still audited."""
     services, users, run_id = web
     rec = first_scored(services, run_id)
@@ -175,7 +175,7 @@ def test_tci_074_a_provider_that_does_not_answer_leaves_the_stored_summary_alone
     assert len([e for e in services.audit.events(run_id) if e["event_type"] == "GENAI_PROSE"]) == 2
 
 
-def test_tci_075_the_item_screen_says_who_wrote_the_summary(web):
+def test_tci_085_the_item_screen_says_who_wrote_the_summary(web):
     """Offline text is never presented as written by AI."""
     from app.web import views
     from app.web.rendering import render

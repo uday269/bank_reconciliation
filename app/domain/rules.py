@@ -6,7 +6,7 @@ rules reproducible and testable on their own (ADR-04).
 
 Order matters. Rules run before any scoring, so the AI layer never reopens something a
 rule already settled (ADR-05). A rule either produces a certain result or declines,
-and anything a rule declines becomes work for Stage 7.
+and anything a rule declines becomes work for the scoring layer.
 """
 
 from __future__ import annotations

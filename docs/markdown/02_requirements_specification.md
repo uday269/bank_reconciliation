@@ -18,7 +18,7 @@ This document states what the system must do (functional requirements), how well
 | RPT- | Report | RPT-09 Reconciliation Summary |
 | NOP- | Deliberate no-op (not implemented, with reason) | NOP-01 |
 
-All requirements are mandatory except FR-GAI (optional capability). Items marked *pending* depend on sponsor decisions DD-01 (BR-19, PRM-09, FR-EVL-02, FR-EVL-03; needed before Stage 7) and DD-02 (CR-11, FR-REV-06; needed before Stage 5). The *Source* column cites the governing brief section (§) or design decision (DD).
+All requirements are mandatory except FR-GAI (optional capability). Two design decisions shape specific items and are reported to the sponsor, who may revise them: DD-01, the false automatic match rate reported as a hypothetical (BR-19, PRM-09, FR-EVL-02, FR-EVL-03), and DD-02, one decision record per item in a batch (CR-11, FR-REV-06). The *Source* column cites the governing brief section (§) or design decision (DD).
 
 ## 2. Roles
 
@@ -98,10 +98,10 @@ Defaults apply to the demonstration run. Every run records the parameter values 
 | PRM-03 | Outstanding check stale after | 45 calendar days | G3 |
 | PRM-04 | Group candidate cap | 15 | DD-07 |
 | PRM-05 | Group member cap | 4 | DD-07 |
-| PRM-06 | High confidence band, lower bound | 0.90 | Confirmed in Stage 7 |
-| PRM-07 | Low confidence band, upper bound (exclusive) | 0.70 | Confirmed in Stage 7 |
-| PRM-08 | Minimum margin between first and second candidate for CAT-02 | 0.15 | Confirmed in Stage 7 |
-| PRM-09 | Hypothetical auto-accept threshold *T* | Set on calibration data only | DD-01 (pending) |
+| PRM-06 | High confidence band, lower bound | 0.90 | Confirmed on calibration data |
+| PRM-07 | Low confidence band, upper bound (exclusive) | 0.70 | Confirmed on calibration data |
+| PRM-08 | Minimum margin between first and second candidate for CAT-02 | 0.15 | Confirmed on calibration data |
+| PRM-09 | Hypothetical auto-accept threshold *T* | Set on calibration data only | DD-01 |
 | PRM-10 | Deposit in transit stale after | 5 business days | New default |
 
 ## 4. Functional Requirements
@@ -179,12 +179,13 @@ Defaults apply to the demonstration run. Every run records the parameter values 
 | FR-REV-03 | Show, for each item: bank transaction and source evidence; proposed match or ranked candidates; confidence and risk; supporting and conflicting evidence; suggested exception category and corrective action; decision controls; comment field and reviewer identity; item history | §6, §12 |
 | FR-REV-04 | Offer the actions permitted for the item's category: approve, reject, modify, escalate, mark unresolved | §6 |
 | FR-REV-05 | Record reviewer identity, decision, comment, UTC timestamp and status change for every decision | §6, §7 |
-| FR-REV-06 | Batch-approve CAT-01 items under CR-11 | §5, DD-02 (pending) |
+| FR-REV-06 | Batch-approve CAT-01 items under CR-11 | §5, DD-02 |
 | FR-REV-07 | Record *modify* as a new decision that keeps the original recommendation | §7 |
 | FR-REV-08 | Route escalated items to the senior queue | §6 |
 | FR-REV-09 | Show every ranked candidate, not only the top one | §15, §16 |
 | FR-REV-10 | Never preselect a decision; approval of a non-exact item requires opening its detail view | §15 |
 | FR-REV-11 | Record the time an item's detail is opened and the time of the decision | DD-04 |
+| FR-REV-12 | Reverse a final decision while the period is open: the decision stays on record, the reversal is a new event that references it, and the item returns to review | §7 |
 
 ### 4.8 Adjustments (FR-ADJ)
 
@@ -232,7 +233,7 @@ Defaults apply to the demonstration run. Every run records the parameter values 
 | ID | Requirement | Source |
 |------------|---------------------------------------------------------------|------------|
 | FR-EVL-01 | Report precision and recall overall and per scenario | §11 |
-| FR-EVL-02 | Report the false automatic match rate as a hypothetical under BR-19 | §11, DD-01 (pending) |
+| FR-EVL-02 | Report the false automatic match rate as a hypothetical under BR-19 | §11, DD-01 |
 | FR-EVL-03 | Report review rate as 100% by design, with the hypothetical rate under BR-19 alongside | §11, DD-03 |
 | FR-EVL-04 | Report approval rate and rejection rate of recommendations | §11 |
 | FR-EVL-05 | Report time per item from FR-REV-11 timestamps for a stratified 50-item sample per person, or "not measured" | §11, DD-04 |
@@ -324,7 +325,7 @@ Defaults apply to the demonstration run. Every run records the parameter values 
 | CR-08 | Every action and its audit event commit together; if the audit write fails, the action is rolled back | §14 |
 | CR-09 | Audit events are never updated or deleted; corrections are new events | §7 |
 | CR-10 | **Close conditions:** no item awaiting decision; every escalation decided; every adjustment approved or rejected; audit chain verifies; report package generated; any non-zero unresolved difference acknowledged by the signer with a comment | §4, §8 |
-| CR-11 | **Batch approval:** batches contain only CAT-01 items with Low risk; the reviewer may remove items; one approval writes one decision per item; batch rejection writes one rejection per item and requeues them | DD-02 (pending) |
+| CR-11 | **Batch approval:** batches contain only CAT-01 items with Low risk; the reviewer may remove items; one approval writes one decision per item; batch rejection writes one rejection per item and requeues them | DD-02 |
 | CR-12 | The system never posts journal entries | §16 |
 | CR-13 | Generative AI cannot set or change a score, confidence, risk, category or decision | DD-10 |
 | CR-14 | Models are never retrained from individual reviewer decisions; a new model version requires validation on the evaluation dataset and is recorded in the audit log | §16 |
@@ -332,6 +333,7 @@ Defaults apply to the demonstration run. Every run records the parameter values 
 | CR-16 | A comment is required to reject, modify, escalate, mark unresolved, or approve a High-risk item | §6 |
 | CR-17 | Matching cannot start until all file-level validation checks pass | §14 |
 | CR-18 | After close, an item's decision can change only through an approved reopening | §7 |
+| CR-19 | A decision is reversed only by a Senior Accountant or Controller who did not make it, with a comment, in an open period, and never while an adjustment for the item is proposed or approved | §7 |
 
 ## 9. Approval Roles and Escalation Paths
 
@@ -378,7 +380,7 @@ These extend ASM-01..10 in DOC-01.
 | 3 | Capability goals | FR-MAT, FR-AI, FR-REV, FR-AUD, FR-EVL groups; DOC-07 |
 | 4 | Required workflow (10 steps) | Import: FR-IMP-01..03; validate: FR-VAL-01..07; normalize: FR-NRM-01..05; exact rules: FR-MAT-01..04; candidates: FR-AI-01..03; confidence, risk, explanation: FR-AI-04..07, FR-RSK-01; exceptions: FR-EXC-01..03; routing: FR-REV-01; audit: FR-AUD-01..07; package and close: FR-RPT-02, FR-PER-01..02 |
 | 5 | Scenarios | SCN-01..08; BR-01..12 |
-| 6 | Human approval and reviewer interface | CAT-01..05; CR-01..03, CR-11, CR-16; FR-REV-01..11 |
+| 6 | Human approval and reviewer interface | CAT-01..05; CR-01..03, CR-11, CR-16, CR-19; FR-REV-01..12 |
 | 7 | Audit and process reports | FR-AUD-01..07; CR-08, CR-09; RPT-01..10 |
 | 8 | Report package | RPT-09, 02, 11, 06, 07, 08, 12, 13; FR-RPT-02; BR-17 |
 | 9 | Data scope and fields | FR-IMP-01..03; DOC-04 (dataset and ground truth) |
@@ -394,10 +396,10 @@ These extend ASM-01..10 in DOC-01.
 
 | Question | Governing rules | Evidence in |
 |----------------------------------------|-----------------------------|-----------|
-| Which rules should always be deterministic? | BR-01..19, CR-01..18, FR-RSK-01 | DOC-05, DOC-07 |
+| Which rules should always be deterministic? | BR-01..19, CR-01..19, FR-RSK-01 | DOC-05, DOC-07 |
 | Which transactions require senior approval? | BR-15, CR-02, PRM-01 | DOC-07 |
 | How will confidence be calibrated and communicated? | FR-AI-05, BR-14, FR-EVL-08, FR-EVL-11 | DOC-07 |
 | How are group candidates generated efficiently? | BR-04, BR-05, FR-AI-02, FR-AI-03 | DOC-05, DOC-07 |
 | How does the design prevent over-trust in AI? | FR-REV-09, FR-REV-10, CR-15, CR-16, NFR-06 | DOC-07 |
-| How do corrections preserve audit history? | FR-AUD-06, FR-REV-07, CR-09, CR-18 | DOC-05 |
+| How do corrections preserve audit history? | FR-AUD-06, FR-REV-07, FR-REV-12, CR-09, CR-18, CR-19 | DOC-05 |
 | What evidence would justify limited batch approval in production? | BR-19, FR-EVL-02, FR-EVL-08 | DOC-07 |

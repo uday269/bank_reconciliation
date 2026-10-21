@@ -396,6 +396,34 @@ class RecommendationRepository:
                        {"candidate_id": candidate_id, column: member_id})
         return recommendation_id
 
+    def reissue(self, connection: sqlite3.Connection, recommendation_id: int, created_at: str) -> int:
+        """A new open copy of a recommendation and its system candidates (CR-19).
+
+        Used when a decision is reversed: the decided recommendation is kept as it was, and
+        the item returns to review through this copy, so each recommendation carries one
+        decision history. A pairing a reviewer selected by hand is not copied; it belonged
+        to the reversed decision.
+        """
+        import json
+        original = self.get(recommendation_id, connection)
+        columns = ("run_id", "subject_item_type", "subject_item_id", "kind", "relationship", "source",
+                   "rule_name", "model_version_id", "category_code", "exception_code", "risk_level",
+                   "risk_rules", "confidence", "explanation")
+        copy_id = insert(connection, "recommendation", {**{c: original[c] for c in columns},
+                                                        "status": "open", "created_at": created_at})
+        for candidate in self.candidates(recommendation_id, connection):
+            if json.loads(candidate["feature_values"] or "{}").get("origin") == "reviewer":
+                continue
+            candidate_id = insert(connection, "candidate", {
+                "recommendation_id": copy_id, "rank_order": candidate["rank_order"],
+                "score": candidate["score"], "confidence": candidate["confidence"],
+                "feature_values": candidate["feature_values"]})
+            for member in self.candidate_members(candidate["candidate_id"], connection):
+                insert(connection, "candidate_member", {
+                    "candidate_id": candidate_id, "bank_transaction_id": member["bank_transaction_id"],
+                    "ledger_entry_id": member["ledger_entry_id"], "carry_in_item_id": member["carry_in_item_id"]})
+        return copy_id
+
     def add_candidate(self, connection: sqlite3.Connection, recommendation_id: int,
                       candidate: CandidateInput) -> int:
         """Append a candidate to an existing recommendation; existing candidates are untouched.
@@ -514,7 +542,7 @@ class DecisionRepository:
     """Reviewer decisions. Append-only: a changed mind is a new decision (CR-09).
 
     A batch approval writes one `review_batch` row and one decision per item in it,
-    each carrying the batch identifier (DD-02, pending confirmation). The batch row
+    each carrying the batch identifier (DD-02). The batch row
     records the reviewer's single action; the decisions remain the per-item evidence.
     """
 

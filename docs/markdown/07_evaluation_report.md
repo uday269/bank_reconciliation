@@ -96,19 +96,26 @@ Zero errors in 467 is not a zero error rate. With no failures observed, the uppe
 
 ## 7. Review Results
 
-*Measured on run 3, reviewed in the reviewer interface. This section is completed from `python -m app.cli evaluate --run 3` once the run is reviewed and signed.*
+*Measured on a complete review of August 2026: the scripted review in TC-S-008, run through the same services and controls the interface uses, then reported, signed off and locked. The same review runs in the test suite on every run (`python -m pytest -q -k tcs_008`).*
 
 | Measure | Value |
 |----------------------------------------|----------------------------------------|
-| Recommendations decided | pending |
-| Approve, modify, reject, escalate, unresolved rates (FR-EVL-04) | pending |
-| Approvals correct against ground truth | pending |
-| Pairings made by hand | pending |
-| Time per item, per person (FR-EVL-05, DD-04) | pending; "not measured" for anyone with no timed decisions |
-| Audit completeness (FR-EVL-07) | pending |
-| Unresolved difference at sign-off | pending; correct value -$9,392.35 |
+| Recommendations decided | 641 of 675. The other 34 were superseded when a decision on the same records settled them |
+| Decision mix (FR-EVL-04) | Approve 611 (95.3%), modify 10 (1.6%), unresolved 20 (3.1%), reject 0, escalate 0, of 641 |
+| Exact matches approved as one batch | 378 decisions, one record each (DD-02) |
+| Approvals correct against ground truth | 1.0000 (566/566) |
+| Scored matches approved, by confidence band | High 103, Medium 52, Low 11; all correct |
+| Pairings made by hand | 10, the many-to-one groups of SCN-05 (section 8) |
+| Adjustments | 16, each approved by someone other than the preparer; none posted |
+| Audit completeness (FR-EVL-07) | 1.0000 (2,242/2,242 events with every required field); chain intact |
+| Unresolved difference at sign-off | **-$9,392.35**, equal to the dataset's true difference |
+| Time per item, per person (FR-EVL-05, DD-04) | **Not measured** (see below) |
 
-The automated end-to-end test of the same review (TC-S-008) already shows the target: every approval correct, audit completeness 100%, chain intact, and a signed difference of -$9,392.35.
+**What this shows.** The controls allow a complete, correct month-end: every item reaches a decision, no approval is wrong, hand pairing closes the gap scoring leaves, and the signed statement equals the true difference. Every event in the trail carries the fields brief section 7 requires.
+
+**What it does not show.** The scripted review used the ground truth to decide which records to pair by hand and which to leave open, so it stands for a reviewer who judges every item correctly. Its accuracy is an upper bound on what reviewers achieve, not a measure of it. A review of run 3 in the interface recorded six decisions by one person and was not completed, so it is not reported as a review.
+
+**Time per item is not measured.** The scripted review has no reading time, and six decisions from one person fall well short of the protocol of about fifty items for each of two people (DD-04). No estimate is given in its place. The interface records the time a reviewer opens an item and the time of the decision (FR-REV-11), and `python -m app.cli evaluate --run N` reports the median and mean per person, so a timed review can be measured without any change to the system.
 
 ## 8. Error Analysis
 
@@ -128,7 +135,7 @@ The automated end-to-end test of the same review (TC-S-008) already shows the ta
 - **One calibration month.** Section 5 shows what one month of shift does. Calibration needs several months and periodic refitting.
 - **Risk can follow a wrong category.** An unexplained item classified as a timing item gets a timing item's risk (section 4). A reviewer who trusts the category could approve it as an outstanding check. The mitigations are the statement, which keeps such items visible, and the stale-item rule; a stronger fix is to raise risk for any no-counterpart item above a value threshold.
 - **Many-to-one matching is manual.** SCN-05 relies on hand pairing (section 8).
-- **Time per item is a small sample.** At most two people and about fifty items each (DD-04), on synthetic data in a quiet setting. It indicates effort; it does not predict a team's throughput.
+- **Human review is not measured.** The complete review in section 7 is scripted and knows the answers. The accuracy of real reviewers, and time per item, need a timed review by at least two people on about fifty items each (DD-04). Even then, synthetic data in a quiet setting indicates effort; it does not predict a team's throughput.
 
 ## 10. Design Questions (brief section 15)
 

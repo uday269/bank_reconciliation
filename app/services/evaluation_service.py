@@ -155,6 +155,7 @@ class ReviewMetrics:
     batches: int = 0
     batch_decisions: int = 0
     manual_pairings: int = 0
+    reversals: int = 0                                                  # decisions reversed (CR-19)
     by_band: dict[str, Counter] = field(default_factory=dict)
     timing: dict[str, list[int]] = field(default_factory=dict)          # person -> seconds
     blocked_attempts: Counter = field(default_factory=Counter)          # rule -> count
@@ -329,10 +330,20 @@ class EvaluationService:
         for decision in repos.decisions.for_run(run_id):
             history[decision["recommendation_id"]].append(decision)
 
+        reversed_recs = {int(event["entity_id"]) for event in services.audit.events(run_id)
+                         if event["event_type"] == "DECISION_REVERSED"}
+        metrics.reversals = len(reversed_recs)
+
         batches = set()
         for rec_id, decisions in history.items():
             rec = recommendations[rec_id]
             final = decisions[-1]
+            if rec_id in reversed_recs:
+                # Reversed: the decisions happened and are counted, but none is final, so
+                # the item is measured on the copy it was reissued as.
+                for decision in decisions:
+                    metrics.decisions[decision["decision"]] = metrics.decisions.get(decision["decision"], 0) + 1
+                continue
             metrics.decided += final["decision"] != "escalate"
             for decision in decisions:
                 metrics.decisions[decision["decision"]] = metrics.decisions.get(decision["decision"], 0) + 1
@@ -567,6 +578,7 @@ def render_markdown(evaluation: Evaluation) -> str:
             add(f"| {name.capitalize()} rate | {shown(decisions.get(name, 0), total)} |")
         add(f"| Approvals that were correct (ground truth) | {shown(review.approvals_correct, review.approvals_checked)} |")
         add(f"| Pairings made by hand | {review.manual_pairings} |")
+        add(f"| Decisions reversed | {review.reversals} |")
         add(f"| Batches | {review.batches}, covering {review.batch_decisions} decisions |")
         add(f"| Adjustments | {', '.join(f'{k} {v}' for k, v in sorted(review.adjustments.items())) or 'none'} |")
         add(f"| Refused attempts | {sum(review.blocked_attempts.values())}"

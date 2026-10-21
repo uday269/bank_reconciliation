@@ -24,7 +24,7 @@ Refusals
     re-raised. A refused action therefore leaves evidence that the control fired and
     no other trace (ADR-12).
 
-Batch approval (DD-02, pending confirmation)
+Batch approval (DD-02)
     One reviewer action writes one `review_batch` row and, per item, one decision and
     one audit event. A different ruling changes `approve_batch`, `reject_batch` and the
     W4 screen only.
@@ -83,6 +83,14 @@ class DecisionOutcome:
     new_status: str
     requeued: list[int] = field(default_factory=list)       # new exception recommendations
     superseded: list[int] = field(default_factory=list)     # recommendations replaced by a modify
+
+
+@dataclass(frozen=True)
+class ReversalOutcome:
+    reversed_recommendation_id: int
+    reversed_decision_id: int
+    new_recommendation_id: int
+    released: list[str] = field(default_factory=list)       # external ids returned to review
 
 
 @dataclass(frozen=True)
@@ -153,7 +161,116 @@ class ReviewService:
                                  recommendation_id, decision, comment, violation)
             raise
 
-    # -- batches (DD-02, pending) -------------------------------------------
+    # -- reversing a decision (CR-19, FR-AUD-06) ------------------------------
+    def reverse(self, recommendation_id: int, user_id: int, comment: str | None,
+                at: str | None = None) -> ReversalOutcome:
+        """Reverse the final decision on a recommendation, in an open period.
+
+        The decision row and its audit event stay exactly as they were. The reversal is a
+        new DECISION_REVERSED event that references both; the decided recommendation is
+        marked superseded and a fresh copy returns the records to review, so the item can
+        be decided again with every earlier step still on record.
+        """
+        at = at or utc_now()
+        recommendation = self.repositories.recommendations.get(recommendation_id)
+        run_id = recommendation["run_id"]
+        try:
+            with self.database.transaction() as connection:
+                user = self.repositories.users.get(user_id, connection)
+                run = self.repositories.runs.get(run_id, connection)
+                outcome = self._reverse(connection, run, user, recommendation_id, comment, at)
+                self._return_to_review(connection, run)
+                return outcome
+        except ControlViolation as violation:
+            self._record_blocked(run_id, user_id, "recommendation", recommendation_id,
+                                 "reverse a decision", comment, violation)
+            raise
+
+    def reversal_refusal(self, recommendation_id: int, user: sqlite3.Row | None) -> ControlViolation | None:
+        """Why this person could not reverse the decision now, or None if they could.
+
+        Used by the item screen; `reverse` runs the same checks again inside its transaction.
+        """
+        if user is None:
+            return ControlViolation("ROLE", "no identity selected")
+        connection = self.database.connect()
+        try:
+            self._reversal_checks(connection, self.repositories.runs.get(
+                self.repositories.recommendations.get(recommendation_id)["run_id"]),
+                user, recommendation_id, "checking")
+        except ControlViolation as violation:
+            return violation
+        return None
+
+    def _reversal_checks(self, connection: sqlite3.Connection, run: sqlite3.Row, user: sqlite3.Row,
+                         recommendation_id: int, comment: str | None) -> sqlite3.Row:
+        recommendation = self.repositories.recommendations.get(recommendation_id, connection)
+        period_lock.require_writable(run, "reverse a decision")
+        permissions.require_role(user, permissions.REVERSE)
+        if recommendation["status"] != "decided":
+            raise ControlViolation("STATE", f"recommendation {recommendation_id} has no final decision to reverse")
+        decision = self.repositories.decisions.latest(recommendation_id, connection)
+        if decision is None or decision["decision"] not in permissions.REVERSIBLE_DECISIONS:
+            raise ControlViolation("STATE", f"recommendation {recommendation_id} has no final decision to reverse")
+        if decision["decided_by"] == user["user_id"]:
+            raise ControlViolation("CR-19", "a decision cannot be reversed by the person who made it")
+        live = [row for row in self.repositories.adjustments.for_recommendation(recommendation_id, connection)
+                if row["status"] in ("proposed", "approved")]
+        if live:
+            raise ControlViolation("STATE", f"an adjustment linked to this item is {live[0]['status']}, so the "
+                                            "decision behind it cannot be reversed")
+        if not (comment or "").strip():
+            raise ControlViolation("CR-16", "reversing a decision requires a comment")
+        return decision
+
+    def _reverse(self, connection: sqlite3.Connection, run: sqlite3.Row, user: sqlite3.Row,
+                 recommendation_id: int, comment: str | None, at: str) -> ReversalOutcome:
+        recs = self.repositories.recommendations
+        decision = self._reversal_checks(connection, run, user, recommendation_id, comment)
+        recommendation = recs.get(recommendation_id, connection)
+
+        # The records the decision settled: the chosen candidate for a modify, otherwise
+        # the leading candidate (or, for an exception, the subject).
+        if decision["decision"] == "modify" and decision["chosen_candidate_id"]:
+            settled = self._members(decision["chosen_candidate_id"], connection)
+            if recommendation["kind"] == "exception":
+                settled = [(recommendation["subject_item_type"], recommendation["subject_item_id"])] + settled
+        else:
+            settled = self._leading(recommendation, connection)[1]
+        settled = list(dict.fromkeys(settled))
+
+        subject_key = (recommendation["subject_item_type"], recommendation["subject_item_id"])
+        subject_before = self.repositories.items.get(*subject_key, connection)["status"]
+        for item_type, item_id in settled:
+            current = self.repositories.items.get(item_type, item_id, connection)["status"]
+            states.require_item_transition(current, "proposed")
+            self.repositories.items.set_status(connection, item_type, item_id, "proposed")
+
+        recs.set_status(connection, recommendation_id, "superseded")
+        new_id = recs.reissue(connection, recommendation_id, at)
+
+        reversed_event = self.audit.latest_event(run["run_id"], "DECISION", "recommendation",
+                                                 recommendation_id, connection=connection)
+        evidence = [f"review_decision:{decision['review_decision_id']}",
+                    f"recommendation:{recommendation_id}", f"recommendation:{new_id}"]
+        if reversed_event is not None:
+            evidence.append(f"audit_event:{reversed_event['sequence_no']}")
+        released = self._external_ids(settled, connection)
+        self.audit.write(connection, RunContext.load(self.database, run["run_id"]), AuditEvent(
+            event_type="DECISION_REVERSED", process_code="P6", entity_type="recommendation",
+            entity_id=recommendation_id, actor_type="human", actor_user_id=user["user_id"],
+            item_refs=released, rule_name="CR-19", decision="reverse", comment=comment,
+            evidence_refs=evidence,
+            original_values={"decision": decision["decision"], "decided_by": decision["decided_by"],
+                             "review_decision_id": decision["review_decision_id"],
+                             "recommendation_status": "decided",
+                             "corrects_audit_event": reversed_event["sequence_no"] if reversed_event else None},
+            revised_values={"recommendation_status": "superseded", "reissued_as": new_id,
+                            "items_returned_to": "proposed"},
+            previous_status=subject_before, new_status="proposed", created_at=at))
+        return ReversalOutcome(recommendation_id, decision["review_decision_id"], new_id, released)
+
+    # -- batches (DD-02) ----------------------------------------------------
     def approve_batch(self, run_id: int, user_id: int, recommendation_ids: list[int],
                       comment: str | None = None, at: str | None = None) -> BatchOutcome:
         return self._batch(run_id, user_id, recommendation_ids, "approve", comment, at)

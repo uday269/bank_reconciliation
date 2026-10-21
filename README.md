@@ -6,7 +6,7 @@ A human-supervised bank reconciliation system. It matches a month of bank transa
 
 ## Status
 
-Feature-complete, tested and evaluated: **232 automated tests passing**. The release guides are in progress; the first release will be tagged `v1.0.0`.
+**Version 1.0.0.** Feature-complete, tested and evaluated: **254 automated tests passing**. Installation, user, developer and troubleshooting guides are in [`guides/`](#guides).
 
 ## What It Does
 
@@ -15,7 +15,7 @@ Feature-complete, tested and evaluated: **232 automated tests passing**. The rel
 | Import and validate | Three CSV files (bank statement, ledger cash detail, prior-period carry-in items) plus control totals. 23 validation tests; originals kept beside normalized values | System; a file-level failure blocks matching |
 | Match | Deterministic rules settle exact matches first; a scoring layer proposes the rest, including one-to-many groups, with calibrated confidence and the evidence for and against | System proposes |
 | Classify and route | Exceptions (fees, interest, outstanding checks, deposits in transit, duplicates, unexplained items) get a category, a rule-based risk level and a queue | System proposes |
-| Review | Every item: approve, select another candidate, reject, escalate, leave unresolved, or pair by hand. Exact matches can be approved as a batch, one record per item | Staff and Senior Accountants |
+| Review | Every item: approve, select another candidate, reject, escalate, leave unresolved, or pair by hand. Exact matches can be approved as a batch, one record per item. A wrong decision can be reversed by a second, senior person; both stay on record | Staff and Senior Accountants |
 | Adjust | Proposed correcting entries for fees, interest and missing entries, approved by someone other than the preparer. **Never posted** | Senior Accountant or Controller |
 | Report and close | 13 reports in HTML and CSV with content hashes; a report check confirms each approved item before it counts as reconciled; sign-off records the statement and the audit chain head, then locks the period | Controller |
 | Reopen | Requested with a reason, approved by a different person; a new sign-off is needed to close again | Accountant requests, Controller approves |
@@ -28,7 +28,7 @@ On the included August 2026 dataset, the scoring layer raises recall from **0.69
 
 | Layer | Package | Responsibility |
 |---|---|---|
-| Presentation | `app/web` | Reviewer interface: routes, view functions, templates |
+| Presentation | `app/web` | Reviewer interface: routes, view functions, templates, plain-language wording |
 | Services | `app/services` | One service per workflow; owns every transaction |
 | Control | `app/control` | Permissions, separation of duties, state models, period lock, the six-condition reconciliation rule |
 | Domain | `app/domain` | Rules, candidates, scoring, calibration, risk, explanations, statement arithmetic. No input or output |
@@ -72,17 +72,19 @@ Open <http://127.0.0.1:8000> and choose who you are acting as from the selector 
 
 | Identity | Role | Typical work |
 |---|---|---|
-| Maya Castillo, Ethan Brooks | Staff Accountant | Import, review queues, batch exact matches, propose adjustments |
-| Priya Raman | Senior Accountant | High-risk and escalated items, approve adjustments |
-| Daniel Okafor | Controller | Sign off and lock the period, decide reopening |
+| Maya Castillo, Ethan Brooks | Staff Accountant | Start a month, review the lists, approve exact matches in one go, propose adjustments |
+| Priya Raman | Senior Accountant | Senior review, approve adjustments, reverse a wrong decision |
+| Daniel Okafor | Controller | Sign off and close the month, decide reopening |
 
 A complete reconciliation:
 
-1. **New run** (Maya): create the August run, upload the four files from `data/august_2026/`, then **Validate and match**.
-2. **Review** (Maya, Ethan): batch-approve CAT-01; work through CAT-02 to CAT-04. Each item shows every candidate, the supporting and conflicting evidence, and why any action is blocked.
-3. **Senior queue** (Priya): decide high-risk and escalated items; pair missed groups by hand; approve the adjustments.
-4. **Reports** (anyone): generate the package. The report check moves approved items to reconciled.
-5. **Close** (Daniel): review the statement and the six close conditions, explain the difference, sign off.
+1. **New month** (Maya): start August 2026, upload the four files from `data/august_2026/`, then **Check and match**.
+2. **Review** (Maya, Ethan): **Approve exact matches** in one go, then work through Likely matches, Matches to check closely and Unmatched items. Each item shows what the system suggests, what supports it, what doesn't fit, and the original records as received.
+3. **Senior review** (Priya): decide high-risk and escalated items, pair missed groups by hand, and approve the adjustments.
+4. **Update the reports** (anyone): the report check moves approved items to reconciled.
+5. **Close month** (Daniel): check that the bank agrees with the books, explain the difference, and sign off.
+
+Every screen uses plain language; **Show details** reveals the rule references, scores and fingerprints behind it. The [User Guide](guides/markdown/02_user_guide.md) walks through each screen.
 
 Identity is selected, not authenticated. Every decision is still attributed and checked against the role and separation-of-duties rules.
 
@@ -113,9 +115,9 @@ python3 -m pytest -q
 |---|---|
 | Every item needs a recorded human decision | No automatic approval exists; confidence only orders the queues |
 | High-risk and escalated items need a senior | Role check, and an independence check against whoever reviewed or escalated the item |
-| Separation of duties | Adjustment preparer ≠ approver; reopen requester ≠ approver; signer ≠ sole reviewer |
+| Separation of duties | Adjustment preparer ≠ approver; reopen requester ≠ approver; signer ≠ sole reviewer; a decision's maker ≠ the person who reverses it |
 | Reconciled means all six conditions hold | Validated, proposed, approved, evidence linked, audited, and confirmed in the report |
-| Evidence is never edited | Append-only database triggers plus a SHA-256 hash chain; corrections are new events |
+| Evidence is never edited | Append-only database triggers plus a SHA-256 hash chain; a correction is a new event that references the one it corrects |
 | A closed period stays closed | Service checks and database triggers; only an approved reopening unlocks it |
 | Refusals leave evidence | Every blocked action is recorded with the rule that blocked it |
 
@@ -154,11 +156,12 @@ bank_reconciliation/
 ├── data/                 Seeded datasets with ground truth
 ├── db/schema.sql         Schema, constraints, triggers, indexes
 ├── docs/                 Project documents (Markdown and Word) and diagrams
-├── guides/               User-facing guides (Markdown and Word)
+├── guides/               Installation, user, developer and troubleshooting guides (Markdown and Word)
 ├── models/               Fitted calibration artefact
 ├── reports/              Benchmarks; generated packages go in reports/run_<id>/ (not committed)
 ├── scripts/              Dataset generation, calibration fitting, benchmarks
-└── tests/                232 tests: unit, integration, control, scenario, reproducibility
+├── tests/                254 tests: unit, integration, control, scenario, reproducibility
+└── LICENSE               MIT
 ```
 
 ## Documents
@@ -176,6 +179,15 @@ bank_reconciliation/
 
 Results: [evaluation](reports/evaluation.md) · [rules only](reports/baseline_benchmark.md) · [rules plus scoring](reports/hybrid_benchmark.md)
 
+## Guides
+
+| ID | Guide | For | Markdown | Word |
+|---|---|---|---|---|
+| GDE-01 | Installation and Deployment | Anyone setting it up | [md](guides/markdown/01_installation_and_deployment_guide.md) | [docx](guides/word-files/01_installation_and_deployment_guide.docx) |
+| GDE-02 | User Guide | Accountants and the Controller | [md](guides/markdown/02_user_guide.md) | [docx](guides/word-files/02_user_guide.docx) |
+| GDE-03 | Developer Guide | Anyone changing the code | [md](guides/markdown/03_developer_guide.md) | [docx](guides/word-files/03_developer_guide.docx) |
+| GDE-04 | FAQ and Troubleshooting | Everyone | [md](guides/markdown/04_faq_and_troubleshooting.md) | [docx](guides/word-files/04_faq_and_troubleshooting.docx) |
+
 ## Scope
 
 | Item | Value |
@@ -185,3 +197,7 @@ Results: [evaluation](reports/evaluation.md) · [rules only](reports/baseline_be
 | Period | August 2026, one account |
 | Import format | CSV only |
 | Data | Synthetic only |
+
+## License
+
+[MIT](LICENSE). All company, bank, people and transaction data are fictional and synthetic.

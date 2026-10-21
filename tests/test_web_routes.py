@@ -225,3 +225,20 @@ def test_tci_068_sign_off_and_reopening_through_the_close_screen(web):
                            data={"decision": "approve", "comment": "Re-close after the correction"})
     assert "back in review" in response.text
     assert services.repositories.runs.get(run_id)["status"] == "in_review"
+
+
+def test_tci_090_reversing_a_decision_through_the_item_screen(web):
+    """CR-19: the reversal opens the reissued item; a blocked attempt names the rule."""
+    client, services, users, run_id = web
+    rec = first_rec(services, run_id, "CAT-01", risk_level="low")
+    act_as(client, users, "Maya Castillo")
+    client.post(f"/items/{rec['recommendation_id']}/decision", data={"decision": "approve"})
+
+    response = client.post(f"/items/{rec['recommendation_id']}/reverse", data={"comment": "Mine"})
+    assert "Only a Senior Accountant or the Controller" in response.text
+
+    act_as(client, users, "Priya Raman")
+    response = client.post(f"/items/{rec['recommendation_id']}/reverse", data={"comment": "Wrong invoice"})
+    assert response.status_code == 200 and "Decision reversed" in response.text
+    assert "This item was decided before" in response.text
+    assert events(services, run_id, "DECISION_REVERSED")[-1]["actor_user_id"] == users["Priya Raman"]
